@@ -1,0 +1,17 @@
+By default, this package is configured to run PyTest tests
+(http://pytest.org/).
+
+Prefix the test files with 'test_'.
+
+Run the tests by calling:
+$ brazil-build test
+
+To run a single/few test files, just provide a path to the files:
+$ brazil-build test -k TEST_PATTERN
+
+Code coverage is automatically reported for <%=@python_package_name%>;
+to add other packages, modify pytest.ini in the package root directory.
+
+To debug the failing tests:
+$ brazil-build test --pdb
+will drop you into the Python debugger on the failed test.
