@@ -19,6 +19,7 @@ setup(
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
     scripts=['bin/entry.py'],
+    data_files=[('/opt/amazon/etc', ['etc/nginx.conf', 'etc/telegraf.conf', 'etc/print_gpu_info.py'])],
 
     long_description=read('README.rst'),
     author='Amazon Web Services',
