@@ -36,8 +36,8 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    install_requires=[],
+    install_requires=['Flask', 'boto3', 'six'],
     extras_require={
-        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'pytest-xdist', 'mock', 'Flask', 'boto3']
+        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'pytest-xdist', 'mock']
     },
 )
