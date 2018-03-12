@@ -8,7 +8,7 @@ import sys
 import traceback
 from pprint import pprint
 
-import environment as env
+import container_support.environment as env
 from container_support.serving import Server
 
 PYTHONPATH = 'PYTHONPATH'
