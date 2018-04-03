@@ -34,7 +34,8 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    install_requires=[],
+    install_requires=['numpy>=1.13.3', 'requests>=2.18', 'boto3>=1.4.8', 'six>=1.11.0', 'gevent>=1.2.2',
+                      'gunicorn>=19.7.1', 'flask>=0.11', 'Jinja2>=2.9', 'scikit-learn>=0.19.1'],
     extras_require={
         'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'pytest-xdist', 'mock', 'Flask', 'boto3']
     }
