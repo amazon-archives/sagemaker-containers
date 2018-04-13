@@ -12,8 +12,8 @@ def read(file_name):
 
 
 setup(
-    name='sagemaker-container-support',
-    version='1.0',
+    name='sagemaker_container_support',
+    version='2.0.0',
     description='Open source library for creating containers to run on Amazon SageMaker.',
 
     packages=find_packages(where='src', exclude=('test',)),
