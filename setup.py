@@ -12,7 +12,7 @@ def read(file_name):
 
 
 setup(
-    name='sagemaker-containers',
+    name='sagemaker-container-support',
     version='1.0',
     description='Open source library for creating containers to run on Amazon SageMaker.',
 
