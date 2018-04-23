@@ -12,29 +12,46 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
+import os
+
 from sagemaker_containers import modules
 
 
 def test_download_and_import_module(upload_script, create_script):
-    create_script('my-script.py', 'def validate(): return True')
+    create_script('my_script.py', 'def validate(): return True')
 
     content = ['from distutils.core import setup',
-               "setup(name='my-script', py_modules=['my-script'])"]
+               "setup(name='my_script', py_modules=['my_script'])"]
 
     create_script('setup.py', content)
 
-    url = upload_script('my-script.py')
+    url = upload_script('my_script.py')
 
-    module = modules.download_and_import(url, 'my-script')
+    module = modules.download_and_import(url, 'my_script')
 
     assert module.validate()
 
 
 def test_download_and_import_script(upload_script, create_script):
-    create_script('my-script.py', 'def validate(): return True')
+    create_script('my_script.py', 'def validate(): return True')
 
-    url = upload_script('my-script.py')
+    url = upload_script('my_script.py')
 
-    module = modules.download_and_import(url, 'my-script')
+    module = modules.download_and_import(url, 'my_script')
+
+    assert module.validate()
+
+
+def test_download_and_import_script_with_requirements(upload_script, create_script):
+    script = os.linesep.join(['import os',
+                              'def validate():',
+                              '    return os.path.exist("requirements.txt")'])
+
+    create_script('my_script.py', script)
+    create_script('requirements.txt', 'keras\nh5py')
+
+    url = upload_script('my_script.py')
+
+    module = modules.download_and_import(url, 'my_script')
 
     assert module.validate()
