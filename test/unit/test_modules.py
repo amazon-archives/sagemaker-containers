@@ -43,7 +43,7 @@ def test_prepare():
     smc.modules.prepare('c:/path/to/', 'my-module')
     open.assert_called_with('c:/path/to/setup.py', 'w')
 
-    content = os.linesep.join(['from distutils.core import setup',
+    content = os.linesep.join(['from setuptools import setup',
                                'setup(name="my-module", py_modules=["my-module"])'])
 
     open().write.assert_called_with(content)
@@ -74,6 +74,13 @@ def test_install_fails(check_call):
     with pytest.raises(RuntimeError) as e:
         smc.modules.install('git://aws/container-support')
     assert str(e.value).startswith('Failed to pip install git://aws/container-support:')
+
+
+@patch('sys.executable', None)
+def test_install_no_python_executable():
+    with pytest.raises(RuntimeError) as e:
+        smc.modules.install('git://aws/container-support')
+    assert str(e.value) == 'Failed to retrieve the real path for the Python executable binary'
 
 
 @patch('importlib.import_module')

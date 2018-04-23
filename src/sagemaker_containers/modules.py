@@ -48,13 +48,15 @@ def prepare(path, name):
         logging.info('Module %s does not provide a setup.py. Generating a minimal setup.' % name)
 
         with open(os.path.join(path, 'setup.py'), 'w') as f:
-            lines = ['from distutils.core import setup',
+            lines = ['from setuptools import setup',
                      'setup(name="%s", py_modules=["%s"])' % (name, name)]
 
             f.write(os.linesep.join(lines))
 
 
 def install(path):
+    if not sys.executable:
+        raise RuntimeError('Failed to retrieve the real path for the Python executable binary')
     try:
         subprocess.check_call(shlex.split('%s -m pip install %s -U' % (sys.executable, path)))
     except subprocess.CalledProcessError:
@@ -74,6 +76,7 @@ def download_and_import(url, name=DEFAULT_MODULE_NAME):
                     prepare(tmpdir, name)
 
                     install(tmpdir)
+
+                    return importlib.import_module(name)
                 finally:
                     shutil.rmtree(tmpdir)
-                    return importlib.import_module(name)
