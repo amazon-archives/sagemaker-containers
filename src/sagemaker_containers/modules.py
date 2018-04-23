@@ -32,10 +32,10 @@ DEFAULT_MODULE_NAME = 'default_user_module_name'
 
 
 def s3_download(url, dst):  # type: (str, str) -> None
-    """Download a file from the S3.
+    """Download a file from S3.
 
     Args:
-        url (str): the s3 url location of the file.
+        url (str): the s3 url of the file.
         dst (str): the destination where the file will be saved.
     """
     url = urlparse(url)
@@ -83,19 +83,19 @@ def install(path):  # type: (str) -> None
 
 
 def download_and_import(url, name=DEFAULT_MODULE_NAME):  # type: (str, str) -> module
-    """Download, Prepare and Install a compressed tar file from S3 as a module.
+    """Download, prepare and install a compressed tar file from S3 as a module.
 
     SageMaker Python SDK saves the user provided scripts as compressed tar files in S3
-    https://github.com/aws/sagemaker-python-sdk#mxnet-sagemaker-estimators.
+    https://github.com/aws/sagemaker-python-sdk.
 
     This function downloads this compressed file, transforms it as a module, and installs it.
 
     Args:
-        url (str): the s3 url location of the file.
+        url (str): the s3 url of the file.
         name (str): name of the script or module.
 
     Returns:
-
+        (module): the imported module
     """
     with tempfile.NamedTemporaryFile() as tmp:
         s3_download(url, tmp.name)

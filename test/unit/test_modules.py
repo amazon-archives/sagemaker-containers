@@ -16,7 +16,7 @@ import os
 import subprocess
 import sys
 
-from mock import call, mock_open, patch
+from mock import call, MagicMock, mock_open, patch
 import pytest
 from six import PY2
 
@@ -128,5 +128,20 @@ def test_s3_download_and_import(tar_open, rm_tree, named_temporary_file, downloa
     install.assert_called_with('/tmp')
 
     assert module == import_module('another_module_name')
+
+    rm_tree.assert_called_with('/tmp')
+
+
+@patch('sagemaker_containers.modules.prepare')
+@patch('sagemaker_containers.modules.s3_download', MagicMock)
+@patch('tempfile.NamedTemporaryFile', MagicMock)
+@patch('tempfile.mkdtemp', lambda: '/tmp')
+@patch('shutil.rmtree')
+@patch(builtins_open, mock_open())
+@patch('tarfile.open', MagicMock)
+def test_s3_download_and_import_deletes_tmp_dir(rm_tree, prepare):
+    prepare.side_effect = ValueError('nothing to open')
+    with pytest.raises(ValueError):
+        smc.modules.download_and_import('s3://bucket/my-module', 'another_module_name')
 
     rm_tree.assert_called_with('/tmp')
