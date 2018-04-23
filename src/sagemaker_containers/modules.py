@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODULE_NAME = 'default_user_module_name'
 
 
-def download(url, dst):
+def s3_download(url, dst):
     url = urlparse(url)
 
     if url.scheme != 's3':
@@ -65,7 +65,7 @@ def install(path):
 
 def download_and_import(url, name=DEFAULT_MODULE_NAME):
     with tempfile.NamedTemporaryFile() as tmp:
-        download(url, tmp.name)
+        s3_download(url, tmp.name)
 
         with open(tmp.name, 'rb') as f:
             with tarfile.open(mode='r:gz', fileobj=f) as t:
