@@ -236,7 +236,7 @@ def test_user_requirements_file_training(training):
 
 def test_training_job_name(training):
     env = TrainingEnvironment(training)
-    assert env.training_job_name == 'training_job_name'
+    assert env.job_name == 'training_job_name'
 
 
 @patch('tempfile.gettempdir')

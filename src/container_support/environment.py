@@ -192,7 +192,7 @@ class TrainingEnvironment(ContainerEnvironment):
             self.current_host if len(self.hosts) > 1 else '')
         "The dir to write non-model training artifacts (e.g. evaluation results) which will be retained by SageMaker. "
 
-        self.training_job_name = os.environ.get(TrainingEnvironment.TRAINING_JOB_ENV.upper(), None)
+        self.job_name = os.environ.get(TrainingEnvironment.TRAINING_JOB_ENV.upper(), None)
         "The name of the current training job"
 
         # TODO validate docstring
