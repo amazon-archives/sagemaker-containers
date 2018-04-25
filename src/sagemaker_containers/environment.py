@@ -191,6 +191,12 @@ class Environment(collections.Mapping):
     """Provides access to aspects of the training environment relevant to training jobs, including
     hyperparameters, system characteristics, filesystem locations, environment variables and configuration settings.
 
+    The environment is a read-only snapshot of the container environment. It does not contain any form of state.
+    It is a dictionary like object, allowing any builtin function that works with dictionary.
+
+    Example on how to print the state of the container:
+        >>> print(str(smc.Environment.create()))
+
     Example on how a script can use training environment:
         ```
         >>>import sagemaker_containers as smc
