@@ -18,8 +18,8 @@ from mock import Mock, patch
 import pytest
 import six
 
-from test.conftest import json_dump
 import sagemaker_containers as smc
+from test.conftest import json_dump
 
 RESOURCE_CONFIG = dict(current_host='algo-1', hosts=['algo-1', 'algo-2', 'algo-3'])
 
