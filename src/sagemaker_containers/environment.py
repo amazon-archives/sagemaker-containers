@@ -38,7 +38,7 @@ CURRENT_HOST_ENV = 'CURRENT_HOST'  # type: str
 JOB_NAME_ENV = 'JOB_NAME'  # type: str
 USE_NGINX_ENV = 'SAGEMAKER_USE_NGINX'  # type: str
 
-BASE_PATH = os.environ.get(BASE_PATH_ENV, os.path.join(os.sep, 'opt', 'ml'))  # type: str
+BASE_PATH = os.environ.get(BASE_PATH_ENV, os.path.join('/opt', 'ml'))  # type: str
 
 MODEL_PATH = os.path.join(BASE_PATH, 'model')  # type: str
 INPUT_PATH = os.path.join(BASE_PATH, 'input')  # type: str
