@@ -586,8 +586,9 @@ class Environment(collections.Mapping):
 
         input_data_config = read_input_data_config()
 
-        hps = read_hyperparameters()
-        sagemaker_hyperparameters, hyperparameters = smc.collections.split_by_criteria(hps, SAGEMAKER_HYPERPARAMETERS)
+        hyperparameters = read_hyperparameters()
+        sagemaker_hyperparameters, hyperparameters = smc.collections.split_by_criteria(hyperparameters,
+                                                                                       SAGEMAKER_HYPERPARAMETERS)
 
         sagemaker_region = sagemaker_hyperparameters.get(REGION_PARAM_NAME, session.region_name)
 
