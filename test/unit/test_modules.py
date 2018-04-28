@@ -21,6 +21,7 @@ import pytest
 from six import PY2
 
 import sagemaker_containers as smc
+from test.mocks import assert_called_with, patch_context_manager, patch_with_validation
 
 builtins_open = '__builtin__.open' if PY2 else 'builtins.open'
 
@@ -83,65 +84,41 @@ def test_install_no_python_executable():
     assert str(e.value) == 'Failed to retrieve the real path for the Python executable binary'
 
 
-@patch('importlib.import_module')
-@patch('sagemaker_containers.modules.prepare')
-@patch('sagemaker_containers.modules.install')
-@patch('sagemaker_containers.modules.s3_download')
-@patch('tempfile.NamedTemporaryFile')
-@patch('tempfile.mkdtemp', lambda: '/tmp')
-@patch('shutil.rmtree')
-@patch(builtins_open, mock_open())
+@patch_with_validation('importlib.import_module', smc.modules.DEFAULT_MODULE_NAME)
+@patch_with_validation('os.makedirs', '/tmp/module_dir')
+@patch_context_manager('sagemaker_containers.environment.temporary_directory', return_value='/tmp')
+@patch_with_validation('sagemaker_containers.modules.prepare', '/tmp/module_dir', smc.modules.DEFAULT_MODULE_NAME)
+@patch_with_validation('sagemaker_containers.modules.install', '/tmp/module_dir')
+@patch_with_validation('sagemaker_containers.modules.s3_download', 's3://bucket/my-module', '/tmp/tar_file')
 @patch('tarfile.open')
-def test_s3_download_and_import_default_name(tar_open, rm_tree, named_temporary_file, download, install, prepare,
-                                             import_module):
-    module = smc.modules.download_and_import('s3://bucket/my-module')
+def test_s3_download_import_default_name(tarfile_open):
+    smc.modules.download_and_import('s3://bucket/my-module')
 
-    download.assert_called_with('s3://bucket/my-module', named_temporary_file().__enter__().name)
-
-    tar_open().__enter__().extractall.assert_called_with(path='/tmp')
-
-    prepare.assert_called_with('/tmp', smc.modules.DEFAULT_MODULE_NAME)
-    install.assert_called_with('/tmp')
-
-    assert module == import_module(smc.modules.DEFAULT_MODULE_NAME)
-
-    rm_tree.assert_called_with('/tmp')
+    with assert_called_with(tarfile_open, name='/tmp/tar_file', mode='r:gz') as t:
+        t.extractall.assert_called_with(path='/tmp/module_dir')
 
 
-@patch('importlib.import_module')
-@patch('sagemaker_containers.modules.prepare')
-@patch('sagemaker_containers.modules.install')
-@patch('sagemaker_containers.modules.s3_download')
-@patch('tempfile.NamedTemporaryFile')
-@patch('tempfile.mkdtemp', lambda: '/tmp')
-@patch('shutil.rmtree')
-@patch(builtins_open, mock_open())
+@patch_with_validation('importlib.import_module', 'another_module_name')
+@patch_with_validation('os.makedirs', '/tmp/module_dir')
+@patch_context_manager('sagemaker_containers.environment.temporary_directory', return_value='/tmp')
+@patch_with_validation('sagemaker_containers.modules.prepare', '/tmp/module_dir', 'another_module_name')
+@patch_with_validation('sagemaker_containers.modules.install', '/tmp/module_dir')
+@patch_with_validation('sagemaker_containers.modules.s3_download', 's3://bucket/my-module', '/tmp/tar_file')
 @patch('tarfile.open')
-def test_s3_download_and_import(tar_open, rm_tree, named_temporary_file, download, install, prepare, import_module):
-    module = smc.modules.download_and_import('s3://bucket/my-module', 'another_module_name')
+def test_s3_download_import(tarfile_open):
+    smc.modules.download_and_import('s3://bucket/my-module', 'another_module_name')
 
-    download.assert_called_with('s3://bucket/my-module', named_temporary_file().__enter__().name)
-
-    tar_open().__enter__().extractall.assert_called_with(path='/tmp')
-
-    prepare.assert_called_with('/tmp', 'another_module_name')
-    install.assert_called_with('/tmp')
-
-    assert module == import_module('another_module_name')
-
-    rm_tree.assert_called_with('/tmp')
+    with assert_called_with(tarfile_open, name='/tmp/tar_file', mode='r:gz') as t:
+        t.extractall.assert_called_with(path='/tmp/module_dir')
 
 
-@patch('sagemaker_containers.modules.prepare')
+@patch('sagemaker_containers.modules.prepare', MagicMock(side_effect=ValueError('nothing to open')))
 @patch('sagemaker_containers.modules.s3_download', MagicMock)
 @patch('tempfile.NamedTemporaryFile', MagicMock)
-@patch('tempfile.mkdtemp', lambda: '/tmp')
-@patch('shutil.rmtree')
+@patch_with_validation('os.makedirs', '/tmp/module_dir')
+@patch_context_manager('sagemaker_containers.environment.temporary_directory', return_value='/tmp')
 @patch(builtins_open, mock_open())
 @patch('tarfile.open', MagicMock)
-def test_s3_download_and_import_deletes_tmp_dir(rm_tree, prepare):
-    prepare.side_effect = ValueError('nothing to open')
+def test_s3_download_and_import_deletes_tmp_dir():
     with pytest.raises(ValueError):
         smc.modules.download_and_import('s3://bucket/my-module', 'another_module_name')
-
-    rm_tree.assert_called_with('/tmp')

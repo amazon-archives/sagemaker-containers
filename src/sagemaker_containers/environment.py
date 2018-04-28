@@ -13,13 +13,16 @@
 from __future__ import absolute_import
 
 import collections
+import contextlib
 import json
 import logging
 import multiprocessing
 import os
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
 
 import boto3
 import six
@@ -43,13 +46,17 @@ BASE_PATH = os.environ.get(BASE_PATH_ENV, os.path.join('/opt', 'ml'))  # type: s
 MODEL_PATH = os.path.join(BASE_PATH, 'model')  # type: str
 INPUT_PATH = os.path.join(BASE_PATH, 'input')  # type: str
 INPUT_DATA_PATH = os.path.join(INPUT_PATH, 'data')  # type: str
-INPUT_CONFIG_PATH = os.path.join(INPUT_PATH, 'config')  # type: str
+INPUT_DATA_CONFIG_PATH = os.path.join(INPUT_PATH, 'config')  # type: str
 OUTPUT_PATH = os.path.join(BASE_PATH, 'output')  # type: str
 OUTPUT_DATA_PATH = os.path.join(OUTPUT_PATH, 'data')  # type: str
 
 HYPERPARAMETERS_FILE = 'hyperparameters.json'  # type: str
 RESOURCE_CONFIG_FILE = 'resourceconfig.json'  # type: str
 INPUT_DATA_CONFIG_FILE = 'inputdataconfig.json'  # type: str
+
+HYPERPARAMETERS_PATH = os.path.join(INPUT_DATA_CONFIG_PATH, HYPERPARAMETERS_FILE)  # type: str
+INPUT_DATA_CONFIG_FILE_PATH = os.path.join(INPUT_DATA_CONFIG_PATH, INPUT_DATA_CONFIG_FILE)  # type: str
+RESOURCE_CONFIG_PATH = os.path.join(INPUT_DATA_CONFIG_PATH, RESOURCE_CONFIG_FILE)  # type: str
 
 PROGRAM_PARAM = 'sagemaker_program'  # type: str
 SUBMIT_DIR_PARAM = 'sagemaker_submit_directory'  # type: str
@@ -85,7 +92,7 @@ def read_hyperparameters():  # type: () -> dict
     Returns:
          (dict[string, object]): a dictionary containing the hyperparameters.
     """
-    hyperparameters = read_json(os.path.join(INPUT_CONFIG_PATH, HYPERPARAMETERS_FILE))
+    hyperparameters = read_json(HYPERPARAMETERS_PATH)
 
     try:
         return {k: json.loads(v) for k, v in hyperparameters.items()}
@@ -115,7 +122,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
                                 sorted lexicographically. For example, `['algo-1', 'algo-2', 'algo-3']`
                                 for a three-node cluster.
     """
-    return read_json(os.path.join(INPUT_CONFIG_PATH, RESOURCE_CONFIG_FILE))
+    return read_json(RESOURCE_CONFIG_PATH)
 
 
 def read_input_data_config():  # type: () -> dict
@@ -148,7 +155,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
     Returns:
             input_data_config (dict[string, object]): contents from /opt/ml/input/config/inputdataconfig.json.
     """
-    return read_json(os.path.join(INPUT_CONFIG_PATH, INPUT_DATA_CONFIG_FILE))
+    return read_json(INPUT_DATA_CONFIG_FILE_PATH)
 
 
 def channel_path(channel):  # type: (str) -> str
@@ -587,6 +594,7 @@ class Environment(collections.Mapping):
         input_data_config = read_input_data_config()
 
         hyperparameters = read_hyperparameters()
+
         sagemaker_hyperparameters, hyperparameters = smc.collections.split_by_criteria(hyperparameters,
                                                                                        SAGEMAKER_HYPERPARAMETERS)
 
@@ -597,7 +605,7 @@ class Environment(collections.Mapping):
         os.environ[REGION_PARAM_NAME.upper()] = sagemaker_region
 
         return cls(input_dir=INPUT_PATH,
-                   input_config_dir=INPUT_CONFIG_PATH,
+                   input_config_dir=INPUT_DATA_CONFIG_PATH,
                    model_dir=MODEL_PATH,
                    output_dir=OUTPUT_PATH,
                    output_data_dir=OUTPUT_DATA_PATH,
@@ -630,3 +638,24 @@ class Environment(collections.Mapping):
         if program_param.endswith('.py'):
             return program_param[:-3]
         return program_param
+
+
+@contextlib.contextmanager
+def temporary_directory(suffix='', prefix='tmp', dir=None):  # type: (str, str, str) -> None
+    """Create a temporary directory with a context manager. The file is deleted when the context exits.
+
+    The prefix, suffix, and dir arguments are the same as for mkstemp().
+
+    Args:
+        suffix (str):  If suffix is specified, the file name will end with that suffix, otherwise there will be no
+                        suffix.
+        prefix (str):  If prefix is specified, the file name will begin with that prefix; otherwise,
+                        a default prefix is used.
+        dir (str):  If dir is specified, the file will be created in that directory; otherwise, a default directory is
+                        used.
+    Returns:
+        (str) path to the directory
+    """
+    tmpdir = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
+    yield tmpdir
+    shutil.rmtree(tmpdir)

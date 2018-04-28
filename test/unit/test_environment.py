@@ -13,13 +13,14 @@
 import itertools
 import json
 import logging
+import os
 
 from mock import Mock, patch
 import pytest
 import six
 
 import sagemaker_containers as smc
-from test.conftest import json_dump
+import test.environment as test_env
 
 RESOURCE_CONFIG = dict(current_host='algo-1', hosts=['algo-1', 'algo-2', 'algo-3'])
 
@@ -45,11 +46,11 @@ SAGEMAKER_HYPERPARAMETERS = {'sagemaker_region': 'us-west-2', 'default_user_modu
 ALL_HYPERPARAMETERS = dict(itertools.chain(USER_HYPERPARAMETERS.items(), SAGEMAKER_HYPERPARAMETERS.items()))
 
 
-def test_read_json(tmpdir):
-    path_obj = tmpdir.join('hyperparameters.json')
-    json_dump(ALL_HYPERPARAMETERS, tmpdir.join('hyperparameters.json'))
+@pytest.mark.usefixtures('create_base_path')
+def test_read_json():
+    test_env.write_json(ALL_HYPERPARAMETERS, smc.environment.HYPERPARAMETERS_PATH)
 
-    assert smc.environment.read_json(str(path_obj)) == ALL_HYPERPARAMETERS
+    assert smc.environment.read_json(smc.environment.HYPERPARAMETERS_PATH) == ALL_HYPERPARAMETERS
 
 
 def test_read_json_throws_exception():
@@ -57,15 +58,17 @@ def test_read_json_throws_exception():
         smc.environment.read_json('non-existent.json')
 
 
-def test_read_hyperparameters(input_config_path):
-    json_dump(ALL_HYPERPARAMETERS, input_config_path.join('hyperparameters.json'))
+@pytest.mark.usefixtures('create_base_path')
+def test_read_hyperparameters():
+    test_env.write_json(ALL_HYPERPARAMETERS, smc.environment.HYPERPARAMETERS_PATH)
 
     assert smc.environment.read_hyperparameters() == ALL_HYPERPARAMETERS
 
 
-def test_read_key_serialized_hyperparameters(input_config_path):
+@pytest.mark.usefixtures('create_base_path')
+def test_read_key_serialized_hyperparameters():
     key_serialized_hps = {k: json.dumps(v) for k, v in ALL_HYPERPARAMETERS.items()}
-    json_dump(key_serialized_hps, input_config_path.join('hyperparameters.json'))
+    test_env.write_json(key_serialized_hps, smc.environment.HYPERPARAMETERS_PATH)
 
     assert smc.environment.read_hyperparameters() == ALL_HYPERPARAMETERS
 
@@ -80,21 +83,24 @@ def test_read_exception(loads):
     assert 'Unable to read.' in str(e)
 
 
-def test_resource_config(input_config_path):
-    json_dump(RESOURCE_CONFIG, input_config_path.join('resourceconfig.json'))
+@pytest.mark.usefixtures('create_base_path')
+def test_resource_config():
+    test_env.write_json(RESOURCE_CONFIG, smc.environment.RESOURCE_CONFIG_PATH)
 
     assert smc.environment.read_resource_config() == RESOURCE_CONFIG
 
 
-def test_input_data_config(input_config_path):
-    json_dump(INPUT_DATA_CONFIG, input_config_path.join('inputdataconfig.json'))
+@pytest.mark.usefixtures('create_base_path')
+def test_input_data_config():
+    test_env.write_json(INPUT_DATA_CONFIG, smc.environment.INPUT_DATA_CONFIG_FILE_PATH)
 
     assert smc.environment.read_input_data_config() == INPUT_DATA_CONFIG
 
 
-def test_channel_input_dirs(input_data_path):
-    assert smc.environment.channel_path('evaluation') == str(input_data_path.join('evaluation'))
-    assert smc.environment.channel_path('training') == str(input_data_path.join('training'))
+def test_channel_input_dirs():
+    input_data_path = smc.environment.INPUT_DATA_PATH
+    assert smc.environment.channel_path('evaluation') == os.path.join(input_data_path, 'evaluation')
+    assert smc.environment.channel_path('training') == os.path.join(input_data_path, 'training')
 
 
 @patch('subprocess.check_output', lambda s: six.b('GPU 0\nGPU 1'))
@@ -187,3 +193,19 @@ def test_environment_module_name(sagemaker_program, environment):
 
     env = smc.environment.Environment(module_name=sagemaker_program, **env_dict)
     assert env.module_name == 'program'
+
+
+@patch('tempfile.mkdtemp')
+@patch('shutil.rmtree')
+def test_temporary_directory(rmtree, mkdtemp):
+    with smc.environment.temporary_directory():
+        mkdtemp.assert_called()
+    rmtree.assert_called()
+
+
+@patch('tempfile.mkdtemp')
+@patch('shutil.rmtree')
+def test_temporary_directory_with_args(rmtree, mkdtemp):
+    with smc.environment.temporary_directory('suffix', 'prefix', '/tmp'):
+        mkdtemp.assert_called_with(dir='/tmp', prefix='prefix', suffix='suffix')
+    rmtree.assert_called()
