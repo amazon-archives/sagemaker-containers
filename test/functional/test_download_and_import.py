@@ -13,18 +13,18 @@
 from __future__ import absolute_import
 
 from sagemaker_containers import modules
-import test.environment as test_env
+import test
 
 content = ['from distutils.core import setup\n',
            'setup(name="test_script", py_modules=["test_script"])']
 
-SETUP = test_env.File('setup.py', content)
+SETUP = test.File('setup.py', content)
 
-USER_SCRIPT = test_env.File('test_script.py', 'def validate(): return True')
+USER_SCRIPT = test.File('test_script.py', 'def validate(): return True')
 
 
 def test_download_and_import_module():
-    user_module = test_env.UserModule(USER_SCRIPT).add_file(SETUP).upload()
+    user_module = test.UserModule(USER_SCRIPT).add_file(SETUP).upload()
 
     module = modules.download_and_import(user_module.url, 'test_script')
 
@@ -32,7 +32,7 @@ def test_download_and_import_module():
 
 
 def test_download_and_import_script():
-    user_module = test_env.UserModule(USER_SCRIPT).upload()
+    user_module = test.UserModule(USER_SCRIPT).upload()
 
     module = modules.download_and_import(user_module.url, 'test_script')
 
@@ -43,13 +43,13 @@ content = ['import os',
            'def validate():',
            '    return os.path.exist("requirements.txt")']
 
-USER_SCRIPT_WITH_REQUIREMENTS = test_env.File('test_script.py', content)
+USER_SCRIPT_WITH_REQUIREMENTS = test.File('test_script.py', content)
 
-REQUIREMENTS_FILE = test_env.File('requirements.txt', ['keras', 'h5py'])
+REQUIREMENTS_FILE = test.File('requirements.txt', ['keras', 'h5py'])
 
 
 def test_download_and_import_script_with_requirements():
-    user_module = test_env.UserModule(USER_SCRIPT_WITH_REQUIREMENTS).add_file(REQUIREMENTS_FILE).upload()
+    user_module = test.UserModule(USER_SCRIPT_WITH_REQUIREMENTS).add_file(REQUIREMENTS_FILE).upload()
 
     module = modules.download_and_import(user_module.url, 'test_script')
 

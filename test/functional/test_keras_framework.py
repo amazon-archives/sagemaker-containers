@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 import sagemaker_containers as smc
-import test.environment as test_env
+import test
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -63,17 +63,17 @@ def keras_framework_training_fn():
 
 @pytest.mark.usefixtures('create_base_path')
 def test_keras_framework():
-    channel = test_env.Channel.create(name='training')
+    channel = test.Channel.create(name='training')
 
     features = np.random.random((10, 1))
     labels = np.zeros((10, 1))
     np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    module = test_env.UserModule(test_env.File(name='user_script.py', content=USER_SCRIPT))
+    module = test.UserModule(test.File(name='user_script.py', content=USER_SCRIPT))
 
     hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py')
 
-    test_env.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
+    test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
 
     model = keras_framework_training_fn()
 

@@ -20,7 +20,7 @@ import pytest
 import six
 
 import sagemaker_containers as smc
-import test.environment as test_env
+import test
 
 RESOURCE_CONFIG = dict(current_host='algo-1', hosts=['algo-1', 'algo-2', 'algo-3'])
 
@@ -48,7 +48,7 @@ ALL_HYPERPARAMETERS = dict(itertools.chain(USER_HYPERPARAMETERS.items(), SAGEMAK
 
 @pytest.mark.usefixtures('create_base_path')
 def test_read_json():
-    test_env.write_json(ALL_HYPERPARAMETERS, smc.environment.HYPERPARAMETERS_PATH)
+    test.write_json(ALL_HYPERPARAMETERS, smc.environment.HYPERPARAMETERS_PATH)
 
     assert smc.environment.read_json(smc.environment.HYPERPARAMETERS_PATH) == ALL_HYPERPARAMETERS
 
@@ -60,7 +60,7 @@ def test_read_json_throws_exception():
 
 @pytest.mark.usefixtures('create_base_path')
 def test_read_hyperparameters():
-    test_env.write_json(ALL_HYPERPARAMETERS, smc.environment.HYPERPARAMETERS_PATH)
+    test.write_json(ALL_HYPERPARAMETERS, smc.environment.HYPERPARAMETERS_PATH)
 
     assert smc.environment.read_hyperparameters() == ALL_HYPERPARAMETERS
 
@@ -68,7 +68,7 @@ def test_read_hyperparameters():
 @pytest.mark.usefixtures('create_base_path')
 def test_read_key_serialized_hyperparameters():
     key_serialized_hps = {k: json.dumps(v) for k, v in ALL_HYPERPARAMETERS.items()}
-    test_env.write_json(key_serialized_hps, smc.environment.HYPERPARAMETERS_PATH)
+    test.write_json(key_serialized_hps, smc.environment.HYPERPARAMETERS_PATH)
 
     assert smc.environment.read_hyperparameters() == ALL_HYPERPARAMETERS
 
@@ -85,14 +85,14 @@ def test_read_exception(loads):
 
 @pytest.mark.usefixtures('create_base_path')
 def test_resource_config():
-    test_env.write_json(RESOURCE_CONFIG, smc.environment.RESOURCE_CONFIG_PATH)
+    test.write_json(RESOURCE_CONFIG, smc.environment.RESOURCE_CONFIG_PATH)
 
     assert smc.environment.read_resource_config() == RESOURCE_CONFIG
 
 
 @pytest.mark.usefixtures('create_base_path')
 def test_input_data_config():
-    test_env.write_json(INPUT_DATA_CONFIG, smc.environment.INPUT_DATA_CONFIG_FILE_PATH)
+    test.write_json(INPUT_DATA_CONFIG, smc.environment.INPUT_DATA_CONFIG_FILE_PATH)
 
     assert smc.environment.read_input_data_config() == INPUT_DATA_CONFIG
 
