@@ -12,26 +12,15 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-import logging
 import os
 
 import numpy as np
+import pytest
 
 import sagemaker_containers as smc
+import test
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-
-RESOURCE_CONFIG = dict(current_host='algo-1', hosts=['algo-1'])
-
-INPUT_DATA_CONFIG = {'training': {'ContentType': 'trainingContentType',
-                                  'TrainingInputMode': 'File',
-                                  'S3DistributionType': 'FullyReplicated',
-                                  'RecordWrapperType': 'None'}}
-
-HYPERPARAMETERS = dict(training_data_file='training_data.npz', sagemaker_region='us-west-2',
-                       default_user_module_name='net',
-                       sagemaker_job_name='sagemaker-training-job', sagemaker_enable_cloudwatch_metrics=True,
-                       sagemaker_container_log_level=logging.WARNING, sagemaker_program='user_script.py')
 
 USER_SCRIPT = """
 import os
@@ -72,14 +61,19 @@ def keras_framework_training_fn():
     return model
 
 
-def test_keras_framework(create_channel, create_training):
-    create_training(script_name='user_script.py', script=USER_SCRIPT, hyperparameters=HYPERPARAMETERS,
-                    resource_config=RESOURCE_CONFIG, input_data_config=INPUT_DATA_CONFIG)
+@pytest.mark.usefixtures('create_base_path')
+def test_keras_framework():
+    channel = test.Channel.create(name='training')
 
     features = np.random.random((10, 1))
     labels = np.zeros((10, 1))
+    np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    create_channel(channel='training', file_name='training_data.npz', data=dict(features=features, labels=labels))
+    module = test.UserModule(test.File(name='user_script.py', content=USER_SCRIPT))
+
+    hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py')
+
+    test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
 
     model = keras_framework_training_fn()
 
