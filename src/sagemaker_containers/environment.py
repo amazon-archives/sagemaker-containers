@@ -57,7 +57,6 @@ HYPERPARAMETERS_PATH = os.path.join(INPUT_CONFIG_PATH, HYPERPARAMETERS_FILE)  # 
 INPUT_DATA_CONFIG_FILE_PATH = os.path.join(INPUT_CONFIG_PATH, INPUT_DATA_CONFIG_FILE)  # type: str
 RESOURCE_CONFIG_PATH = os.path.join(INPUT_CONFIG_PATH, RESOURCE_CONFIG_FILE)  # type: str
 
-PROGRAM_PARAM = 'sagemaker_program'  # type: str
 USER_PROGRAM_PARAM = 'sagemaker_program'  # type: str
 USER_PROGRAM_ENV = USER_PROGRAM_PARAM.upper()  # type: str
 
@@ -690,7 +689,7 @@ class ServingEnvironment(Environment):
 
 
 @contextlib.contextmanager
-def temporary_directory(suffix='', prefix='tmp', dir=None):  # type: (str, str, str) -> None
+def tmpdir(suffix='', prefix='tmp', dir=None):  # type: (str, str, str) -> None
     """Create a temporary directory with a context manager. The file is deleted when the context exits.
 
     The prefix, suffix, and dir arguments are the same as for mkstemp().
@@ -705,6 +704,6 @@ def temporary_directory(suffix='', prefix='tmp', dir=None):  # type: (str, str, 
     Returns:
         (str) path to the directory
     """
-    tmpdir = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
-    yield tmpdir
-    shutil.rmtree(tmpdir)
+    tmp = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
+    yield tmp
+    shutil.rmtree(tmp)

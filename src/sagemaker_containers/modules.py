@@ -97,7 +97,7 @@ def download_and_import(url, name=DEFAULT_MODULE_NAME):  # type: (str, str) -> m
     Returns:
         (module): the imported module
     """
-    with smc.environment.temporary_directory() as tmpdir:
+    with smc.environment.tmpdir() as tmpdir:
         dst = os.path.join(tmpdir, 'tar_file')
         s3_download(url, dst)
 

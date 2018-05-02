@@ -115,7 +115,7 @@ class UserModule(object):
         return os.path.join('s3://', self.bucket, self.key)
 
     def upload(self):  # type: () -> UserModule
-        with smc.environment.temporary_directory() as tmpdir:
+        with smc.environment.tmpdir() as tmpdir:
             tar_name = os.path.join(tmpdir, 'sourcedir.tar.gz')
             with tarfile.open(tar_name, mode='w:gz') as tar:
                 for _file in self._files:
