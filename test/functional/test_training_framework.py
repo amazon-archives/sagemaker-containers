@@ -60,40 +60,40 @@ def save(model, model_dir):
 """
 
 
-def framework_training_fn():
-    env = smc.Environment.create()
+class TestFramework(object):
+    @staticmethod
+    def framework_training_fn():
+        env = smc.TrainingEnvironment()
 
-    mod = smc.modules.download_and_import(env.module_dir, env.module_name)
+        mod = smc.modules.download_and_import(env.module_dir, env.module_name)
 
-    model = mod.train(**smc.functions.matching_args(mod.train, env))
+        model = mod.train(**smc.functions.matching_args(mod.train, env))
 
-    if model:
-        if hasattr(mod, 'save'):
-            mod.save(model, env.model_dir)
-        else:
-            model_file = os.path.join(env.model_dir, 'saved_model')
-            model.save(model_file)
+        if model:
+            if hasattr(mod, 'save'):
+                mod.save(model, env.model_dir)
+            else:
+                model_file = os.path.join(env.model_dir, 'saved_model')
+                model.save(model_file)
 
+    @pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
+    def test_training_framework(self, user_script):
+        channel = test.Channel.create(name='training')
 
-@pytest.mark.usefixtures('create_base_path')
-@pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
-def test_training_framework(user_script):
-    channel = test.Channel.create(name='training')
+        features = [1, 2, 3, 4]
+        labels = [0, 1, 0, 1]
+        np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    features = [1, 2, 3, 4]
-    labels = [0, 1, 0, 1]
-    np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
+        module = test.UserModule(test.File(name='user_script.py', content=user_script))
 
-    module = test.UserModule(test.File(name='user_script.py', content=user_script))
+        hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py',
+                               epochs=10, batch_size=64)
 
-    hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py',
-                           epochs=10, batch_size=64)
+        test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
 
-    test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
+        self.framework_training_fn()
 
-    framework_training_fn()
+        model = smc.environment.read_json(os.path.join(smc.environment.MODEL_PATH, 'saved_model'))
 
-    model = smc.environment.read_json(os.path.join(smc.environment.MODEL_PATH, 'saved_model'))
-
-    assert model == dict(loss='categorical_crossentropy', y=labels, epochs=10,
-                         x=features, batch_size=64, optimizer='SGD')
+        assert model == dict(loss='categorical_crossentropy', y=labels, epochs=10,
+                             x=features, batch_size=64, optimizer='SGD')

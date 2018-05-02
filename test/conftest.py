@@ -12,12 +12,9 @@
 # language governing permissions and limitations under the License.
 import logging
 import os
+import shutil
 
-from mock import patch
 import pytest
-import six
-
-import sagemaker_containers.environment as environment
 
 logger = logging.getLogger(__name__)
 
@@ -28,19 +25,14 @@ logging.getLogger('botocore').setLevel(logging.WARN)
 DEFAULT_REGION = 'us-west-2'
 
 
-@pytest.fixture(name='base_path')
-def fixture_base_path(tmpdir):
-    yield str(tmpdir)
+@pytest.fixture(autouse=True)
+def create_base_path():
+    import sagemaker_containers.environment as environment
 
+    os.makedirs(environment.MODEL_PATH)
+    os.makedirs(environment.INPUT_CONFIG_PATH)
+    os.makedirs(environment.OUTPUT_DATA_PATH)
 
-@pytest.fixture
-def create_base_path(base_path):
+    yield str(os.environ['BASE_PATH'])
 
-    with patch.dict('os.environ', {'BASE_PATH': base_path}):
-        six.moves.reload_module(environment)
-        os.makedirs(environment.MODEL_PATH)
-        os.makedirs(environment.INPUT_DATA_CONFIG_PATH)
-        os.makedirs(environment.OUTPUT_DATA_PATH)
-
-        yield base_path
-    six.moves.reload_module(environment)
+    shutil.rmtree(os.environ['BASE_PATH'])
