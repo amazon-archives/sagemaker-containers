@@ -39,8 +39,6 @@ logger = logging.getLogger(__name__)
 
 BASE_PATH_ENV = 'BASE_PATH'  # type: str
 CURRENT_HOST_ENV = 'CURRENT_HOST'  # type: str
-JOB_NAME_ENV = 'JOB_NAME'  # type: str
-USE_NGINX_ENV = 'SAGEMAKER_USE_NGINX'  # type: str
 
 BASE_PATH = os.environ.get(BASE_PATH_ENV, os.path.join('/opt', 'ml'))  # type: str
 
