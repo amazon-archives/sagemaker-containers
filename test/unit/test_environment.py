@@ -98,6 +98,26 @@ def test_channel_input_dirs(input_data_path):
     assert smc.environment.channel_path('training') == str(input_data_path.join('training'))
 
 
+def test_expand_base_path_with_default():
+    if smc.environment.BASE_PATH_ENV in os.environ:
+        del os.environ[smc.environment.BASE_PATH_ENV]
+
+    path = '{}/my/path'
+    expanded = smc.environment.expand_base_path(path)
+
+    assert expanded == '/opt/ml/my/path'
+
+
+def test_expand_base_path_with_custom_base():
+    path = '{}/my/path'
+    os.environ[smc.environment.BASE_PATH_ENV] = '/root/of/all/evil'
+
+    expanded = smc.environment.expand_base_path(path)
+
+    del os.environ[smc.environment.BASE_PATH_ENV]
+    assert expanded == '/root/of/all/evil/my/path'
+
+
 @patch('subprocess.check_output', lambda s: six.b('GPU 0\nGPU 1'))
 def test_gpu_count_in_gpu_instance():
     assert smc.environment.gpu_count() == 2

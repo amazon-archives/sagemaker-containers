@@ -38,7 +38,7 @@ BASE_PATH_ENV = 'BASE_PATH'  # type: str
 CURRENT_HOST_ENV = 'CURRENT_HOST'  # type: str
 JOB_NAME_ENV = 'JOB_NAME'  # type: str
 
-BASE_PATH = os.environ.get(BASE_PATH_ENV, os.path.join('/opt', 'ml'))  # type: str
+BASE_PATH = '{}'  # type: str
 
 MODEL_PATH = os.path.join(BASE_PATH, 'model')  # type: str
 INPUT_PATH = os.path.join(BASE_PATH, 'input')  # type: str
@@ -91,6 +91,12 @@ def read_json(path):  # type: (str) -> dict
         return json.load(f)
 
 
+def expand_base_path(path):
+    """Expand any path which depends on the BASE_PATH. It will look in the BASE_PATH_ENV and if it is
+    not set, it will default to /opt/ml as the base path."""
+    return path.format(os.environ.get(BASE_PATH_ENV, os.path.join('/opt', 'ml')))
+
+
 def read_hyperparameters():  # type: () -> dict
     """Read the hyperparameters from /opt/ml/input/config/hyperparameters.json.
 
@@ -100,7 +106,7 @@ def read_hyperparameters():  # type: () -> dict
     Returns:
          (dict[string, object]): a dictionary containing the hyperparameters.
     """
-    hyperparameters = read_json(os.path.join(INPUT_CONFIG_PATH, HYPERPARAMETERS_FILE))
+    hyperparameters = read_json(os.path.join(expand_base_path(INPUT_CONFIG_PATH), HYPERPARAMETERS_FILE))
 
     try:
         return {k: json.loads(v) for k, v in hyperparameters.items()}
@@ -130,7 +136,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
                                 sorted lexicographically. For example, `['algo-1', 'algo-2', 'algo-3']`
                                 for a three-node cluster.
     """
-    return read_json(os.path.join(INPUT_CONFIG_PATH, RESOURCE_CONFIG_FILE))
+    return read_json(os.path.join(expand_base_path(INPUT_CONFIG_PATH), RESOURCE_CONFIG_FILE))
 
 
 def read_input_data_config():  # type: () -> dict
@@ -163,7 +169,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
     Returns:
             input_data_config (dict[string, object]): contents from /opt/ml/input/config/inputdataconfig.json.
     """
-    return read_json(os.path.join(INPUT_CONFIG_PATH, INPUT_DATA_CONFIG_FILE))
+    return read_json(os.path.join(expand_base_path(INPUT_CONFIG_PATH), INPUT_DATA_CONFIG_FILE))
 
 
 def channel_path(channel):  # type: (str) -> str
@@ -175,7 +181,7 @@ def channel_path(channel):  # type: (str) -> str
     Returns:
         (str) The input data directory for the specified channel.
     """
-    return os.path.join(INPUT_DATA_PATH, channel)
+    return os.path.join(expand_base_path(INPUT_DATA_PATH), channel)
 
 
 def gpu_count():  # type: () -> int
@@ -475,14 +481,14 @@ class TrainingEnvironment(Environment):
         os.environ[REGION_NAME_ENV] = sagemaker_region
 
         self._hosts = hosts
-        self._input_dir = INPUT_PATH
-        self._input_config_dir = INPUT_CONFIG_PATH
-        self._model_dir = MODEL_PATH
-        self._output_dir = OUTPUT_PATH
+        self._input_dir = expand_base_path(INPUT_PATH)
+        self._input_config_dir = expand_base_path(INPUT_CONFIG_PATH)
+        self._model_dir = expand_base_path(MODEL_PATH)
+        self._output_dir = expand_base_path(OUTPUT_PATH)
         self._hyperparameters = hyperparameters
         self._resource_config = resource_config
         self._input_data_config = input_data_config
-        self._output_data_dir = OUTPUT_DATA_PATH
+        self._output_data_dir = expand_base_path(OUTPUT_DATA_PATH)
         self._channel_input_dirs = {channel: channel_path(channel) for channel in input_data_config}
         self._current_host = current_host
 

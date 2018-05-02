@@ -16,13 +16,11 @@ import os
 import time
 
 import boto3
-from mock import patch
 import numpy as np
 import pytest
 import sagemaker
 import six
 
-import sagemaker_containers.environment as environment
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +44,9 @@ def override_opt_ml_path(tmpdir):
     input_data.mkdir('config')
     input_data.mkdir('data')
     tmpdir.mkdir('model')
-
-    with patch.dict('os.environ', {'BASE_PATH': str(tmpdir)}):
-        six.moves.reload_module(environment)
-        yield tmpdir
-    six.moves.reload_module(environment)
+    os.environ['BASE_PATH'] = str(tmpdir)
+    yield tmpdir
+    del os.environ['BASE_PATH']
 
 
 @pytest.fixture(name='input_path')
