@@ -24,27 +24,43 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 USER_SCRIPT = """
 import os
-
-import keras
+import test.miniml as miniml
 import numpy as np
 
 def train(channel_input_dirs, hyperparameters):
     data = np.load(os.path.join(channel_input_dirs['training'], hyperparameters['training_data_file']))
     x_train = data['features']
-    y_train = keras.utils.to_categorical(data['labels'], 10)
+    y_train = data['labels']
 
-    model = keras.models.Sequential()
-    model.add(keras.layers.Dense(10, activation='softmax', input_dim=1))
+    model = miniml.Model(loss='categorical_crossentropy', optimizer='SGD')
 
-    model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.SGD(), metrics=['accuracy'])
-
-    model.fit(x_train, y_train, epochs=1, batch_size=1)
+    model.fit(x=x_train, y=y_train, epochs=hyperparameters['epochs'], batch_size=hyperparameters['batch_size'])
 
     return model
 """
 
+USER_SCRIPT_WITH_SAVE = """
+import os
+import test.miniml as miniml
+import numpy as np
 
-def keras_framework_training_fn():
+def train(channel_input_dirs, hyperparameters):
+    data = np.load(os.path.join(channel_input_dirs['training'], hyperparameters['training_data_file']))
+    x_train = data['features']
+    y_train = data['labels']
+
+    model = miniml.Model(loss='categorical_crossentropy', optimizer='SGD')
+
+    model.fit(x=x_train, y=y_train, epochs=hyperparameters['epochs'], batch_size=hyperparameters['batch_size'])
+
+    return model
+
+def save(model, model_dir):
+    model.save(model_file)
+"""
+
+
+def framework_training_fn():
     env = smc.Environment.create()
 
     mod = smc.modules.download_and_import(env.module_dir, env.module_name)
@@ -58,23 +74,26 @@ def keras_framework_training_fn():
             model_file = os.path.join(env.model_dir, 'saved_model')
             model.save(model_file)
 
-    return model
-
 
 @pytest.mark.usefixtures('create_base_path')
-def test_keras_framework():
+@pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
+def test_training_framework(user_script):
     channel = test.Channel.create(name='training')
 
-    features = np.random.random((10, 1))
-    labels = np.zeros((10, 1))
+    features = [1, 2, 3, 4]
+    labels = [0, 1, 0, 1]
     np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    module = test.UserModule(test.File(name='user_script.py', content=USER_SCRIPT))
+    module = test.UserModule(test.File(name='user_script.py', content=user_script))
 
-    hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py')
+    hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py',
+                           epochs=10, batch_size=64)
 
     test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
 
-    model = keras_framework_training_fn()
+    framework_training_fn()
 
-    assert model.trainable
+    model = smc.environment.read_json(os.path.join(smc.environment.MODEL_PATH, 'saved_model'))
+
+    assert model == dict(loss='categorical_crossentropy', y=labels, epochs=10,
+                         x=features, batch_size=64, optimizer='SGD')
