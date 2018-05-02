@@ -88,13 +88,13 @@ def test_install_no_python_executable():
 
 
 @contextlib.contextmanager
-def patch_temporary_directory():
+def patch_tmpdir():
     yield '/tmp'
 
 
 class TestDownloadAndImport(test.TestBase):
     patches = [
-        patch('sagemaker_containers.environment.temporary_directory', new=patch_temporary_directory),
+        patch('sagemaker_containers.environment.tmpdir', new=patch_tmpdir),
         patch('sagemaker_containers.modules.prepare', autospec=True),
         patch('sagemaker_containers.modules.install', autospec=True),
         patch('sagemaker_containers.modules.s3_download', autospec=True),
