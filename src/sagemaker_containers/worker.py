@@ -45,14 +45,26 @@ def default_healthcheck_fn():  # type: () -> Response
     return Response(status=smc.status_codes.OK)
 
 
-def run(transformer, healthcheck_fn=None, module_name=None):
-    # type: (smc.Transformer, function or None, str or None) -> Flask
+def run(transform_fn, initialize_fn=None, healthcheck_fn=None, module_name=None):
+    # type: (function, function or None, str or None) -> Flask
     """Creates and Flask application from a transformer.
 
     Args:
-        transformer (smc.Transformer): object responsible to load the model and make predictions.
-        healthcheck_fn (function): function that will be used for healthcheck calls when the containers starts,
-                                    if not specified, it will use ping as the default healthcheck call.
+        transform_fn (function): responsible to make predictions against the model. Follows the signature:
+
+            * Returns:
+                `sagemaker_containers.worker.TransformSpec`: named tuple with prediction data.
+
+
+        initialize_fn (function, optional): this function is called when the Flask application starts.
+            It doest not have return type or arguments.
+
+        healthcheck_fn (function, optional): function that will be used for healthcheck calls when the containers
+            starts, if not specified, it will use ping as the default healthcheck call. Signature:
+
+            * Returns:
+                `flask.app.Response`: response object with new healthcheck response.
+
         module_name (str): the module name which implements the worker. If not specified, ir will use
                                 sagemaker_containers.ServingEnvironment().module_name as the default module name.
 
@@ -62,10 +74,11 @@ def run(transformer, healthcheck_fn=None, module_name=None):
     healthcheck_fn = healthcheck_fn or default_healthcheck_fn
     app = Flask(import_name=module_name or env.module_name)
 
-    transformer.initialize()
+    if initialize_fn:
+        initialize_fn()
 
     def invocations_fn():
-        transform_spec = transformer.transform()
+        transform_spec = transform_fn()
 
         return Response(response=transform_spec.prediction,
                         status=smc.status_codes.OK,

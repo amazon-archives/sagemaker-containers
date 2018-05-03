@@ -12,16 +12,11 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-from mock import ANY, Mock, patch, PropertyMock
+from mock import ANY, MagicMock, patch, PropertyMock
 import pytest
 from six.moves import range
 
 import sagemaker_containers as smc
-
-
-class MockTransformer(Mock):
-    def transform(self):
-        return smc.worker.TransformSpec('fake data', smc.content_types.APPLICATION_JSON)
 
 
 def test_default_ping_fn():
@@ -39,10 +34,27 @@ def patch_flask():
 
 @pytest.mark.parametrize('module_name, expected_name', [('test_module', 'test_module'), (None, 'user_program')])
 def test_run(flask, module_name, expected_name):
-    transformer = MockTransformer()
-    app = smc.worker.run(transformer, module_name=module_name)
+    transformer = MagicMock()
+
+    app = smc.worker.run(transform_fn=transformer.transform, module_name=module_name)
 
     flask.assert_called_with(import_name=expected_name)
+
+    rules = app.add_url_rule
+    rules.assert_any_call(rule='/invocations', endpoint='invocations', view_func=ANY, methods=ANY)
+
+    rules.assert_called_with(rule='/ping', endpoint='ping', view_func=smc.worker.default_healthcheck_fn)
+
+    assert rules.call_count == 2
+
+
+def test_run_with_initialize(flask):
+    transformer = MagicMock()
+
+    app = smc.worker.run(transform_fn=transformer.transform, initialize_fn=transformer.initialize,
+                         module_name='test_module')
+
+    flask.assert_called_with(import_name='test_module')
 
     transformer.initialize.assert_called()
 
@@ -55,8 +67,10 @@ def test_run(flask, module_name, expected_name):
 
 
 def test_invocations():
-    transformer = MockTransformer()
-    app = smc.worker.run(transformer, module_name='test_module')
+    def transform_fn():
+        return smc.worker.TransformSpec(prediction='fake data', accept=smc.content_types.APPLICATION_JSON)
+
+    app = smc.worker.run(transform_fn=transform_fn, module_name='test_module')
 
     with app.test_client() as worker:
         for _ in range(9):
