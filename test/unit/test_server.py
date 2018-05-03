@@ -15,6 +15,7 @@ from mock import call, patch, PropertyMock
 from sagemaker_containers.environment import ServingEnvironment
 from sagemaker_containers.server import start
 
+
 @patch.object(ServingEnvironment, 'model_server_workers', PropertyMock(return_value=2))
 @patch.object(ServingEnvironment, 'model_server_timeout', PropertyMock(return_value=100))
 @patch.object(ServingEnvironment, 'use_nginx', PropertyMock(return_value=False))
@@ -23,14 +24,14 @@ from sagemaker_containers.server import start
 @patch('subprocess.Popen')
 def test_start_no_nginx(popen):
     calls = [call(
-                 ['gunicorn',
-                  '--timeout', '100',
-                  '-k', 'gevent',
-                  '-b', '0.0.0.0:8080',
-                  '--worker-connections', '2000',
-                  '-w', '2',
-                  '--log-level', 'info',
-                  'my_module'])]
+        ['gunicorn',
+         '--timeout', '100',
+         '-k', 'gevent',
+         '-b', '0.0.0.0:8080',
+         '--worker-connections', '2000',
+         '-w', '2',
+         '--log-level', 'info',
+         'my_module'])]
 
     start('my_module')
     popen.assert_has_calls(calls)
