@@ -65,13 +65,12 @@ def run(transform_fn, initialize_fn=None, healthcheck_fn=None, module_name=None)
             * Returns:
                 `flask.app.Response`: response object with new healthcheck response.
 
-        module_name (str): the module name which implements the worker. If not specified, ir will use
+        module_name (str): the module name which implements the worker. If not specified, it will use
                                 sagemaker_containers.ServingEnvironment().module_name as the default module name.
 
     Returns:
         (Flask): an instance of Flask ready for inferences.
     """
-    healthcheck_fn = healthcheck_fn or default_healthcheck_fn
     app = Flask(import_name=module_name or env.module_name)
 
     if initialize_fn:

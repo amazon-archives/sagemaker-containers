@@ -19,7 +19,7 @@ import urllib3
 import sagemaker_containers as smc
 
 
-def test_server():
+def test_server_with_a_simple_app():
     original_env = os.environ.copy()
 
     os.environ[smc.environment.FRAMEWORK_MODULE_ENV] = 'test.functional.simple_flask:app'
