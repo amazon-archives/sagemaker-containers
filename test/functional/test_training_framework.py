@@ -72,14 +72,7 @@ def framework_training_fn():
             mod.save(model, training_env.model_dir)
         else:
             model_file = os.path.join(training_env.model_dir, 'saved_model')
-            print('----------------------------')
-            print(training_env.model_dir)
-            print(env.TrainingEnv().model_dir)
             model.save(model_file)
-            a = env.read_json(os.path.join(env.TrainingEnv().model_dir, 'saved_model'))
-            print(a)
-            print(model_file)
-            print(os.path.join(env.TrainingEnv().model_dir, 'saved_model'))
 
 
 @pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
