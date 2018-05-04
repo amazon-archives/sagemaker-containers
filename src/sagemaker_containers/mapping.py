@@ -57,10 +57,8 @@ class MappingMixin(collections.Mapping):
     def __getitem__(self, k):
         if not self._is_property(k):
             raise KeyError('Trying to access non property %s' % k)
-        try:
-            return getattr(self, k)
-        except AttributeError:
-            reraise(KeyError, KeyError('Trying to access invalid key %s' % k), sys.exc_info()[2])
+        return getattr(self, k)
+
 
     def __len__(self):
         return len(self.properties())
