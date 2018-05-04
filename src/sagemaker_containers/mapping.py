@@ -13,9 +13,6 @@
 from __future__ import absolute_import
 
 import collections
-import sys
-
-from six import reraise
 
 SplitResultSpec = collections.namedtuple('SplitResultSpec', 'included excluded')
 
@@ -58,7 +55,6 @@ class MappingMixin(collections.Mapping):
         if not self._is_property(k):
             raise KeyError('Trying to access non property %s' % k)
         return getattr(self, k)
-
 
     def __len__(self):
         return len(self.properties())
