@@ -16,7 +16,7 @@ import inspect
 
 import pytest as pytest
 
-import sagemaker_containers as smc
+from sagemaker_containers import functions
 
 
 @pytest.mark.parametrize('fn, expected', [
@@ -27,10 +27,10 @@ import sagemaker_containers as smc
     (lambda x, y, *args, **kwargs: None, inspect.ArgSpec(['x', 'y'], 'args', 'kwargs', None))
 ])
 def test_getargspec(fn, expected):
-    assert smc.functions.getargspec(fn) == expected
+    assert functions.getargspec(fn) == expected
 
 
-@pytest.mark.parametrize('fn, environment, expected', [
+@pytest.mark.parametrize('fn, env, expected', [
     (lambda: None, {}, {}),
     (lambda x, y='y': None, dict(x='x', y=None, t=3), dict(x='x', y=None)),
     (lambda not_in_env_arg: None, dict(x='x', y=None, t=3), {}),
@@ -38,5 +38,5 @@ def test_getargspec(fn, expected):
     (lambda *arguments, **keywords: None, dict(x='x', y=None, t=3), dict(x='x', y=None, t=3)),
     (lambda **kwargs: None, dict(x='x', y=None, t=3), dict(x='x', y=None, t=3))
 ])
-def test_matching_args(fn, environment, expected):
-    assert smc.functions.matching_args(fn, environment) == expected
+def test_matching_args(fn, env, expected):
+    assert functions.matching_args(fn, env) == expected

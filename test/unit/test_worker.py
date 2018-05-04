@@ -27,7 +27,7 @@ def test_default_ping_fn():
 def patch_flask():
     property_mock = PropertyMock(return_value='user_program')
     with patch('sagemaker_containers.worker.Flask') as flask, \
-            patch('sagemaker_containers.environment.ServingEnvironment.module_name',
+            patch('sagemaker_containers.env.ServingEnv.module_name',
                   property_mock):
         yield flask
 

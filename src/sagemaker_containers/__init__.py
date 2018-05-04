@@ -14,12 +14,9 @@ from __future__ import absolute_import
 
 import sagemaker_containers.collections
 import sagemaker_containers.content_types
-import sagemaker_containers.environment
+import sagemaker_containers.env
 import sagemaker_containers.functions
 import sagemaker_containers.modules
 import sagemaker_containers.server
 import sagemaker_containers.status_codes
 import sagemaker_containers.worker  # noqa ignore=F401
-
-from sagemaker_containers.environment import Environment, ServingEnvironment, TrainingEnvironment  # noqa ignore=F401
-#  imported but unused

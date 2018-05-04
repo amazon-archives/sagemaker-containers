@@ -16,9 +16,9 @@ import collections
 
 from flask import Flask, Response
 
-import sagemaker_containers as smc
+from sagemaker_containers import env, status_codes
 
-env = smc.environment.ServingEnvironment()
+serving_env = env.ServingEnv()
 
 
 def default_healthcheck_fn():  # type: () -> Response
@@ -42,7 +42,7 @@ def default_healthcheck_fn():  # type: () -> Response
     Returns:
         (flask.Response): with status code 200
     """
-    return Response(status=smc.status_codes.OK)
+    return Response(status=status_codes.OK)
 
 
 def run(transform_fn, initialize_fn=None, healthcheck_fn=None, module_name=None):
@@ -66,12 +66,12 @@ def run(transform_fn, initialize_fn=None, healthcheck_fn=None, module_name=None)
                 `flask.app.Response`: response object with new healthcheck response.
 
         module_name (str): the module name which implements the worker. If not specified, it will use
-                                sagemaker_containers.ServingEnvironment().module_name as the default module name.
+                                sagemaker_containers.ServingEnv().module_name as the default module name.
 
     Returns:
         (Flask): an instance of Flask ready for inferences.
     """
-    app = Flask(import_name=module_name or env.module_name)
+    app = Flask(import_name=module_name or serving_env.module_name)
 
     if initialize_fn:
         initialize_fn()
@@ -80,7 +80,7 @@ def run(transform_fn, initialize_fn=None, healthcheck_fn=None, module_name=None)
         transform_spec = transform_fn()
 
         return Response(response=transform_spec.prediction,
-                        status=smc.status_codes.OK,
+                        status=status_codes.OK,
                         mimetype=transform_spec.accept)
 
     app.add_url_rule(rule='/invocations', endpoint='invocations', view_func=invocations_fn, methods=["POST"])
