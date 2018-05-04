@@ -12,10 +12,10 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-import sagemaker_containers.collections
 import sagemaker_containers.content_types
 import sagemaker_containers.env
 import sagemaker_containers.functions
+import sagemaker_containers.mapping
 import sagemaker_containers.modules
 import sagemaker_containers.server
 import sagemaker_containers.status_codes
