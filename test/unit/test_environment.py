@@ -169,7 +169,7 @@ def test_serving_env(serving_env):
     assert serving_env.model_server_workers == 8
     assert serving_env.module_name == 'main'
     assert serving_env.enable_metrics
-    assert serving_env.framework_module == 'server:app'
+    assert serving_env.framework_module == ' '
 
 
 def test_request():
@@ -199,8 +199,8 @@ def test_request_content_type():
 
 
 def test_train_env_properties(training_env):
-    assert training_env.properties() == ['channel_input_dirs', 'current_host', 'enable_metrics', 'hosts',
-                                         'hyperparameters', 'input_config_dir', 'input_data_config',
+    assert training_env.properties() == ['channel_input_dirs', 'current_host', 'enable_metrics', 'framework_module',
+                                         'hosts', 'hyperparameters', 'input_config_dir', 'input_data_config',
                                          'input_dir', 'log_level', 'model_dir', 'module_dir', 'module_name',
                                          'num_cpu', 'num_gpu', 'output_data_dir', 'output_dir',
                                          'resource_config']
