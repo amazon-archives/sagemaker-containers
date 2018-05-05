@@ -24,9 +24,10 @@ import subprocess
 import sys
 import tempfile
 
+from flask import Request, request
 import six
 
-from sagemaker_containers import mapping
+from sagemaker_containers import content_types, mapping
 
 if six.PY2:
     JSONDecodeError = None
@@ -236,6 +237,13 @@ class Env(mapping.MappingMixin):
         self._module_dir = module_dir
         self._enable_metrics = enable_metrics
         self._log_level = log_level
+        self._model_dir = MODEL_PATH
+
+    @property
+    def model_dir(self):  # type: () -> str
+        """Returns:
+            (str): the directory where models should be saved, e.g., /opt/ml/model/"""
+        return self._model_dir
 
     @property
     def current_host(self):  # type: () -> str
@@ -454,7 +462,6 @@ class TrainingEnv(Env):
         self._hosts = hosts
         self._input_dir = INPUT_PATH
         self._input_config_dir = INPUT_CONFIG_PATH
-        self._model_dir = MODEL_PATH
         self._output_dir = OUTPUT_PATH
         self._hyperparameters = split_result.excluded
         self._resource_config = resource_config
@@ -505,12 +512,6 @@ class TrainingEnv(Env):
             (str): the path of the input directory, e.g. /opt/ml/input/config/
         """
         return self._input_config_dir
-
-    @property
-    def model_dir(self):  # type: () -> str
-        """Returns:
-            (str): the directory where models should be saved, e.g., /opt/ml/model/"""
-        return self._model_dir
 
     @property
     def output_dir(self):  # type: () -> str
@@ -662,6 +663,64 @@ class ServingEnv(Env):
         """Returns:
             (str): Name of the framework module to be used for serving."""
         return self._framework_module
+
+
+class RequestEnv(Request, mapping.MappingMixin):
+    """The Request object used to read request data.
+
+    Example:
+
+    POST /INVOCATIONS {payload: '42', Content-Type: JSON, Accept: CSV}
+
+    >>> from sagemaker_containers import env
+
+    >>> request = env.RequestEnv()
+    >>> content = request.content
+
+    >>> print(str(request))
+
+    {'content_length': '2', 'content_type': 'application/json', 'content': '42', 'accept': 'application/json', ... }
+
+
+    """
+
+    def __init__(self, environ=None):
+        super(RequestEnv, self).__init__(environ=environ or request.environ)
+
+    @property
+    def content_type(self):  # type () -> str
+        """The request's content-type.
+
+        Returns:
+            (str): The value, if any, of the header 'ContentType' (used by some AWS services) and 'Content-Type'.
+                    Otherwise, returns 'Application/Json' as default.
+        """
+        # todo(mvsusp): consider a better default content-type
+        return self.headers.get('ContentType') or self.headers.get('Content-Type') or content_types.JSON
+
+    @property
+    def accept(self):  # type: () -> str
+        """The content-type for the response to the client.
+
+        Returns:
+            (str): The value of the header 'Accept' or 'Application/Json' as default
+        """
+        return self.headers.get('Accept', content_types.JSON)
+
+    @property
+    def content(self):  # type: () -> object
+        """The request incoming data.
+
+        It automatic decodes from utf-8
+
+        Returns:
+            (obj): incoming data
+        """
+        data = self.get_data()
+        try:
+            return data.decode('utf-8')
+        except (JSONDecodeError, UnicodeDecodeError):
+            return data
 
 
 @contextlib.contextmanager

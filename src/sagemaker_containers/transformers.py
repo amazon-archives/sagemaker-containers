@@ -1,0 +1,160 @@
+# Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the 'License'). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the 'license' file accompanying this file. This file is
+# distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+from __future__ import absolute_import
+
+import collections
+
+from sagemaker_containers import env, serializers
+
+TransformSpec = collections.namedtuple('TransformSpec', 'serialized_prediction accept')
+
+
+class BaseTransformer(object):
+    """A Transformer is a proxy between the worker and the framework transformation functions.
+
+    The BaseTransformer implements the following functions:
+
+        functions required by worker.run:
+
+            initialize, transform
+
+        functions required by the frameworks:
+
+            input_fn, output_fn, transform_fn
+
+    Examples:
+    >>>import os
+
+    >>>from sagemaker_containers import env, modules, transformers
+    >>>import miniml
+
+    >>>serving_env = env.ServingEnv()
+
+    >>>class MiniMlTransformer(transformers.BaseTransformer):
+    >>>     def predict_fn(self, model, data):
+    >>>         return model.predict(data)
+    >>>
+    >>>     def model_fn(self, model_dir):
+    >>>         return miniml.Model.load(os.path.join(model_dir, 'minimlmodel'))
+
+    >>>transformer = MiniMlTransformer()
+
+    >>>mod = modules.download_and_import(serving_env.module_dir, serving_env.module_name)
+
+    >>>transformer.load_user_fns(mod)
+    """
+    def __init__(self):
+        self._model = None
+        self._call = None
+
+    def model_fn(self, model_dir):
+        """Function responsible to load the model.
+            For more information about model loading https://github.com/aws/sagemaker-python-sdk#model-loading.
+
+        Args:
+            model_dir (str): The directory where model files are stored.
+
+        Returns:
+            (obj) the loaded model.
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def input_fn(input_data, content_type):
+        """Takes request data and de-serializes the data into an object for prediction.
+
+            When an InvokeEndpoint operation is made against an Endpoint running SageMaker model server,
+            the model server receives two pieces of information:
+
+                - The request Content-Type, for example "application/json"
+                - The request data content, which is at most 5 MB (5 * 1024 * 1024 bytes) in size.
+
+            The input_fn is responsible to take the request data and pre-process it before prediction.
+
+        Args:
+            input_data (obj): the request data content.
+            content_type (str): the request Content-Type.
+
+        Returns:
+            (obj): data ready for prediction.
+        """
+        return serializers.loads(input_data, content_type)
+
+    def predict_fn(self, model, data):
+        """Function responsible for model predictions.
+
+        Args:
+            model (obj): model loaded by model_fn
+            data: de-serializes data returned by input_fn
+
+         Returns:
+             (obj): data ready for prediction.
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def output_fn(prediction, accept):
+        """Function responsible to serialize the prediction for the response.
+
+        Args:
+            prediction (obj): prediction returned by predict_fn .
+            accept (str): accept content-type expected by the client.
+
+        Returns:
+            (TransformSpec): a namedtuple with the following args:
+
+                * Args:
+                    serialized_prediction: the serialized data to return
+                    accept: the content-type that the data was transformed to.
+        """
+        serialized_prediction = serializers.dumps(prediction, accept)
+        return TransformSpec(serialized_prediction, accept)
+
+    def transform_fn(self, model, input_data, content_type, accept):
+        """Function responsible for input processing, prediction, and output processing.
+
+        Args:
+            model (obj): model loaded by model_fn
+            input_data (obj): the request data content.
+            content_type (str): the request Content-Type.
+            accept: the content-type that the data was transformed to.
+
+        Returns:
+
+        """
+        data = self.input_fn(input_data=input_data, content_type=content_type)
+        prediction = self.predict_fn(model=model, data=data)
+        return self.output_fn(prediction=prediction, accept=accept)
+
+    def initialize(self):
+        """function is called when the worker starts the Flask application.
+
+        It does not have return type or arguments.
+        """
+        self._model = self.model_fn(model_dir=env.ServingEnv().model_dir)
+
+    def transform(self):
+        """Responsible to make predictions against the model.
+
+        Returns:
+            (sagemaker_containers.transformers.TransformSpec): named tuple with prediction data.
+        """
+        request_env = env.RequestEnv()
+
+        result = self.transform_fn(self._model, request_env.content, request_env.content_type, request_env.accept)
+
+        if not isinstance(result, TransformSpec):
+            # transforms tuple in TransformSpec for backwards compatibility
+            return TransformSpec(*result)
+
+        return result

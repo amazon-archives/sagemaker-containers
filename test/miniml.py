@@ -10,6 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import numpy as np
+
+from sagemaker_containers import env
 import test
 
 
@@ -27,3 +30,10 @@ class Model(object):
 
     def save(self, model_dir):
         test.write_json(self.parameters, model_dir)
+
+    @classmethod
+    def load(cls, model_dir):
+        return cls(**env.read_json(model_dir))
+
+    def predict(self, data):
+        return np.asarray(self.parameters['W']) * np.asarray(data)

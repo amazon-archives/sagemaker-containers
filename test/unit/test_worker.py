@@ -16,11 +16,11 @@ from mock import ANY, MagicMock, patch, PropertyMock
 import pytest
 from six.moves import range
 
-import sagemaker_containers as smc
+from sagemaker_containers import content_types, status_codes, transformers, worker
 
 
 def test_default_ping_fn():
-    assert smc.worker.default_healthcheck_fn().status_code == smc.status_codes.OK
+    assert worker.default_healthcheck_fn().status_code == status_codes.OK
 
 
 @pytest.fixture(name='flask')
@@ -36,14 +36,14 @@ def patch_flask():
 def test_run(flask, module_name, expected_name):
     transformer = MagicMock()
 
-    app = smc.worker.run(transform_fn=transformer.transform, module_name=module_name)
+    app = worker.run(transform_fn=transformer.transform, module_name=module_name)
 
     flask.assert_called_with(import_name=expected_name)
 
     rules = app.add_url_rule
     rules.assert_any_call(rule='/invocations', endpoint='invocations', view_func=ANY, methods=ANY)
 
-    rules.assert_called_with(rule='/ping', endpoint='ping', view_func=smc.worker.default_healthcheck_fn)
+    rules.assert_called_with(rule='/ping', endpoint='ping', view_func=worker.default_healthcheck_fn)
 
     assert rules.call_count == 2
 
@@ -51,8 +51,8 @@ def test_run(flask, module_name, expected_name):
 def test_run_with_initialize(flask):
     transformer = MagicMock()
 
-    app = smc.worker.run(transform_fn=transformer.transform, initialize_fn=transformer.initialize,
-                         module_name='test_module')
+    app = worker.run(transform_fn=transformer.transform, initialize_fn=transformer.initialize,
+                     module_name='test_module')
 
     flask.assert_called_with(import_name='test_module')
 
@@ -61,20 +61,20 @@ def test_run_with_initialize(flask):
     rules = app.add_url_rule
     rules.assert_any_call(rule='/invocations', endpoint='invocations', view_func=ANY, methods=ANY)
 
-    rules.assert_called_with(rule='/ping', endpoint='ping', view_func=smc.worker.default_healthcheck_fn)
+    rules.assert_called_with(rule='/ping', endpoint='ping', view_func=worker.default_healthcheck_fn)
 
     assert rules.call_count == 2
 
 
 def test_invocations():
     def transform_fn():
-        return smc.worker.TransformSpec(prediction='fake data', accept=smc.content_types.APPLICATION_JSON)
+        return transformers.TransformSpec(serialized_prediction='fake data', accept=content_types.JSON)
 
-    app = smc.worker.run(transform_fn=transform_fn, module_name='test_module')
+    app = worker.run(transform_fn=transform_fn, module_name='test_module')
 
-    with app.test_client() as worker:
+    with app.test_client() as client:
         for _ in range(9):
-            response = worker.post('/invocations')
-            assert response.status_code == smc.status_codes.OK
+            response = client.post('/invocations')
+            assert response.status_code == status_codes.OK
             assert response.get_data().decode('utf-8') == 'fake data'
-            assert response.mimetype == smc.content_types.APPLICATION_JSON
+            assert response.mimetype == content_types.JSON

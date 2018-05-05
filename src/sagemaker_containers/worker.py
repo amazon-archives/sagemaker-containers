@@ -12,8 +12,6 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-import collections
-
 from flask import Flask, Response
 
 from sagemaker_containers import env, status_codes
@@ -53,7 +51,7 @@ def run(transform_fn, initialize_fn=None, healthcheck_fn=None, module_name=None)
         transform_fn (function): responsible to make predictions against the model. Follows the signature:
 
             * Returns:
-                `sagemaker_containers.worker.TransformSpec`: named tuple with prediction data.
+                `sagemaker_containers.transformers.TransformSpec`: named tuple with prediction data.
 
 
         initialize_fn (function, optional): this function is called when the Flask application starts.
@@ -79,7 +77,7 @@ def run(transform_fn, initialize_fn=None, healthcheck_fn=None, module_name=None)
     def invocations_fn():
         transform_spec = transform_fn()
 
-        return Response(response=transform_spec.prediction,
+        return Response(response=transform_spec.serialized_prediction,
                         status=status_codes.OK,
                         mimetype=transform_spec.accept)
 
@@ -87,6 +85,3 @@ def run(transform_fn, initialize_fn=None, healthcheck_fn=None, module_name=None)
     app.add_url_rule(rule='/ping', endpoint='ping', view_func=healthcheck_fn or default_healthcheck_fn)
 
     return app
-
-
-TransformSpec = collections.namedtuple('TransformSpec', 'prediction accept')
