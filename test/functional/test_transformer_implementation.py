@@ -29,7 +29,7 @@ class MiniMlTransformer(transformers.BaseTransformer):
         return miniml.Model.load(os.path.join(model_dir, 'minimlmodel'))
 
 
-def test_prediction_without_user_module():
+def test_transformer_implementation():
     test.create_resource_config()
     test.create_input_data_config()
     test.create_hyperparameters_config({'sagemaker_program': 'user_script.py'})
@@ -41,23 +41,23 @@ def test_prediction_without_user_module():
     transformer.initialize()
 
     with worker.run(transformer.transform, transformer.initialize, module_name='miniml').test_client() as client:
-        payload = [.6, 9, 42.]
+        payload = [6, 9, 42.]
         response = post(client, payload, content_types.JSON)
 
         assert response.status_code == status_codes.OK
-        assert response.get_data().decode('utf-8') == '[3.5999999999999996, 81.0, 1764.0]'
+        assert response.get_data().decode('utf-8') == '[36.0, 81.0, 1764.0]'
 
         response = post(client, payload, content_types.CSV)
 
         assert response.status_code == status_codes.OK
-        assert response.get_data().decode('utf-8') == '3.6000001430511475\n81.0\n1764.0\n'
+        assert response.get_data().decode('utf-8') == '36.0\n81.0\n1764.0\n'
 
         response = post(client, payload, content_types.NPY)
 
         assert response.status_code == status_codes.OK
         response_data = serializers.loads(response.get_data(), content_types.NPY)
 
-        np.testing.assert_array_almost_equal(response_data, np.asarray([3.6, 81., 1764.]))
+        np.testing.assert_array_almost_equal(response_data, np.asarray([36., 81., 1764.]))
 
 
 def post(client, payload, content_type):

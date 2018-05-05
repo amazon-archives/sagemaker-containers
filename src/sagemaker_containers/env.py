@@ -667,16 +667,20 @@ class ServingEnv(Env):
         return self._model_server_workers
 
 
-class RequestEnv(Request, mapping.MappingMixin):
+class Request(Request, mapping.MappingMixin):
     """The Request object used to read request data.
 
     Example:
 
-    POST /INVOCATIONS {payload: '42', Content-Type: JSON, Accept: CSV}
+    POST /invocations
+    Content-Type: 'application/json'.
+    Accept: 'application/json'.
+
+    42
 
     >>> from sagemaker_containers import env
 
-    >>> request = env.RequestEnv()
+    >>> request = env.Request()
     >>> content = request.content
 
     >>> print(str(request))
@@ -687,7 +691,7 @@ class RequestEnv(Request, mapping.MappingMixin):
     """
 
     def __init__(self, environ=None):
-        super(RequestEnv, self).__init__(environ=environ or request.environ)
+        super(Request, self).__init__(environ=environ or request.environ)
 
     @property
     def content_type(self):  # type () -> str

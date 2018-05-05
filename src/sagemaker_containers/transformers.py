@@ -36,18 +36,18 @@ class BaseTransformer(object):
     >>>import os
 
     >>>from sagemaker_containers import env, modules, transformers
-    >>>import miniml
+    >>>import Keras
 
     >>>serving_env = env.ServingEnv()
 
-    >>>class MiniMlTransformer(transformers.BaseTransformer):
+    >>>class KerasTransformer(transformers.BaseTransformer):
     >>>     def predict_fn(self, model, data):
     >>>         return model.predict(data)
     >>>
     >>>     def model_fn(self, model_dir):
-    >>>         return miniml.Model.load(os.path.join(model_dir, 'minimlmodel'))
+    >>>         return Keras.models.load_model(os.path.join(model_dir, 'minimlmodel'))
 
-    >>>transformer = MiniMlTransformer()
+    >>>transformer = KerasTransformer()
 
     >>>mod = modules.download_and_import(serving_env.module_dir, serving_env.module_name)
 
@@ -130,28 +130,38 @@ class BaseTransformer(object):
             accept: the content-type that the data was transformed to.
 
         Returns:
+            (TransformSpec): a namedtuple with the following args:
 
+                * Args:
+                    serialized_prediction: the serialized data to return
+                    accept: the content-type that the data was transformed to.
         """
         data = self.input_fn(input_data=input_data, content_type=content_type)
         prediction = self.predict_fn(model=model, data=data)
         return self.output_fn(prediction=prediction, accept=accept)
 
-    def initialize(self):
-        """function is called when the worker starts the Flask application.
+    def initialize(self):  # type: () -> None
+        """Execute any initialization necessary to starting making predictions with the Transformer.
+
+        The default implementation is used to load the model.
+
+        This function is called by sagemaker_containers.worker.run, before starting the Flask application.
+        The gunicorn server forks multiple workers, executing multiple Flask applications in parallel.
+        This function will be called once per each worker.
 
         It does not have return type or arguments.
         """
         self._model = self.model_fn(model_dir=env.ServingEnv().model_dir)
 
-    def transform(self):
+    def transform(self):  # type: () -> TransformSpec
         """Responsible to make predictions against the model.
 
         Returns:
             (sagemaker_containers.transformers.TransformSpec): named tuple with prediction data.
         """
-        request_env = env.RequestEnv()
+        request = env.Request()
 
-        result = self.transform_fn(self._model, request_env.content, request_env.content_type, request_env.accept)
+        result = self.transform_fn(self._model, request.content, request.content_type, request.accept)
 
         if not isinstance(result, TransformSpec):
             # transforms tuple in TransformSpec for backwards compatibility

@@ -173,13 +173,13 @@ def test_serving_env(serving_env):
 
 
 def test_request():
-    request = test.request_env(data='42')
+    request = test.request(data='42')
 
     assert request.content_type == content_types.JSON
     assert request.accept == content_types.JSON
     assert request.content == '42'
 
-    request = test.request_env(data=serializers.dumps([6, 9.3], content_types.NPY),
+    request = test.request(data=serializers.dumps([6, 9.3], content_types.NPY),
                                content_type=content_types.NPY,
                                accept=content_types.CSV)
 
@@ -191,10 +191,10 @@ def test_request():
 
 
 def test_request_content_type():
-    response = test.request_env(content_type=content_types.CSV)
+    response = test.request(content_type=content_types.CSV)
     assert response.content_type == content_types.CSV
 
-    response = test.request_env(headers={'ContentType': content_types.NPY})
+    response = test.request(headers={'ContentType': content_types.NPY})
     assert response.content_type == content_types.NPY
 
 

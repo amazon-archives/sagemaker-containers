@@ -94,7 +94,7 @@ class Json(object):
 
 
 class Csv(object):
-    """JSON serializer"""
+    """CSV serializer"""
 
     @staticmethod
     def loads(string):  # type: (str) -> object

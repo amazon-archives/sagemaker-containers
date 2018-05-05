@@ -101,7 +101,7 @@ def create_hyperparameters_config(hyperparameters, submit_dir=None, sagemaker_hy
 File = collections.namedtuple('File', ['name', 'content'])  # type: (str, str or list) -> File
 
 
-def request_env(path='/', base_url=None, query_string=None, accept=None,
+def request(path='/', base_url=None, query_string=None, accept=None,
                 method='GET', input_stream=None, content_type=None,
                 content_length=None, headers=None, data=None, charset='utf-8', mimetype=None):
     headers = headers or {}
@@ -114,7 +114,7 @@ def request_env(path='/', base_url=None, query_string=None, accept=None,
         content_type=content_type, content_length=content_length, headers=headers, data=data, charset=charset,
         mimetype=mimetype)
 
-    return env.RequestEnv(environ_builder.get_environ())
+    return env.Request(environ_builder.get_environ())
 
 
 def environ(path='/', base_url=None, query_string=None, accept=None, method='GET', input_stream=None,

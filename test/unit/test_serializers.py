@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from mock import patch
 import numpy as np
+import pytest
 from six import b, StringIO
 
 from sagemaker_containers import content_types, serializers
@@ -68,35 +69,25 @@ def test_csv_dumps(string_io, savetxt):
     savetxt.assert_called_with(string_io(), 42, delimiter=',', fmt='%s')
 
 
-@patch('sagemaker_containers.serializers.npy.dumps', autospec=True)
-@patch('sagemaker_containers.serializers.csv.dumps', autospec=True)
-@patch('sagemaker_containers.serializers.json.dumps', autospec=True)
-def test_dumps(json_dumps, csv_dumps, npy_dumps):
-    serializers.dumps(42, content_types.JSON)
+@pytest.mark.parametrize('target, content_type', [
+    ('sagemaker_containers.serializers.json.dumps', content_types.JSON),
+    ('sagemaker_containers.serializers.csv.dumps', content_types.CSV),
+    ('sagemaker_containers.serializers.npy.dumps', content_types.NPY)
+])
+def test_dumps(target, content_type):
+    with patch(target) as serializer:
+        serializers.dumps(42, content_type)
 
-    json_dumps.assert_called_once_with(42)
-
-    serializers.dumps(42, content_types.CSV)
-
-    csv_dumps.assert_called_once_with(42)
-
-    serializers.dumps(42, content_types.NPY)
-
-    npy_dumps.assert_called_once_with(42)
+        serializer.assert_called_once_with(42)
 
 
-@patch('sagemaker_containers.serializers.npy.loads', autospec=True)
-@patch('sagemaker_containers.serializers.csv.loads', autospec=True)
-@patch('sagemaker_containers.serializers.json.loads', autospec=True)
-def test_loads(json_loads, csv_loads, npy_loads):
-    serializers.loads(42, content_types.JSON)
+@pytest.mark.parametrize('target, content_type', [
+    ('sagemaker_containers.serializers.json.loads', content_types.JSON),
+    ('sagemaker_containers.serializers.csv.loads', content_types.CSV),
+    ('sagemaker_containers.serializers.npy.loads', content_types.NPY)
+])
+def test_dumps(target, content_type):
+    with patch(target) as serializer:
+        serializers.loads(42, content_type)
 
-    json_loads.assert_called_once_with(42)
-
-    serializers.loads(42, content_types.CSV)
-
-    csv_loads.assert_called_once_with(42)
-
-    serializers.loads(42, content_types.NPY)
-
-    npy_loads.assert_called_once_with(42)
+        serializer.assert_called_once_with(42)

@@ -64,10 +64,10 @@ def test_initialize():
     assert transformer._model == {'my-model': env.ServingEnv().model_dir}
 
 
-request = test.request_env(data='42')
+request = test.request(data='42')
 
 
-@patch('sagemaker_containers.env.RequestEnv', lambda: request)
+@patch('sagemaker_containers.env.Request', lambda: request)
 def test_transform_backwards_compatibility():
     def new_transform(model, content, content_type, accept):
         return transformers.TransformSpec(serialized_prediction=[content], accept=accept)
@@ -79,7 +79,7 @@ def test_transform_backwards_compatibility():
     assert result == transformers.TransformSpec(serialized_prediction=['42'], accept='application/json')
 
 
-@patch('sagemaker_containers.env.RequestEnv', lambda: request)
+@patch('sagemaker_containers.env.Request', lambda: request)
 def test_transform():
     def new_transform(model, content, content_type, accept):
         return ['42'], 'application/json'
