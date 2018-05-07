@@ -54,7 +54,7 @@ def write_json(obj, path):  # type: (object, str) -> None
         path (str): Path to JSON file
     """
     with open(path, 'w') as f:
-        json.dump(obj, f, )
+        json.dump(obj, f)
 
 
 def prepare(user_module, hyperparameters, channels, current_host='algo-1', hosts=None):
