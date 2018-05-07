@@ -12,7 +12,9 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-from sagemaker_containers import encoder, env, worker
+import textwrap
+
+from sagemaker_containers import encoders, env, worker
 
 
 class BaseTransformer(object):
@@ -64,7 +66,10 @@ class BaseTransformer(object):
         Returns:
             (obj) the loaded model.
         """
-        raise NotImplementedError()
+        raise NotImplementedError(textwrap.dedent("""
+        Please provide a model_fn implementation.
+        See documentation for model_fn at https://github.com/aws/sagemaker-python-sdk
+        """))
 
     @staticmethod
     def input_fn(input_data, content_type):
@@ -85,7 +90,7 @@ class BaseTransformer(object):
         Returns:
             (obj): data ready for prediction.
         """
-        return encoder.DefaultDecoder().decode(input_data, content_type)
+        return encoders.default_decoder.decode(input_data, content_type)
 
     def predict_fn(self, model, data):
         """Function responsible for model predictions.
@@ -108,14 +113,13 @@ class BaseTransformer(object):
             accept (str): accept content-type expected by the client.
 
         Returns:
-            (TransformSpec): a namedtuple with the following args:
+            (worker.Response): a Flask response object with the following args:
 
                 * Args:
                     response: the serialized data to return
                     accept: the content-type that the data was transformed to.
         """
-        default_encoder = encoder.DefaultEncoder()
-        return worker.Response(default_encoder.encode(prediction, accept), accept)
+        return worker.Response(encoders.default_encoder.encode(prediction, accept), accept)
 
     def transform_fn(self, model, input_data, content_type, accept):
         """Function responsible for input processing, prediction, and output processing.
@@ -127,7 +131,7 @@ class BaseTransformer(object):
             accept: the content-type that the data was transformed to.
 
         Returns:
-            (TransformSpec): a namedtuple with the following args:
+            (worker.Response): a Flask response object with the following args:
 
                 * Args:
                     response: the serialized data to return
@@ -154,7 +158,11 @@ class BaseTransformer(object):
         """Responsible to make predictions against the model.
 
         Returns:
-            (sagemaker_containers.transformers.TransformSpec): named tuple with prediction data.
+            (worker.Response): a Flask response object with the following args:
+
+                * Args:
+                    response: the serialized data to return
+                    accept: the content-type that the data was transformed to.
         """
         request = worker.Request()
 

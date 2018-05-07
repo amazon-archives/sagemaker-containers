@@ -28,7 +28,7 @@ import werkzeug.test as werkzeug_test
 os.environ['BASE_PATH'] = os.path.join(tempfile.mkdtemp(), 'opt', 'ml')
 DEFAULT_REGION = 'us-west-2'
 
-from sagemaker_containers import env, worker  # noqa ignore=E402 module level import not at top of file
+from sagemaker_containers import encoders, env, worker  # noqa ignore=E402 module level import not at top of file
 
 DEFAULT_CONFIG = dict(ContentType="application/x-numpy", TrainingInputMode="File",
                       S3DistributionType="FullyReplicated", RecordWrapperType="None")
@@ -54,7 +54,7 @@ def write_json(obj, path):  # type: (object, str) -> None
         path (str): Path to JSON file
     """
     with open(path, 'w') as f:
-        json.dump(obj, f)
+        json.dump(obj, f, )
 
 
 def prepare(user_module, hyperparameters, channels, current_host='algo-1', hosts=None):

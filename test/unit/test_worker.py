@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from six.moves import range
 
-from sagemaker_containers import content_types, encoder, status_codes, worker
+from sagemaker_containers import content_types, encoders, status_codes, worker
 import test
 
 
@@ -84,7 +84,7 @@ def test_request():
     assert request.accept == content_types.JSON
     assert request.content == '42'
 
-    default_encoder = encoder.DefaultEncoder()
+    default_encoder = encoders.DefaultEncoder()
     request = test.request(data=default_encoder.encode([6, 9.3], content_types.NPY),
                            content_type=content_types.NPY,
                            accept=content_types.CSV)
@@ -92,7 +92,7 @@ def test_request():
     assert request.content_type == content_types.NPY
     assert request.accept == content_types.CSV
 
-    result = encoder.DefaultDecoder().decode(request.content, content_types.NPY)
+    result = encoders.DefaultDecoder().decode(request.content, content_types.NPY)
     np.testing.assert_array_equal(result, [6, 9.3])
 
 

@@ -120,13 +120,15 @@ class CsvEncoder(object):
         return stream.getvalue()
 
 
-DEFAULT_ENCODERS = [JsonEncoder(), CsvEncoder(), NpyEncoder()]
-DEFAULT_DECODERS = [JsonDecoder(), CsvDecoder(), NpyDecoder()]
+DEFAULT_ENCODERS = frozenset([JsonEncoder(), CsvEncoder(), NpyEncoder()])
+DEFAULT_DECODERS = frozenset([JsonDecoder(), CsvDecoder(), NpyDecoder()])
 
 
 class DefaultEncoder(object):
-    def __init__(self, encoders=DEFAULT_ENCODERS):
-        self._encoders = encoders
+    def __init__(self, encoders=None):
+        encoders = encoders or DEFAULT_ENCODERS
+
+        self._encoders_map = {encoder.content_type: encoder for encoder in encoders}
 
     def encode(self, obj, content_type):
         """Encode an object to a one of the default content types.
@@ -138,15 +140,20 @@ class DefaultEncoder(object):
         Returns:
             object: encoded object.
         """
-        for encoder in self._encoders:
-            if content_type == encoder.content_type:
-                return encoder.encode(obj)
-        raise UnsupportedFormatError(content_type)
+        try:
+            return self._encoders_map[content_type].encode(obj)
+        except KeyError:
+            raise UnsupportedFormatError(content_type)
+
+
+default_encoder = DefaultEncoder()
 
 
 class DefaultDecoder(object):
-    def __init__(self, decoders=DEFAULT_DECODERS):
-        self._decoders = decoders
+    def __init__(self, decoders=None):
+        decoders = decoders or DEFAULT_DECODERS
+
+        self._decoders_map = {decoder.content_type: decoder for decoder in decoders}
 
     def decode(self, obj, content_type):
         """Decode an object to a one of the default content types.
@@ -158,10 +165,13 @@ class DefaultDecoder(object):
         Returns:
             object: decoded object.
         """
-        for decoder in self._decoders:
-            if content_type == decoder.content_type:
-                return decoder.decode(obj)
-        raise UnsupportedFormatError(content_type)
+        try:
+            return self._decoders_map[content_type].decode(obj)
+        except KeyError:
+            raise UnsupportedFormatError(content_type)
+
+
+default_decoder = DefaultDecoder()
 
 
 class UnsupportedFormatError(Exception):

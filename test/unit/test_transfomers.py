@@ -24,14 +24,14 @@ class TestTransformer(transformers.BaseTransformer):
 transformer = TestTransformer()
 
 
-@patch('sagemaker_containers.encoder.DefaultDecoder.decode')
+@patch('sagemaker_containers.encoders.DefaultDecoder.decode')
 def test_transformer_input_fn(loads):
     assert transformer.input_fn(42, content_types.JSON)
 
     loads.assert_called_with(42, content_types.JSON)
 
 
-@patch('sagemaker_containers.encoder.DefaultEncoder.encode', lambda self, prediction, accept: prediction ** 2)
+@patch('sagemaker_containers.encoders.DefaultEncoder.encode', lambda self, prediction, accept: prediction ** 2)
 def test_transformer_output_fn():
     response = transformer.output_fn(2, content_types.CSV)
     assert response.response == 4

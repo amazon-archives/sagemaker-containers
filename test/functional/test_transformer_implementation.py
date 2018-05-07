@@ -16,17 +16,17 @@ import os
 
 import numpy as np
 
-from sagemaker_containers import content_types, encoder, env, status_codes, transformers, worker
+from sagemaker_containers import content_types, encoders, env, status_codes, transformers, worker
 import test
-from test import miniml
+from test import fake_ml_framework
 
 
-class MiniMlTransformer(transformers.BaseTransformer):
+class FakeMLTransformer(transformers.BaseTransformer):
     def predict_fn(self, model, data):
         return model.predict(data)
 
     def model_fn(self, model_dir):
-        return miniml.Model.load(os.path.join(model_dir, 'minimlmodel'))
+        return fake_ml_framework.Model.load(os.path.join(model_dir, 'fake_ml_model'))
 
 
 def test_transformer_implementation():
@@ -34,13 +34,16 @@ def test_transformer_implementation():
     test.create_input_data_config()
     test.create_hyperparameters_config({'sagemaker_program': 'user_script.py'})
 
-    model_path = os.path.join(env.TrainingEnv().model_dir, 'minimlmodel')
-    miniml.Model(W=[6, 9, 42]).save(model_path)
+    model_path = os.path.join(env.TrainingEnv().model_dir, 'fake_ml_model')
+    fake_ml_framework.Model(weights=[6, 9, 42]).save(model_path)
 
-    transformer = MiniMlTransformer()
+    transformer = FakeMLTransformer()
     transformer.initialize()
 
-    with worker.Worker(transformer.transform, transformer.initialize, module_name='miniml').test_client() as client:
+    with worker.Worker(transformer.transform,
+                       transformer.initialize,
+                       module_name='fake_ml_model').test_client() as client:
+
         payload = [6, 9, 42.]
         response = post(client, payload, content_types.NPY, content_types.JSON)
 
@@ -56,11 +59,11 @@ def test_transformer_implementation():
         response = post(client, payload, content_types.CSV, content_types.NPY)
 
         assert response.status_code == status_codes.OK
-        response_data = encoder.NpyDecoder().decode(response.get_data())
+        response_data = encoders.NpyDecoder().decode(response.get_data())
 
         np.testing.assert_array_almost_equal(response_data, np.asarray([36., 81., 1764.]))
 
 
 def post(client, payload, content_type, accept):
     return client.post(path='/invocations', headers={'accept': accept},
-                       data=encoder.DefaultEncoder().encode(payload, content_type), content_type=content_type)
+                       data=encoders.DefaultEncoder().encode(payload, content_type), content_type=content_type)
