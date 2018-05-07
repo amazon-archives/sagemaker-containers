@@ -12,11 +12,7 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-import collections
-
-from sagemaker_containers import env, serializers
-
-TransformSpec = collections.namedtuple('TransformSpec', 'serialized_prediction accept')
+from sagemaker_containers import encoder, env, worker
 
 
 class BaseTransformer(object):
@@ -24,7 +20,7 @@ class BaseTransformer(object):
 
     The BaseTransformer implements the following functions:
 
-        functions required by worker.run:
+        functions required by worker.Worker:
 
             initialize, transform
 
@@ -53,6 +49,7 @@ class BaseTransformer(object):
 
     >>>transformer.load_user_fns(mod)
     """
+
     def __init__(self):
         self._model = None
         self._call = None
@@ -88,7 +85,7 @@ class BaseTransformer(object):
         Returns:
             (obj): data ready for prediction.
         """
-        return serializers.loads(input_data, content_type)
+        return encoder.DefaultDecoder().decode(input_data, content_type)
 
     def predict_fn(self, model, data):
         """Function responsible for model predictions.
@@ -114,11 +111,11 @@ class BaseTransformer(object):
             (TransformSpec): a namedtuple with the following args:
 
                 * Args:
-                    serialized_prediction: the serialized data to return
+                    response: the serialized data to return
                     accept: the content-type that the data was transformed to.
         """
-        serialized_prediction = serializers.dumps(prediction, accept)
-        return TransformSpec(serialized_prediction, accept)
+        default_encoder = encoder.DefaultEncoder()
+        return worker.Response(default_encoder.encode(prediction, accept), accept)
 
     def transform_fn(self, model, input_data, content_type, accept):
         """Function responsible for input processing, prediction, and output processing.
@@ -133,7 +130,7 @@ class BaseTransformer(object):
             (TransformSpec): a namedtuple with the following args:
 
                 * Args:
-                    serialized_prediction: the serialized data to return
+                    response: the serialized data to return
                     accept: the content-type that the data was transformed to.
         """
         data = self.input_fn(input_data=input_data, content_type=content_type)
@@ -141,11 +138,11 @@ class BaseTransformer(object):
         return self.output_fn(prediction=prediction, accept=accept)
 
     def initialize(self):  # type: () -> None
-        """Execute any initialization necessary to starting making predictions with the Transformer.
+        """Execute any initialization necessary to start making predictions with the Transformer.
 
         The default implementation is used to load the model.
 
-        This function is called by sagemaker_containers.worker.run, before starting the Flask application.
+        This function is called by sagemaker_containers.worker.Worker, before starting the Flask application.
         The gunicorn server forks multiple workers, executing multiple Flask applications in parallel.
         This function will be called once per each worker.
 
@@ -153,18 +150,18 @@ class BaseTransformer(object):
         """
         self._model = self.model_fn(model_dir=env.ServingEnv().model_dir)
 
-    def transform(self):  # type: () -> TransformSpec
+    def transform(self):  # type: () -> worker.Response
         """Responsible to make predictions against the model.
 
         Returns:
             (sagemaker_containers.transformers.TransformSpec): named tuple with prediction data.
         """
-        request = env.Request()
+        request = worker.Request()
 
         result = self.transform_fn(self._model, request.content, request.content_type, request.accept)
 
-        if not isinstance(result, TransformSpec):
-            # transforms tuple in TransformSpec for backwards compatibility
-            return TransformSpec(*result)
+        if not isinstance(result, worker.Response):
+            # transforms tuple in Response for backwards compatibility
+            return worker.Response(response=result[0], accept=result[1])
 
         return result

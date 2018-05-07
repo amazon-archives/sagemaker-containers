@@ -21,18 +21,9 @@ import os
 import shlex
 import shutil
 import subprocess
-import sys
 import tempfile
 
-from flask import Request, request
-import six
-
-from sagemaker_containers import content_types, mapping
-
-if six.PY2:
-    JSONDecodeError = None
-elif six.PY3:
-    from json.decoder import JSONDecodeError
+from sagemaker_containers import mapping
 
 logger = logging.getLogger(__name__)
 
@@ -110,15 +101,9 @@ def read_hyperparameters():  # type: () -> dict
 
     try:
         return {k: json.loads(v) for k, v in hyperparameters.items()}
-    except (JSONDecodeError, TypeError):  # pragma: py2 no cover
+    except (ValueError, TypeError):  # pragma: py2 no cover
         logger.warning("Failed to parse hyperparameters' values to Json. Returning the hyperparameters instead:")
         return hyperparameters
-    except ValueError as e:  # pragma: py3 no cover
-        if str(e) == 'No JSON object could be decoded':
-            logger.warning("Failed to parse hyperparameters' values to Json. Returning the hyperparameters instead:")
-            logging.warning(hyperparameters)
-            return hyperparameters
-        six.reraise(*sys.exc_info())
 
 
 def read_resource_config():  # type: () -> dict
@@ -665,68 +650,6 @@ class ServingEnv(Env):
         """Returns:
             (int): Number of worker processes the model server will use"""
         return self._model_server_workers
-
-
-class Request(Request, mapping.MappingMixin):
-    """The Request object used to read request data.
-
-    Example:
-
-    POST /invocations
-    Content-Type: 'application/json'.
-    Accept: 'application/json'.
-
-    42
-
-    >>> from sagemaker_containers import env
-
-    >>> request = env.Request()
-    >>> content = request.content
-
-    >>> print(str(request))
-
-    {'content_length': '2', 'content_type': 'application/json', 'content': '42', 'accept': 'application/json', ... }
-
-
-    """
-
-    def __init__(self, environ=None):
-        super(Request, self).__init__(environ=environ or request.environ)
-
-    @property
-    def content_type(self):  # type () -> str
-        """The request's content-type.
-
-        Returns:
-            (str): The value, if any, of the header 'ContentType' (used by some AWS services) and 'Content-Type'.
-                    Otherwise, returns 'Application/Json' as default.
-        """
-        # todo(mvsusp): consider a better default content-type
-        return self.headers.get('ContentType') or self.headers.get('Content-Type') or content_types.JSON
-
-    @property
-    def accept(self):  # type: () -> str
-        """The content-type for the response to the client.
-
-        Returns:
-            (str): The value of the header 'Accept' or 'Application/Json' as default
-        """
-        return self.headers.get('Accept', content_types.JSON)
-
-    @property
-    def content(self):  # type: () -> object
-        """The request incoming data.
-
-        It automatic decodes from utf-8
-
-        Returns:
-            (obj): incoming data
-        """
-        data = self.get_data()
-        try:
-            return data.decode('utf-8')
-        except (JSONDecodeError, UnicodeDecodeError):
-            return data
 
 
 @contextlib.contextmanager

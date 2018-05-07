@@ -16,11 +16,10 @@ import logging
 import os
 
 from mock import Mock, patch
-import numpy as np
 import pytest
 import six
 
-from sagemaker_containers import content_types, env, serializers
+from sagemaker_containers import env
 import test
 
 RESOURCE_CONFIG = dict(current_host='algo-1', hosts=['algo-1', 'algo-2', 'algo-3'])
@@ -76,9 +75,7 @@ def test_read_key_serialized_hyperparameters():
 def test_read_exception(loads):
     loads.side_effect = ValueError('Unable to read.')
 
-    with pytest.raises(ValueError) as e:
-        env.read_hyperparameters()
-    assert 'Unable to read.' in str(e)
+    assert env.read_hyperparameters() == {'a': 1}
 
 
 def test_resource_config():
@@ -170,32 +167,6 @@ def test_serving_env(serving_env):
     assert serving_env.module_name == 'main'
     assert serving_env.enable_metrics
     assert serving_env.framework_module == ' '
-
-
-def test_request():
-    request = test.request(data='42')
-
-    assert request.content_type == content_types.JSON
-    assert request.accept == content_types.JSON
-    assert request.content == '42'
-
-    request = test.request(data=serializers.dumps([6, 9.3], content_types.NPY),
-                               content_type=content_types.NPY,
-                               accept=content_types.CSV)
-
-    assert request.content_type == content_types.NPY
-    assert request.accept == content_types.CSV
-
-    result = serializers.loads(request.content, content_types.NPY)
-    np.testing.assert_array_equal(result, [6, 9.3])
-
-
-def test_request_content_type():
-    response = test.request(content_type=content_types.CSV)
-    assert response.content_type == content_types.CSV
-
-    response = test.request(headers={'ContentType': content_types.NPY})
-    assert response.content_type == content_types.NPY
 
 
 def test_train_env_properties(training_env):

@@ -28,7 +28,7 @@ import werkzeug.test as werkzeug_test
 os.environ['BASE_PATH'] = os.path.join(tempfile.mkdtemp(), 'opt', 'ml')
 DEFAULT_REGION = 'us-west-2'
 
-from sagemaker_containers import env  # noqa ignore=E402 module level import not at top of file
+from sagemaker_containers import env, worker  # noqa ignore=E402 module level import not at top of file
 
 DEFAULT_CONFIG = dict(ContentType="application/x-numpy", TrainingInputMode="File",
                       S3DistributionType="FullyReplicated", RecordWrapperType="None")
@@ -101,9 +101,9 @@ def create_hyperparameters_config(hyperparameters, submit_dir=None, sagemaker_hy
 File = collections.namedtuple('File', ['name', 'content'])  # type: (str, str or list) -> File
 
 
-def request(path='/', base_url=None, query_string=None, accept=None,
-                method='GET', input_stream=None, content_type=None,
-                content_length=None, headers=None, data=None, charset='utf-8', mimetype=None):
+def request(path='/', base_url=None, query_string=None, accept=None, method='GET', input_stream=None,
+            content_type=None, content_length=None, headers=None, data=None, charset='utf-8', mimetype=None):
+
     headers = headers or {}
 
     if accept:
@@ -114,7 +114,7 @@ def request(path='/', base_url=None, query_string=None, accept=None,
         content_type=content_type, content_length=content_length, headers=headers, data=data, charset=charset,
         mimetype=mimetype)
 
-    return env.Request(environ_builder.get_environ())
+    return worker.Request(environ_builder.get_environ())
 
 
 def environ(path='/', base_url=None, query_string=None, accept=None, method='GET', input_stream=None,

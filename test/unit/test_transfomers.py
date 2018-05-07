@@ -13,7 +13,7 @@
 from mock import patch
 import pytest
 
-from sagemaker_containers import content_types, env, transformers
+from sagemaker_containers import content_types, env, transformers, worker
 import test
 
 
@@ -24,16 +24,18 @@ class TestTransformer(transformers.BaseTransformer):
 transformer = TestTransformer()
 
 
-@patch('sagemaker_containers.serializers.loads')
+@patch('sagemaker_containers.encoder.DefaultDecoder.decode')
 def test_transformer_input_fn(loads):
     assert transformer.input_fn(42, content_types.JSON)
 
     loads.assert_called_with(42, content_types.JSON)
 
 
-@patch('sagemaker_containers.serializers.dumps', lambda prediction, accept: prediction ** 2)
+@patch('sagemaker_containers.encoder.DefaultEncoder.encode', lambda self, prediction, accept: prediction ** 2)
 def test_transformer_output_fn():
-    assert transformer.output_fn(2, content_types.CSV) == transformers.TransformSpec(4, content_types.CSV)
+    response = transformer.output_fn(2, content_types.CSV)
+    assert response.response == 4
+    assert response.headers['accept'] == content_types.CSV
 
 
 @patch.object(transformer, 'output_fn')
@@ -67,25 +69,25 @@ def test_initialize():
 request = test.request(data='42')
 
 
-@patch('sagemaker_containers.env.Request', lambda: request)
+@patch('sagemaker_containers.worker.Request', lambda: request)
 def test_transform_backwards_compatibility():
     def new_transform(model, content, content_type, accept):
-        return transformers.TransformSpec(serialized_prediction=[content], accept=accept)
+        return worker.Response(response=[content], accept=accept)
 
     with patch.object(transformer, 'transform_fn', new_transform):
-
         result = transformer.transform()
 
-    assert result == transformers.TransformSpec(serialized_prediction=['42'], accept='application/json')
+        assert result.response == ['42']
+        assert result.headers['accept'] == 'application/json'
 
 
-@patch('sagemaker_containers.env.Request', lambda: request)
+@patch('sagemaker_containers.worker.Request', lambda: request)
 def test_transform():
     def new_transform(model, content, content_type, accept):
         return ['42'], 'application/json'
 
     with patch.object(transformer, 'transform_fn', new_transform):
-
         result = transformer.transform()
 
-        assert result == transformers.TransformSpec(serialized_prediction=['42'], accept='application/json')
+        assert result.response == ['42']
+        assert result.headers['accept'] == 'application/json'

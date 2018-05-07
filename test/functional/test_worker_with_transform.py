@@ -18,7 +18,7 @@ from mock import patch, PropertyMock
 import pytest
 from six.moves import range
 
-from sagemaker_containers import content_types, status_codes, transformers, worker
+from sagemaker_containers import content_types, status_codes, worker
 
 
 class Transformer(object):
@@ -30,15 +30,15 @@ class Transformer(object):
 
     def transform(self):
         self.calls['transform'] += 1
-        return transformers.TransformSpec(json.dumps(self.calls), content_types.JSON)
+        return worker.Response(json.dumps(self.calls), content_types.JSON)
 
 
 def test_worker_with_initialize():
     transformer = Transformer()
 
-    with worker.run(transform_fn=transformer.transform,
-                    initialize_fn=transformer.initialize,
-                    module_name='worker_with_initialize').test_client() as client:
+    with worker.Worker(transform_fn=transformer.transform,
+                       initialize_fn=transformer.initialize,
+                       module_name='worker_with_initialize').test_client() as client:
         assert client.application.import_name == 'worker_with_initialize'
 
         assert client.get('/ping').status_code == status_codes.OK
@@ -57,7 +57,8 @@ def test_worker_with_initialize():
 def test_worker(module_name, expected_name):
     transformer = Transformer()
 
-    with worker.run(transform_fn=transformer.transform, module_name=module_name).test_client() as client:
+    with worker.Worker(transform_fn=transformer.transform,
+                       module_name=module_name).test_client() as client:
         assert client.application.import_name == expected_name
 
         assert client.get('/ping').status_code == status_codes.OK
@@ -77,9 +78,9 @@ def test_worker_with_custom_ping():
     def custom_ping():
         return 'ping', status_codes.ACCEPTED
 
-    with worker.run(transform_fn=transformer.transform,
-                    healthcheck_fn=custom_ping,
-                    module_name='custom_ping').test_client() as client:
+    with worker.Worker(transform_fn=transformer.transform,
+                       healthcheck_fn=custom_ping,
+                       module_name='custom_ping').test_client() as client:
         response = client.get('/ping')
         assert response.status_code == status_codes.ACCEPTED
         assert response.get_data().decode('utf-8') == 'ping'

@@ -17,23 +17,27 @@ import test
 
 
 class Model(object):
-    x = None
-    y = None
+    def __init__(self, weights=None, bias=1, loss=None, optimizer=None):
+        self.epochs = None
+        self.optimizer = optimizer
+        self.loss = loss
+        self.weights = weights
+        self.bias = bias
+        self.batch_size = None
 
-    def __init__(self, **kwargs):
-        self.parameters = kwargs
-
-    def fit(self, x, y, **kwargs):
-        self.parameters.update(kwargs)
-        self.parameters['x'] = x.tolist()
-        self.parameters['y'] = y.tolist()
+    def fit(self, x, y, epochs=None, batch_size=None):
+        self.weights = y / x + self.bias
+        self.epochs = epochs
+        self.batch_size = batch_size
 
     def save(self, model_dir):
-        test.write_json(self.parameters, model_dir)
+        parameters = dict(weights=self.weights, bias=self.bias,
+                          epochs=self.epochs, batch_size=self.batch_size)
+        test.write_json(parameters, model_dir)
 
     @classmethod
     def load(cls, model_dir):
         return cls(**env.read_json(model_dir))
 
     def predict(self, data):
-        return np.asarray(self.parameters['W']) * np.asarray(data)
+        return np.asarray(self.weights) * np.asarray(data)
