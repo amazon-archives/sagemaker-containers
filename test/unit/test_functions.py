@@ -40,3 +40,16 @@ def test_getargspec(fn, expected):
 ])
 def test_matching_args(fn, env, expected):
     assert functions.matching_args(fn, env) == expected
+
+
+def test_error_wrapper():
+    assert functions.error_wrapper(lambda x: x * 10, NotImplementedError)(3) == 30
+
+
+def test_error_wrapper_exception():
+    with pytest.raises(NotImplementedError):
+        functions.error_wrapper(lambda x: x, NotImplementedError)(2, 3)
+
+
+def test_error_wrapper_none_fn():
+    assert functions.error_wrapper(None, NotImplementedError) is None
