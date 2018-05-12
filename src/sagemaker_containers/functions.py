@@ -69,7 +69,7 @@ def getargspec(fn):  # type: (function) -> inspect.ArgSpec
 
 
 def error_wrapper(fn, error_class):  # type: (function or None, Exception) -> ...
-    """Wraps function fn in a try catch block that re-raises error_class. Returns None if fn is None.
+    """Wraps function fn in a try catch block that re-raises error_class.
 
     Args:
         fn (function): function to wrapped
@@ -84,4 +84,4 @@ def error_wrapper(fn, error_class):  # type: (function or None, Exception) -> ..
         except Exception as e:
             six.raise_from(error_class(e), e)
 
-    return fn and wrapper
+    return wrapper

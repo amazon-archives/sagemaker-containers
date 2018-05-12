@@ -49,7 +49,3 @@ def test_error_wrapper():
 def test_error_wrapper_exception():
     with pytest.raises(NotImplementedError):
         functions.error_wrapper(lambda x: x, NotImplementedError)(2, 3)
-
-
-def test_error_wrapper_none_fn():
-    assert functions.error_wrapper(None, NotImplementedError) is None

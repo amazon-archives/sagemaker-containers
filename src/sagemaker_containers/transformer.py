@@ -64,7 +64,10 @@ def default_predict_fn(model, data):
      Returns:
          (obj): data ready for prediction.
     """
-    raise NotImplementedError()
+    raise NotImplementedError(textwrap.dedent("""
+    Please provide a predict_fn implementation.
+    See documentation for predict_fn at https://github.com/aws/sagemaker-python-sdk
+    """))
 
 
 def default_output_fn(prediction, accept):
@@ -123,10 +126,10 @@ class Transformer(object):
             error_class (Exception): Error class used to separate framework and user errors.
         """
         self._model = None
-        self._model_fn = functions.error_wrapper(model_fn, error_class) or default_model_fn
-        self._input_fn = functions.error_wrapper(input_fn, error_class) or default_input_fn
-        self._predict_fn = functions.error_wrapper(predict_fn, error_class) or default_predict_fn
-        self._output_fn = functions.error_wrapper(output_fn, error_class) or default_output_fn
+        self._model_fn = functions.error_wrapper(model_fn, error_class) if model_fn else default_model_fn
+        self._input_fn = functions.error_wrapper(input_fn, error_class) if input_fn else default_input_fn
+        self._predict_fn = functions.error_wrapper(predict_fn, error_class) if predict_fn else default_predict_fn
+        self._output_fn = functions.error_wrapper(output_fn, error_class) if output_fn else default_output_fn
         self._error_class = error_class
 
     def initialize(self):  # type: () -> None
