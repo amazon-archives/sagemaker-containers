@@ -47,5 +47,6 @@ def test_error_wrapper():
 
 
 def test_error_wrapper_exception():
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(NotImplementedError) as e:
         functions.error_wrapper(lambda x: x, NotImplementedError)(2, 3)
+    assert type(e.value.args[0]) == TypeError
