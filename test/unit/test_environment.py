@@ -230,3 +230,46 @@ def test_tmpdir_with_args(rmtree, mkdtemp):
     with env.tmpdir('suffix', 'prefix', '/tmp'):
         mkdtemp.assert_called_with(dir='/tmp', prefix='prefix', suffix='suffix')
     rmtree.assert_called()
+
+
+def test_write_new_file(training_env):
+    file_1 = 'empty_file'
+    file_path_1 = os.path.join(training_env.output_dir, file_1)
+    training_env.write_new_file(training_env.output_dir, file_1)
+    assert os.path.exists(file_path_1)
+    assert os.stat(file_path_1).st_size == 0
+
+    file_2 = 'non_empty_file'
+    file_path_2 = os.path.join(training_env.output_dir, file_2)
+    content = 'I am not empty.'
+    training_env.write_new_file(training_env.output_dir, file_2, content)
+    assert os.path.exists(file_path_2)
+    with open(file_path_2, 'r') as f:
+        assert f.read() == content
+
+    training_env.write_new_file(training_env.output_dir, file_1, content)
+    with open(file_path_1, 'r') as f:
+        assert f.read() == content
+
+    os.remove(file_path_1)
+    os.remove(file_path_2)
+
+
+def test_write_success_file(training_env):
+    file_path = os.path.join(training_env.output_dir, 'success')
+    training_env.write_success_file()
+    assert os.path.exists(file_path)
+    assert os.stat(file_path).st_size == 0
+
+    os.remove(file_path)
+
+
+def test_write_failure_file(training_env):
+    file_path = os.path.join(training_env.output_dir, 'failure')
+    failure_msg = 'This is a failure'
+    training_env.write_failure_file(failure_msg)
+    assert os.path.exists(file_path)
+    with open(file_path, 'r') as f:
+        assert f.read() == failure_msg
+
+    os.remove(file_path)

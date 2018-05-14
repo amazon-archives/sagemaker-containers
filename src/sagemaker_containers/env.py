@@ -598,6 +598,38 @@ class TrainingEnv(Env):
                 my_module:main"""
         return self._framework_module
 
+    def write_new_file(self, dir_name, file_name, file_content=None):  # type: (str, str, str) -> None
+        """Create a new file with customized content.
+        Args:
+            dir_name: name of the directory
+            file_name: name of the file
+            file_content: content of file
+        """
+        file_path = os.path.join(dir_name, file_name)
+        if os.path.exists(file_path):
+            warning_msg = 'File {} already exists and will be overwritten! ' \
+                          'Please check if file with the same name is created before this call.' \
+                .format(file_path)
+            logger.warning(warning_msg)
+
+        with open(file_path, 'w') as f:
+            if file_content is not None:
+                f.write(file_content)
+
+    def write_success_file(self):  # type: () -> None
+        """Create a file 'success' when training is successful. This file doesn't need to have any content.
+        """
+        self.write_new_file(self._output_dir, 'success')
+
+    def write_failure_file(self, failure_msg):  # type: (str) -> None
+        """Create a file 'failure' if training fails after all algorithm output (for example, logging) completes,
+        the failure description should be written to this file. In a DescribeTrainingJob response, Amazon SageMaker
+        returns the first 1024 characters from this file as FailureReason.
+        Args:
+            failure_msg: The description of failure
+        """
+        self.write_new_file(self._output_dir, 'failure', failure_msg)
+
 
 class ServingEnv(Env):
     """Provides access to aspects of the serving environment relevant to serving containers, including

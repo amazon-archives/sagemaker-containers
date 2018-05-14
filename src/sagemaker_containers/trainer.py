@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import importlib
+import os
+import traceback
 
 from sagemaker_containers import env
 
@@ -23,4 +25,15 @@ def train():
     framework_name, entry_point = training_env.framework_module.split(':')
     framework = importlib.import_module(framework_name)
     entry = getattr(framework, entry_point)
-    entry()
+
+    exit_code = 0
+    try:
+        entry()
+        training_env.write_success_file()
+    except Exception as e:
+        exit_code = 1 if not hasattr(e, 'errno') else e.errno
+        failure_msg = 'Exception caught in training: {}\n{}\n'.format(e, traceback.format_exc())
+        training_env.write_failure_file(failure_msg)
+        raise e
+    finally:
+        os._exit(exit_code)
