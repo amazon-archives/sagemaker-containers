@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
+from collections import Iterable  # noqa ignore=F401 not used
 import json
 import textwrap
 
@@ -20,158 +21,162 @@ from six import BytesIO, StringIO
 
 from sagemaker_containers import content_types
 
+ENCODER_TYPE = 0
+DECODER_TYPE = 1
 
-class NpyEncoder(object):
-    content_type = content_types.NPY
+_encoders_map = {}
+_decoders_map = {}
 
-    @staticmethod
-    def encode(np_array):  # type: (np.array) -> object
-        """Encode an numpy array into memory.
-
-        Args:
-            np_array (np.array): np array object to be serialized.
-
-        Returns:
-            (obj): serialized np array.
-        """
-        buffer = BytesIO()
-        np.save(buffer, np_array)
-        return buffer.getvalue()
+_converters_map = {ENCODER_TYPE: _encoders_map, DECODER_TYPE: _decoders_map}
 
 
-class NpyDecoder(object):
-    content_type = content_types.NPY
+def _set_converter_type(converter_type, content_type):
+    def decorator(f):
+        _converters_map[converter_type][content_type] = f
+        return f
 
-    @staticmethod
-    def decode(obj):  # type: (object) -> np.array
-        """Decode arrays or pickled objects from memory into numpy arrays.
-
-        Args:
-            obj (object): object to be deserialized.
-
-        Returns:
-            (np.array): deserialized numpy array.
-        """
-        stream = BytesIO(obj)
-        return np.load(stream)
+    return decorator
 
 
-class JsonEncoder(json.JSONEncoder):
-    content_type = content_types.JSON
-
-    def default(self, o):
-        if hasattr(o, 'read'):
-            return o.read()
-
-        if hasattr(o, 'tolist'):
-            return o.tolist()
-
-        return super(JsonEncoder, self).default(o)
+def _get_converter(converter_type, content_type):
+    return _converters_map[converter_type][content_type]
 
 
-class JsonDecoder(object):
-    content_type = content_types.JSON
+@_set_converter_type(ENCODER_TYPE, content_types.NPY)
+def array_to_npy(array_like):  # type: (np.array or Iterable or int or float) -> object
+    """Convert an array like object to the NPY format.
 
-    @staticmethod
-    def decode(string):  # type: (object) -> object
-        """Decode a JSON string in a Python object.
+    To understand better what an array like object is see:
+    https://docs.scipy.org/doc/numpy/user/basics.creation.html#converting-python-array-like-objects-to-numpy-arrays
 
-        Args:
-            string (str): JSON string to be decoded.
+    Args:
+        array_like (np.array or Iterable or int or float): array like object to be converted to NPY.
 
-        Returns:
-            (object): deserialized Python object.
-        """
-        return json.loads(string)
-
-
-class CsvDecoder(object):
-    content_type = content_types.CSV
-
-    @staticmethod
-    def decode(string):  # type: (str) -> object
-        """Decode a CSV string in a Python object.
-
-        Args:
-            string (str): CSV string to be decoded
-
-        Returns:
-            (object): decoded Python object.
-        """
-        stream = StringIO(string)
-        return np.genfromtxt(stream, dtype=np.float32, delimiter=',')
+    Returns:
+        (obj): NPY array.
+    """
+    buffer = BytesIO()
+    np.save(buffer, array_like)
+    return buffer.getvalue()
 
 
-class CsvEncoder(object):
-    content_type = content_types.CSV
+@_set_converter_type(DECODER_TYPE, content_types.NPY)
+def npy_to_numpy(npy_array):  # type: (object) -> np.array
+    """Convert an NPY array into numpy.
 
-    @staticmethod
-    def encode(obj):  # type: (object) -> str
-        """Encode python objects, streams, numpy arrays into CSV.
+    Args:
+        npy_array (npy array): to be converted to numpy array
+
+    Returns:
+        (np.array): converted numpy array.
+    """
+    stream = BytesIO(npy_array)
+    return np.load(stream)
+
+
+@_set_converter_type(ENCODER_TYPE, content_types.JSON)
+def array_to_json(array_like):  # type: (np.array or Iterable or int or float) -> str
+    """Convert an array like object to JSON.
+
+    To understand better what an array like object is see:
+    https://docs.scipy.org/doc/numpy/user/basics.creation.html#converting-python-array-like-objects-to-numpy-arrays
+
+    Args:
+        array_like (np.array or Iterable or int or float): array like object to be converted to JSON.
+
+    Returns:
+        (str): object serialized to JSON
+    """
+
+    def default(_array_like):
+        if hasattr(_array_like, 'tolist'):
+            return _array_like.tolist()
+        return json.JSONEncoder().default(_array_like)
+
+    return json.dumps(array_like, default=default)
+
+
+@_set_converter_type(DECODER_TYPE, content_types.JSON)
+def json_to_numpy(string):  # type: (object) -> np.array
+    """Convert a JSON object to a numpy array.
 
         Args:
-            obj (object): object to be encoded.
+            string (str): JSON string.
 
         Returns:
-            str:  decoded object.
+            (np.array): numpy array
         """
-        stream = StringIO()
-        np.savetxt(stream, obj, delimiter=',', fmt='%s')
-        return stream.getvalue()
+    data = json.loads(string)
+    return np.array(data)
 
 
-DEFAULT_ENCODERS = frozenset([JsonEncoder(), CsvEncoder(), NpyEncoder()])
-DEFAULT_DECODERS = frozenset([JsonDecoder(), CsvDecoder(), NpyDecoder()])
+@_set_converter_type(DECODER_TYPE, content_types.CSV)
+def csv_to_numpy(string):  # type: (str) -> np.array
+    """Convert a CSV object to a numpy array.
+
+    Args:
+        string (str): CSV string.
+
+    Returns:
+        (np.array): numpy array
+    """
+    stream = StringIO(string)
+    return np.genfromtxt(stream, dtype=np.float32, delimiter=',')
 
 
-class DefaultEncoder(object):
-    def __init__(self, encoders=None):
-        encoders = encoders or DEFAULT_ENCODERS
+@_set_converter_type(ENCODER_TYPE, content_types.CSV)
+def array_to_csv(array_like):  # type: (np.array or Iterable or int or float) -> str
+    """Convert an array like object to CSV.
 
-        self._encoders_map = {encoder.content_type: encoder for encoder in encoders}
+    To understand better what an array like object is see:
+    https://docs.scipy.org/doc/numpy/user/basics.creation.html#converting-python-array-like-objects-to-numpy-arrays
 
-    def encode(self, obj, content_type):
-        """Encode an object to a one of the default content types.
+    Args:
+        array_like (np.array or Iterable or int or float): array like object to be converted to CSV.
 
-        Args:
-            obj (object): to be encoded.
-            content_type (str): content type to be used.
-
-        Returns:
-            object: encoded object.
-        """
-        try:
-            return self._encoders_map[content_type].encode(obj)
-        except KeyError:
-            raise UnsupportedFormatError(content_type)
+    Returns:
+        (str): object serialized to CSV
+    """
+    stream = StringIO()
+    np.savetxt(stream, array_like, delimiter=',', fmt='%s')
+    return stream.getvalue()
 
 
-default_encoder = DefaultEncoder()
+def decode(obj, content_type):  # type: (np.array or Iterable or int or float) -> np.array
+    """Decode an object ton a one of the default content types to a numpy array.
+
+    Args:
+        obj (object): to be decoded.
+        content_type (str): content type to be used.
+
+    Returns:
+        object: decoded object.
+    """
+    try:
+        converter = _get_converter(DECODER_TYPE, content_type)
+        return converter(obj)
+    except KeyError:
+        raise UnsupportedFormatError(content_type)
 
 
-class DefaultDecoder(object):
-    def __init__(self, decoders=None):
-        decoders = decoders or DEFAULT_DECODERS
+def encode(array_like, content_type):  # type: (np.array or Iterable or int or float) -> np.array
+    """Encode an array like object in a specific content_type to a numpy array.
 
-        self._decoders_map = {decoder.content_type: decoder for decoder in decoders}
+    To understand better what an array like object is see:
+    https://docs.scipy.org/doc/numpy/user/basics.creation.html#converting-python-array-like-objects-to-numpy-arrays
 
-    def decode(self, obj, content_type):
-        """Decode an object to a one of the default content types.
+    Args:
+        array_like (np.array or Iterable or int or float): to be converted to numpy.
+        content_type (str): content type to be used.
 
-        Args:
-            obj (object): to be decoded.
-            content_type (str): content type to be used.
-
-        Returns:
-            object: decoded object.
-        """
-        try:
-            return self._decoders_map[content_type].decode(obj)
-        except KeyError:
-            raise UnsupportedFormatError(content_type)
-
-
-default_decoder = DefaultDecoder()
+    Returns:
+        (np.array): object converted as numpy array.
+    """
+    try:
+        converter = _get_converter(ENCODER_TYPE, content_type)
+        return converter(array_like)
+    except KeyError:
+        raise UnsupportedFormatError(content_type)
 
 
 class UnsupportedFormatError(Exception):
