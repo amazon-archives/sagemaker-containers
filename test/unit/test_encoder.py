@@ -10,7 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from mock import patch
+from mock import Mock, patch
 import numpy as np
 import pytest
 
@@ -68,12 +68,11 @@ def test_array_to_csv(string_io, savetxt):
     'content_type', [content_types.JSON, content_types.CSV, content_types.NPY]
 )
 def test_encode(content_type):
-    with patch('sagemaker_containers.encoders._get_converter') as get_converter:
+    encoder = Mock()
+    with patch.dict(encoders._encoders_map, {content_type: encoder}, clear=True):
         encoders.encode(42, content_type)
 
-        get_converter.assert_called_once_with(encoders.ENCODER_TYPE, content_type)
-
-        get_converter(encoders.ENCODER_TYPE, content_type).assert_called_with(42)
+        encoder.assert_called_once_with(42)
 
 
 def test_encode_error():
@@ -90,9 +89,8 @@ def test_decode_error():
     'content_type', [content_types.JSON, content_types.CSV, content_types.NPY]
 )
 def test_decode(content_type):
-    with patch('sagemaker_containers.encoders._get_converter') as get_converter:
+    decoder = Mock()
+    with patch.dict(encoders._decoders_map, {content_type: decoder}, clear=True):
         encoders.decode(42, content_type)
 
-        get_converter.assert_called_once_with(encoders.DECODER_TYPE, content_type)
-
-        get_converter(encoders.DECODER_TYPE, content_type).assert_called_with(42)
+        decoder.assert_called_once_with(42)

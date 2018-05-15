@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-from collections import Iterable  # noqa ignore=F401 not used
 import json
 import textwrap
 
@@ -21,28 +20,7 @@ from six import BytesIO, StringIO
 
 from sagemaker_containers import content_types
 
-ENCODER_TYPE = 0
-DECODER_TYPE = 1
 
-_encoders_map = {}
-_decoders_map = {}
-
-_converters_map = {ENCODER_TYPE: _encoders_map, DECODER_TYPE: _decoders_map}
-
-
-def _set_converter_type(converter_type, content_type):
-    def decorator(f):
-        _converters_map[converter_type][content_type] = f
-        return f
-
-    return decorator
-
-
-def _get_converter(converter_type, content_type):
-    return _converters_map[converter_type][content_type]
-
-
-@_set_converter_type(ENCODER_TYPE, content_types.NPY)
 def array_to_npy(array_like):  # type: (np.array or Iterable or int or float) -> object
     """Convert an array like object to the NPY format.
 
@@ -60,7 +38,6 @@ def array_to_npy(array_like):  # type: (np.array or Iterable or int or float) ->
     return buffer.getvalue()
 
 
-@_set_converter_type(DECODER_TYPE, content_types.NPY)
 def npy_to_numpy(npy_array):  # type: (object) -> np.array
     """Convert an NPY array into numpy.
 
@@ -74,7 +51,6 @@ def npy_to_numpy(npy_array):  # type: (object) -> np.array
     return np.load(stream)
 
 
-@_set_converter_type(ENCODER_TYPE, content_types.JSON)
 def array_to_json(array_like):  # type: (np.array or Iterable or int or float) -> str
     """Convert an array like object to JSON.
 
@@ -96,7 +72,6 @@ def array_to_json(array_like):  # type: (np.array or Iterable or int or float) -
     return json.dumps(array_like, default=default)
 
 
-@_set_converter_type(DECODER_TYPE, content_types.JSON)
 def json_to_numpy(string):  # type: (object) -> np.array
     """Convert a JSON object to a numpy array.
 
@@ -110,7 +85,6 @@ def json_to_numpy(string):  # type: (object) -> np.array
     return np.array(data)
 
 
-@_set_converter_type(DECODER_TYPE, content_types.CSV)
 def csv_to_numpy(string):  # type: (str) -> np.array
     """Convert a CSV object to a numpy array.
 
@@ -124,7 +98,6 @@ def csv_to_numpy(string):  # type: (str) -> np.array
     return np.genfromtxt(stream, dtype=np.float32, delimiter=',')
 
 
-@_set_converter_type(ENCODER_TYPE, content_types.CSV)
 def array_to_csv(array_like):  # type: (np.array or Iterable or int or float) -> str
     """Convert an array like object to CSV.
 
@@ -142,6 +115,10 @@ def array_to_csv(array_like):  # type: (np.array or Iterable or int or float) ->
     return stream.getvalue()
 
 
+_encoders_map = {content_types.NPY: array_to_npy, content_types.CSV: array_to_csv, content_types.JSON: array_to_json}
+_decoders_map = {content_types.NPY: npy_to_numpy, content_types.CSV: csv_to_numpy, content_types.JSON: json_to_numpy}
+
+
 def decode(obj, content_type):  # type: (np.array or Iterable or int or float) -> np.array
     """Decode an object ton a one of the default content types to a numpy array.
 
@@ -153,8 +130,8 @@ def decode(obj, content_type):  # type: (np.array or Iterable or int or float) -
         object: decoded object.
     """
     try:
-        converter = _get_converter(DECODER_TYPE, content_type)
-        return converter(obj)
+        decoder = _decoders_map[content_type]
+        return decoder(obj)
     except KeyError:
         raise UnsupportedFormatError(content_type)
 
@@ -173,8 +150,8 @@ def encode(array_like, content_type):  # type: (np.array or Iterable or int or f
         (np.array): object converted as numpy array.
     """
     try:
-        converter = _get_converter(ENCODER_TYPE, content_type)
-        return converter(array_like)
+        encoder = _encoders_map[content_type]
+        return encoder(array_like)
     except KeyError:
         raise UnsupportedFormatError(content_type)
 
