@@ -18,7 +18,7 @@ import os
 import numpy as np
 import pytest
 
-from sagemaker_containers import env, trainer
+from sagemaker_containers import env, functions, modules, trainer
 import test
 from test import fake_ml_framework
 
@@ -68,8 +68,55 @@ def train(channel_input_dirs, hyperparameters):
 """
 
 
+def framework_training_fn():
+    training_env = env.TrainingEnv()
+
+    mod = modules.download_and_import(training_env.module_dir, training_env.module_name)
+
+    model = mod.train(**functions.matching_args(mod.train, training_env))
+
+    if model:
+        if hasattr(mod, 'save'):
+            mod.save(model, training_env.model_dir)
+        else:
+            model_file = os.path.join(training_env.model_dir, 'saved_model')
+            model.save(model_file)
+
+
 @pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
 def test_training_framework(user_script):
+    channel = test.Channel.create(name='training')
+
+    features = [1, 2, 3, 4]
+    labels = [0, 1, 0, 1]
+    np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
+
+    module = test.UserModule(test.File(name='user_script.py', content=user_script))
+
+    hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py',
+                           epochs=10, batch_size=64)
+
+    test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
+
+    p = Process(target=framework_training_fn)
+    p.start()
+    p.join()
+
+    model_path = os.path.join(env.TrainingEnv().model_dir, 'saved_model')
+    print(model_path)
+
+    model = test.fake_ml_framework.Model.load(model_path)
+
+    assert model.epochs == 10
+    assert model.batch_size == 64
+    assert model.loss == 'categorical_crossentropy'
+    assert model.optimizer == 'SGD'
+
+    os.remove(model_path)
+
+
+@pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
+def test_training_framework_report_success(user_script):
     channel = test.Channel.create(name='training')
 
     features = [1, 2, 3, 4]
@@ -101,8 +148,10 @@ def test_training_framework(user_script):
     assert model.optimizer == 'SGD'
     assert os.path.exists(os.path.join(env.TrainingEnv().output_dir, 'success'))
 
+    os.remove(model_path)
 
-def test_training_framework_failure():
+
+def test_training_framework_report_failure():
     channel = test.Channel.create(name='training')
 
     features = [1, 2, 3, 4]

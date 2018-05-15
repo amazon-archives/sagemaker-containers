@@ -13,8 +13,10 @@
 import os
 
 from sagemaker_containers import env, functions, modules
+from sagemaker_containers.trainer import report_training_status
 
 
+@report_training_status
 def train():
     training_env = env.TrainingEnv()
 
