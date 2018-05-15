@@ -618,6 +618,7 @@ class TrainingEnv(Env):
 
     def write_success_file(self):  # type: () -> None
         """Create a file 'success' when training is successful. This file doesn't need to have any content.
+        See: https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html
         """
         self.write_new_file(self._output_dir, 'success')
 
@@ -625,6 +626,7 @@ class TrainingEnv(Env):
         """Create a file 'failure' if training fails after all algorithm output (for example, logging) completes,
         the failure description should be written to this file. In a DescribeTrainingJob response, Amazon SageMaker
         returns the first 1024 characters from this file as FailureReason.
+        See: https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html
         Args:
             failure_msg: The description of failure
         """
