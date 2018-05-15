@@ -41,7 +41,7 @@ def test_download_and_import_script():
 
 content = ['import os',
            'def validate():',
-           '    return os.path.exist("requirements.txt")']
+           '    return os.path.exists("requirements.txt")']
 
 USER_SCRIPT_WITH_REQUIREMENTS = test.File('test_script.py', content)
 

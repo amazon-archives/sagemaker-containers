@@ -598,7 +598,7 @@ class TrainingEnv(Env):
                 my_module:main"""
         return self._framework_module
 
-    def write_new_file(self, dir_name, file_name, file_content=None):  # type: (str, str, str) -> None
+    def write_new_file(self, dir_name, file_name, file_content):  # type: (str, str, str) -> None
         """Create a new file with customized content.
         Args:
             dir_name: name of the directory
@@ -606,21 +606,16 @@ class TrainingEnv(Env):
             file_content: content of file
         """
         file_path = os.path.join(dir_name, file_name)
-        if os.path.exists(file_path):
-            warning_msg = 'File {} already exists and will be overwritten! ' \
-                          'Please check if file with the same name is created before this call.' \
-                .format(file_path)
-            logger.warning(warning_msg)
 
         with open(file_path, 'w') as f:
-            if file_content is not None:
-                f.write(file_content)
+            f.write(file_content)
 
     def write_success_file(self):  # type: () -> None
         """Create a file 'success' when training is successful. This file doesn't need to have any content.
         See: https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html
         """
-        self.write_new_file(self._output_dir, 'success')
+        empty_content = ''
+        self.write_new_file(self._output_dir, 'success', empty_content)
 
     def write_failure_file(self, failure_msg):  # type: (str) -> None
         """Create a file 'failure' if training fails after all algorithm output (for example, logging) completes,

@@ -71,7 +71,7 @@ def train(channel_input_dirs, hyperparameters):
 def framework_training_fn():
     training_env = env.TrainingEnv()
 
-    mod = modules.download_and_import(training_env.module_dir, training_env.module_name)
+    mod = modules.download_and_import(training_env.module_dir, training_env.module_name, False)
 
     model = mod.train(**functions.matching_args(mod.train, training_env))
 

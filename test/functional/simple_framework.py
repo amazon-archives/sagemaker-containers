@@ -20,7 +20,7 @@ from sagemaker_containers.trainer import report_training_status
 def train():
     training_env = env.TrainingEnv()
 
-    script = modules.download_and_import(training_env.module_dir, training_env.module_name)
+    script = modules.download_and_import(training_env.module_dir, training_env.module_name, False)
 
     model = script.train(**functions.matching_args(script.train, training_env))
 

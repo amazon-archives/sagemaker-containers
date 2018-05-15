@@ -235,7 +235,8 @@ def test_tmpdir_with_args(rmtree, mkdtemp):
 def test_write_new_file(training_env):
     file_1 = 'empty_file'
     file_path_1 = os.path.join(training_env.output_dir, file_1)
-    training_env.write_new_file(training_env.output_dir, file_1)
+    empty_content = ''
+    training_env.write_new_file(training_env.output_dir, file_1, empty_content)
     assert os.path.exists(file_path_1)
     assert os.stat(file_path_1).st_size == 0
 
@@ -245,10 +246,6 @@ def test_write_new_file(training_env):
     training_env.write_new_file(training_env.output_dir, file_2, content)
     assert os.path.exists(file_path_2)
     with open(file_path_2, 'r') as f:
-        assert f.read() == content
-
-    training_env.write_new_file(training_env.output_dir, file_1, content)
-    with open(file_path_1, 'r') as f:
         assert f.read() == content
 
     os.remove(file_path_1)
