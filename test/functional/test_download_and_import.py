@@ -12,45 +12,104 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-from sagemaker_containers import modules
+import shlex
+import subprocess
+import textwrap
+
+import pytest
+
+from sagemaker_containers import errors, modules
 import test
 
-content = ['from distutils.core import setup\n',
-           'setup(name="test_script", py_modules=["test_script"])']
+data = ['from distutils.core import setup\n',
+        'setup(name="my_test_script", py_modules=["my_test_script"])']
 
-SETUP = test.File('setup.py', content)
+SETUP = test.File('setup.py', data)
 
-USER_SCRIPT = test.File('test_script.py', 'def validate(): return True')
+USER_SCRIPT = test.File('my_test_script.py', 'def validate(): return True')
 
 
-def test_download_and_import_module():
+@pytest.fixture(name='user_module_name')
+def erase_user_module():
+    user_module = 'my_test_script'
+    yield user_module
+    try:
+        subprocess.check_call(shlex.split('pip uninstall -y --quiet %s' % user_module))
+    except subprocess.CalledProcessError:
+        pass
+
+
+def test_download_and_import_module(user_module_name):
     user_module = test.UserModule(USER_SCRIPT).add_file(SETUP).upload()
 
-    module = modules.download_and_import(user_module.url, 'test_script')
+    module = modules.download_and_import(user_module.url, user_module_name, cache=False)
 
     assert module.validate()
 
 
-def test_download_and_import_script():
+def test_download_and_import_script(user_module_name):
     user_module = test.UserModule(USER_SCRIPT).upload()
 
-    module = modules.download_and_import(user_module.url, 'test_script')
+    module = modules.download_and_import(user_module.url, user_module_name, cache=False)
 
     assert module.validate()
 
+data = textwrap.dedent("""
+            from pyfiglet import Figlet
 
-content = ['import os',
-           'def validate():',
-           '    return os.path.exists("requirements.txt")']
+            def say():
+                return Figlet().renderText('SageMaker').strip()
 
-USER_SCRIPT_WITH_REQUIREMENTS = test.File('test_script.py', content)
+""")
 
-REQUIREMENTS_FILE = test.File('requirements.txt', ['keras', 'h5py'])
+USER_SCRIPT_WITH_REQUIREMENTS = test.File('my_test_script.py', data)
+
+REQUIREMENTS_FILE = test.File('requirements.txt', 'pyfiglet')
 
 
-def test_download_and_import_script_with_requirements():
+def test_download_and_import_script_with_requirements(user_module_name):
     user_module = test.UserModule(USER_SCRIPT_WITH_REQUIREMENTS).add_file(REQUIREMENTS_FILE).upload()
 
-    module = modules.download_and_import(user_module.url, 'test_script')
+    module = modules.download_and_import(user_module.url, user_module_name, cache=False)
+
+    assert module.say() == """
+ ____                   __  __       _.............
+/ ___|  __ _  __ _  ___|  \/  | __ _| | _____ _ __.
+\___ \ / _` |/ _` |/ _ \ |\/| |/ _` | |/ / _ \ '__|
+ ___) | (_| | (_| |  __/ |  | | (_| |   <  __/ |...
+|____/ \__,_|\__, |\___|_|  |_|\__,_|_|\_\___|_|...
+             |___/.................................
+""".replace('.', ' ').strip()
+
+
+data = textwrap.dedent("""
+            import file_2
+
+
+            def validate():
+                return file_2.IMPORTED
+""")
+
+USER_SCRIPT_WITH_ADDITIONAL_FILE = test.File('my_test_script.py', data)
+
+ADDITIONAL_FILE = test.File('file_2.py', 'IMPORTED = True')
+
+
+def test_download_and_import_script_with_additional_files(user_module_name):
+    user_module = test.UserModule(USER_SCRIPT_WITH_ADDITIONAL_FILE).add_file(ADDITIONAL_FILE).upload()
+
+    module = modules.download_and_import(user_module.url, user_module_name, cache=False)
 
     assert module.validate()
+
+
+data = ['raise ValueError("this script does not work")']
+
+USER_SCRIPT_WITH_ERROR = test.File('my_test_script.py', data)
+
+
+def test_download_and_import_script_with_error(user_module_name):
+    user_module = test.UserModule(USER_SCRIPT_WITH_ERROR).upload()
+
+    with pytest.raises(errors.ImportModuleError):
+        modules.download_and_import(user_module.url, user_module_name, cache=False)

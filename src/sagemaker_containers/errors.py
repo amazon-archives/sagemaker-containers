@@ -10,9 +10,16 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-JSON = 'application/json'
-CSV = "text/csv"
-OCTET_STREAM = "application/octet-stream"
-ANY = '*/*'
-NPY = 'application/x-npy'
-UTF8_TYPES = [JSON, CSV]
+from __future__ import absolute_import
+
+
+class ClientError(BaseException):
+    pass
+
+
+class InstallModuleError(ClientError):
+    pass
+
+
+class ImportModuleError(ClientError):
+    pass

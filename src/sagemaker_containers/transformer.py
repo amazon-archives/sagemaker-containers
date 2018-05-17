@@ -14,7 +14,7 @@ from __future__ import absolute_import
 
 import textwrap
 
-from sagemaker_containers import encoders, env, functions, worker
+from sagemaker_containers import encoders, env, errors, functions, worker
 
 
 def default_model_fn(model_dir):
@@ -40,12 +40,12 @@ def default_input_fn(input_data, content_type):
         the model server receives two pieces of information:
 
             - The request Content-Type, for example "application/json"
-            - The request data content, which is at most 5 MB (5 * 1024 * 1024 bytes) in size.
+            - The request data, which is at most 5 MB (5 * 1024 * 1024 bytes) in size.
 
         The input_fn is responsible to take the request data and pre-process it before prediction.
 
     Args:
-        input_data (obj): the request data content.
+        input_data (obj): the request data.
         content_type (str): the request Content-Type.
 
     Returns:
@@ -54,7 +54,7 @@ def default_input_fn(input_data, content_type):
     return encoders.decode(input_data, content_type)
 
 
-def default_predict_fn(model, data):
+def default_predict_fn(data, model):
     """Function responsible for model predictions.
 
     Args:
@@ -87,10 +87,6 @@ def default_output_fn(prediction, accept):
     return worker.Response(encoders.encode(prediction, accept), accept)
 
 
-class ClientError(BaseException):
-    pass
-
-
 class Transformer(object):
     """The Transformer is a proxy between the worker and the framework transformation functions.
 
@@ -114,7 +110,7 @@ class Transformer(object):
     >>>transformer.load_user_fns(mod)
     """
 
-    def __init__(self, model_fn=None, input_fn=None, predict_fn=None, output_fn=None, error_class=ClientError):
+    def __init__(self, model_fn=None, input_fn=None, predict_fn=None, output_fn=None, error_class=errors.ClientError):
         """Default constructor. Wraps the any non default framework function in an error class to isolate
         framework from user errors.
 
@@ -140,7 +136,7 @@ class Transformer(object):
         This function will be called once per each worker.
         It does not have return type or arguments.
         """
-        self._model = self._model_fn(model_dir=env.ServingEnv().model_dir)
+        self._model = self._model_fn(env.ServingEnv().model_dir)
 
     def transform(self):  # type: () -> worker.Response
         """Responsible to make predictions against the model.
@@ -154,9 +150,9 @@ class Transformer(object):
         """
         request = worker.Request()
 
-        data = self._input_fn(input_data=request.content, content_type=request.content_type)
-        prediction = self._predict_fn(model=self._model, data=data)
-        result = self._output_fn(prediction=prediction, accept=request.accept)
+        data = self._input_fn(request.content, request.content_type)
+        prediction = self._predict_fn(data, self._model)
+        result = self._output_fn(prediction, request.accept)
 
         if isinstance(result, tuple):
             # transforms tuple in Response for backwards compatibility

@@ -15,12 +15,14 @@ import json
 import logging
 import os
 
-from mock import Mock, patch
+from mock import Mock, mock_open, patch
 import pytest
 import six
 
 from sagemaker_containers import env
 import test
+
+builtins_open = '__builtin__.open' if six.PY2 else 'builtins.open'
 
 RESOURCE_CONFIG = dict(current_host='algo-1', hosts=['algo-1', 'algo-2', 'algo-3'])
 
@@ -96,7 +98,7 @@ def test_channel_input_dirs():
     assert env.channel_path('training') == os.path.join(input_data_path, 'training')
 
 
-@patch('subprocess.check_output', lambda s: six.b('GPU 0\nGPU 1'))
+@patch('subprocess.check_output', lambda s: b'GPU 0\nGPU 1')
 def test_gpu_count_in_gpu_instance():
     assert env.gpu_count() == 2
 
@@ -147,7 +149,7 @@ def test_train_env(training_env):
     assert training_env.hyperparameters == USER_HYPERPARAMETERS
     assert training_env.resource_config == RESOURCE_CONFIG
     assert training_env.input_data_config == INPUT_DATA_CONFIG
-    assert training_env.output_data_dir.endswith('/opt/ml/output/data')
+    assert training_env.output_data_dir.endswith('/opt/ml/output/data/algo-1')
     assert training_env.hosts == RESOURCE_CONFIG['hosts']
     assert training_env.channel_input_dirs['train'].endswith('/opt/ml/input/data/train')
     assert training_env.channel_input_dirs['validation'].endswith('/opt/ml/input/data/validation')
@@ -156,6 +158,7 @@ def test_train_env(training_env):
     assert training_env.module_dir == 'imagenet'
     assert training_env.enable_metrics
     assert training_env.log_level == logging.WARNING
+    assert training_env.network_interface_name == 'ethwe'
 
 
 def test_serving_env(serving_env):
@@ -173,8 +176,8 @@ def test_train_env_properties(training_env):
     assert training_env.properties() == ['channel_input_dirs', 'current_host', 'enable_metrics', 'framework_module',
                                          'hosts', 'hyperparameters', 'input_config_dir', 'input_data_config',
                                          'input_dir', 'log_level', 'model_dir', 'module_dir', 'module_name',
-                                         'num_cpus', 'num_gpus', 'output_data_dir', 'output_dir',
-                                         'resource_config']
+                                         'network_interface_name', 'num_cpus', 'num_gpus', 'output_data_dir',
+                                         'output_dir', 'resource_config']
 
 
 def test_serving_env_properties(serving_env):
@@ -270,3 +273,18 @@ def test_write_failure_file(training_env):
         assert f.read() == failure_msg
 
     os.remove(file_path)
+
+
+@patch(builtins_open, mock_open())
+def test_write_file():
+    env.write_file('/tmp/my-file', '42')
+
+    open.assert_called_with('/tmp/my-file', 'w')
+
+    open().write.assert_called_with('42')
+
+    env.write_file('/tmp/my-file', '42', 'x')
+
+    open.assert_called_with('/tmp/my-file', 'x')
+
+    open().write.assert_called_with('42')
