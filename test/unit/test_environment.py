@@ -235,56 +235,30 @@ def test_tmpdir_with_args(rmtree, mkdtemp):
     rmtree.assert_called()
 
 
-def test_write_new_file(training_env):
-    file_1 = 'empty_file'
-    file_path_1 = os.path.join(training_env.output_dir, file_1)
-    empty_content = ''
-    training_env.write_new_file(training_env.output_dir, file_1, empty_content)
-    assert os.path.exists(file_path_1)
-    assert os.stat(file_path_1).st_size == 0
+@patch(builtins_open, mock_open())
+def test_write_file():
+    env.write_file('/tmp/my-file', '42')
+    open.assert_called_with('/tmp/my-file', 'w')
+    open().write.assert_called_with('42')
 
-    file_2 = 'non_empty_file'
-    file_path_2 = os.path.join(training_env.output_dir, file_2)
-    content = 'I am not empty.'
-    training_env.write_new_file(training_env.output_dir, file_2, content)
-    assert os.path.exists(file_path_2)
-    with open(file_path_2, 'r') as f:
-        assert f.read() == content
-
-    os.remove(file_path_1)
-    os.remove(file_path_2)
+    env.write_file('/tmp/my-file', '42', 'a')
+    open.assert_called_with('/tmp/my-file', 'a')
+    open().write.assert_called_with('42')
 
 
+@patch(builtins_open, mock_open())
 def test_write_success_file(training_env):
     file_path = os.path.join(training_env.output_dir, 'success')
+    empty_msg = ''
     training_env.write_success_file()
-    assert os.path.exists(file_path)
-    assert os.stat(file_path).st_size == 0
-
-    os.remove(file_path)
+    open.assert_called_with(file_path, 'w')
+    open().write.assert_called_with(empty_msg)
 
 
+@patch(builtins_open, mock_open())
 def test_write_failure_file(training_env):
     file_path = os.path.join(training_env.output_dir, 'failure')
     failure_msg = 'This is a failure'
     training_env.write_failure_file(failure_msg)
-    assert os.path.exists(file_path)
-    with open(file_path, 'r') as f:
-        assert f.read() == failure_msg
-
-    os.remove(file_path)
-
-
-@patch(builtins_open, mock_open())
-def test_write_file():
-    env.write_file('/tmp/my-file', '42')
-
-    open.assert_called_with('/tmp/my-file', 'w')
-
-    open().write.assert_called_with('42')
-
-    env.write_file('/tmp/my-file', '42', 'x')
-
-    open.assert_called_with('/tmp/my-file', 'x')
-
-    open().write.assert_called_with('42')
+    open.assert_called_with(file_path, 'w')
+    open().write.assert_called_with(failure_msg)

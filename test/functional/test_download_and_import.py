@@ -54,6 +54,7 @@ def test_download_and_import_script(user_module_name):
 
     assert module.validate()
 
+
 data = textwrap.dedent("""
             from pyfiglet import Figlet
 

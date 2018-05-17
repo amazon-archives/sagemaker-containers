@@ -613,24 +613,13 @@ class TrainingEnv(Env):
                 my_module:main"""
         return self._framework_module
 
-    def write_new_file(self, dir_name, file_name, file_content):  # type: (str, str, str) -> None
-        """Create a new file with customized content.
-        Args:
-            dir_name: name of the directory
-            file_name: name of the file
-            file_content: content of file
-        """
-        file_path = os.path.join(dir_name, file_name)
-
-        with open(file_path, 'w') as f:
-            f.write(file_content)
-
     def write_success_file(self):  # type: () -> None
         """Create a file 'success' when training is successful. This file doesn't need to have any content.
         See: https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html
         """
+        file_path = os.path.join(self._output_dir, 'success')
         empty_content = ''
-        self.write_new_file(self._output_dir, 'success', empty_content)
+        write_file(file_path, empty_content)
 
     def write_failure_file(self, failure_msg):  # type: (str) -> None
         """Create a file 'failure' if training fails after all algorithm output (for example, logging) completes,
@@ -640,7 +629,8 @@ class TrainingEnv(Env):
         Args:
             failure_msg: The description of failure
         """
-        self.write_new_file(self._output_dir, 'failure', failure_msg)
+        file_path = os.path.join(self._output_dir, 'failure')
+        write_file(file_path, failure_msg)
 
 
 class ServingEnv(Env):

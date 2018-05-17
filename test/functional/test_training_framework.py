@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
+import importlib
 from multiprocessing import Process
 import os
 import shlex
@@ -46,8 +47,9 @@ def train(channel_input_dirs, hyperparameters):
     data = np.load(os.path.join(channel_input_dirs['training'], hyperparameters['training_data_file']))
     x_train = data['features']
     y_train = data['labels']
+    optimizer = hyperparameters['optimizer']
 
-    model = fake_ml.Model(optimizer='SGD')
+    model = fake_ml.Model(optimizer=optimizer)
 
     model.fit(x=x_train, y=y_train, epochs=hyperparameters['epochs'], batch_size=hyperparameters['batch_size'])
 
@@ -63,8 +65,9 @@ def train(channel_input_dirs, hyperparameters):
     data = np.load(os.path.join(channel_input_dirs['training'], hyperparameters['training_data_file']))
     x_train = data['features']
     y_train = data['labels']
+    optimizer = hyperparameters['optimizer']
 
-    model = fake_ml.Model(loss='categorical_crossentropy')
+    model = fake_ml.Model(optimizer=optimizer)
 
     model.fit(x=x_train, y=y_train, epochs=hyperparameters['epochs'], batch_size=hyperparameters['batch_size'])
 
@@ -95,47 +98,22 @@ def framework_training_fn():
             model.save(model_file)
 
 
-def test_training_framework_with_save():
+@pytest.mark.parametrize('user_script', [USER_SCRIPT_WITH_SAVE, USER_SCRIPT_WITH_SAVE])
+def test_training_framework(user_script):
+    with pytest.raises(ImportError):
+        importlib.import_module(modules.DEFAULT_MODULE_NAME)
+
     channel = test.Channel.create(name='training')
 
     features = [1, 2, 3, 4]
     labels = [0, 1, 0, 1]
     np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    module = test.UserModule(test.File(name='user_script.py', data=USER_SCRIPT_WITH_SAVE))
+    module = test.UserModule(test.File(name='user_script.py', data=user_script))
 
     hyperparameters = dict(training_data_file='training_data.npz',
                            sagemaker_program='user_script.py',
-                           epochs=10, batch_size=64)
-
-    test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
-
-    p = Process(target=framework_training_fn)
-    p.start()
-    p.join()
-
-    model_path = os.path.join(env.TrainingEnv().model_dir, 'saved_model')
-    print(model_path)
-
-    model = test.fake_ml_framework.Model.load(model_path)
-
-    assert model.epochs == 10
-    assert model.batch_size == 64
-    assert model.loss == 'categorical_crossentropy'
-
-
-def test_training_framework_without_save():
-    channel = test.Channel.create(name='training')
-
-    features = [1, 2, 3, 4]
-    labels = [0, 1, 0, 1]
-    np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
-
-    module = test.UserModule(test.File(name='user_script.py', data=USER_SCRIPT))
-
-    hyperparameters = dict(training_data_file='training_data.npz',
-                           sagemaker_program='user_script.py',
-                           epochs=10, batch_size=64)
+                           epochs=10, batch_size=64, optimizer='Adam')
 
     test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
 
@@ -148,23 +126,24 @@ def test_training_framework_without_save():
 
     assert model.epochs == 10
     assert model.batch_size == 64
-    assert model.optimizer == 'SGD'
-
-    os.remove(model_path)
+    assert model.optimizer == 'Adam'
 
 
 @pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
 def test_training_framework_report_success(user_script):
+    with pytest.raises(ImportError):
+        importlib.import_module(modules.DEFAULT_MODULE_NAME)
+
     channel = test.Channel.create(name='training')
 
     features = [1, 2, 3, 4]
     labels = [0, 1, 0, 1]
     np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    module = test.UserModule(test.File(name='user_script.py', content=user_script))
+    module = test.UserModule(test.File(name='user_script.py', data=user_script))
 
     hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py',
-                           epochs=10, batch_size=64)
+                           epochs=10, batch_size=64, optimizer='SGD')
 
     test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
 
@@ -182,11 +161,8 @@ def test_training_framework_report_success(user_script):
 
     assert model.epochs == 10
     assert model.batch_size == 64
-    assert model.loss == 'categorical_crossentropy'
     assert model.optimizer == 'SGD'
     assert os.path.exists(os.path.join(env.TrainingEnv().output_dir, 'success'))
-
-    os.remove(model_path)
 
 
 def test_training_framework_report_failure():
@@ -196,7 +172,7 @@ def test_training_framework_report_failure():
     labels = [0, 1, 0, 1]
     np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    module = test.UserModule(test.File(name='user_script.py', content=USER_SCRIPT_WITH_EXCEPTION))
+    module = test.UserModule(test.File(name='user_script.py', data=USER_SCRIPT_WITH_EXCEPTION))
 
     hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py',
                            epochs=10, batch_size=64)
