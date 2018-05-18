@@ -78,8 +78,10 @@ def save(model, model_dir):
 """
 
 USER_SCRIPT_WITH_EXCEPTION = """
+import os
+
 def train(channel_input_dirs, hyperparameters):
-    raise OSError(2, 'No such file or directory')
+    raise OSError(os.errno.ENOENT, 'No such file or directory')
 """
 
 
@@ -130,7 +132,7 @@ def test_training_framework(user_script):
 
 
 @pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
-def test_training_framework_report_success(user_script):
+def test_trainer_report_success(user_script):
     with pytest.raises(ImportError):
         importlib.import_module(modules.DEFAULT_MODULE_NAME)
 
@@ -165,7 +167,7 @@ def test_training_framework_report_success(user_script):
     assert os.path.exists(os.path.join(env.TrainingEnv().output_dir, 'success'))
 
 
-def test_training_framework_report_failure():
+def test_trainer_report_failure():
     channel = test.Channel.create(name='training')
 
     features = [1, 2, 3, 4]
@@ -184,7 +186,7 @@ def test_training_framework_report_failure():
     p = Process(target=trainer.train)
     p.start()
     p.join()
-    assert p.exitcode == 2
+    assert p.exitcode == os.errno.ENOENT
 
     failure_file = os.path.join(env.TrainingEnv().output_dir, 'failure')
     assert os.path.exists(failure_file)

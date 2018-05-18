@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from multiprocessing import Process
+import os
 
 from mock import Mock, patch
 
@@ -46,7 +47,7 @@ def test_training_status_report(training_env, import_module):
 
     @trainer.report_training_status
     def fail():
-        raise OSError(2, 'No such file or directory')
+        raise OSError(os.errno.ENOENT, 'No such file or directory')
 
     @trainer.report_training_status
     def succeed():
@@ -55,7 +56,7 @@ def test_training_status_report(training_env, import_module):
     p = Process(target=fail)
     p.start()
     p.join()
-    assert p.exitcode == 2
+    assert p.exitcode == os.errno.ENOENT
 
     p = Process(target=succeed)
     p.start()
