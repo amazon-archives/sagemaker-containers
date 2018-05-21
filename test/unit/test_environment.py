@@ -19,7 +19,7 @@ from mock import Mock, patch
 import pytest
 import six
 
-from sagemaker_containers import _params, env, errors
+from sagemaker_containers import _params, env
 import test
 
 builtins_open = '__builtin__.open' if six.PY2 else 'builtins.open'

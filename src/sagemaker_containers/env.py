@@ -20,7 +20,7 @@ import os
 import shlex
 import subprocess
 
-from sagemaker_containers import _params, errors, mapping
+from sagemaker_containers import _params, mapping
 
 logger = logging.getLogger(__name__)
 
