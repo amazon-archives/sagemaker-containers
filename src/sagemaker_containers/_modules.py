@@ -108,7 +108,7 @@ def install(path):  # type: (str) -> None
     if os.path.exists(os.path.join(path, 'requirements.txt')):
         cmd += '-r requirements.txt'
 
-    logging.info('Installing module with the following command:' % cmd)
+    logging.info('Installing module with the following command:\n%s', cmd)
 
     _check_error(shlex.split(cmd), _errors.InstallModuleError, cwd=path)
 
@@ -216,25 +216,25 @@ def run(module_name, args=None, env_vars=None):  # type: (str, list, dict) -> No
         env_vars (dict): A map containing the environment variables to be written.
     """
     args = args or []
-    env_vars = env_vars or []
+    env_vars = env_vars or {}
 
-    prefix = ' '.join(['%s=%s' % (key.upper(), value) for key, value in env_vars.items()])
+    prefix = ['%s=%s' % (key.upper(), value) for key, value in env_vars.items()]
 
-    cmd = [prefix, python_executable(), '-m', module_name] + args
+    cmd = [python_executable(), '-m', module_name] + args
 
     logging.info('Invoking user script with the following command:')
-    logging.info(' '.join(cmd))
+    print(' '.join(prefix + cmd))
 
     _check_error(cmd, _errors.ExecuteUserScriptError)
 
 
 def _check_error(cmd, error_class, **kwargs):
-    process = subprocess.Popen(cmd, stderr=subprocess.PIPE, **kwargs)
+    process = subprocess.Popen(cmd, stderr=subprocess.PIPE, env=os.environ, **kwargs)
     stdout, stderr = process.communicate()
 
     return_code = process.poll()
     if return_code:
-        raise error_class(return_code, ''.join(cmd), output=stderr)
+        raise error_class(return_code=return_code, cmd=' '.join(cmd), output=stderr)
 
 
 def python_executable():
@@ -285,9 +285,10 @@ def run_module_from_s3(url, args, env_vars=None, name=DEFAULT_MODULE_NAME, cache
         name (str): name of the script or module.
         cache (bool): if True it will avoid downloading the module again, if already installed.
     """
-    env_vars = env_vars or None
+    env_vars = env_vars or {}
     env_vars = env_vars.copy()
-    env_vars['SAGEMAKER_ARGS'] = ' '.join(args)
+
+    env_vars['SM_USER_ARGS'] = ' '.join(args)
 
     download_and_install(url, name, cache)
 
@@ -308,4 +309,4 @@ def write_env_vars(env_vars=None):  # type: (dict) -> None
     env_vars = env_vars or {}
 
     for name, value in env_vars.items():
-        os.environ[name.upper()] = value
+        os.environ[name] = value

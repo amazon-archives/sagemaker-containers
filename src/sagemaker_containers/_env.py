@@ -446,6 +446,41 @@ class TrainingEnv(_Env):
         self._input_config_dir = input_config_dir
         self._output_dir = output_dir
 
+    def to_cmd_args(self):
+        """Command line arguments representation of the training environment.
+
+        Returns:
+            (list): List of cmd arguments
+        """
+        return _mapping.to_cmd_args(self.hyperparameters)
+
+    def to_env_vars(self):
+        """Environment variable representation of the training environment
+
+        Returns:
+            dict: an instance of dictionary
+        """
+
+        env = {
+            'hosts': self.hosts, 'network_interface_name': self.network_interface_name, 'hps': self.hyperparameters,
+            'resource_config': self.resource_config, 'input_data_config': self.input_data_config,
+            'output_data_dir': self.output_data_dir, 'channels': sorted(self.channel_input_dirs.keys()),
+            'current_host': self.current_host, 'module_name': self.module_name, 'log_level': self.log_level,
+            'framework_module': self.framework_module, 'input_dir': self.input_dir,
+            'input_config_dir': self.input_config_dir, 'output_dir': self.output_dir, 'num_cpus': self.num_cpus,
+            'num_gpus': self.num_gpus, 'model_dir': self.model_dir, 'module_dir': self.module_dir
+        }
+
+        for name, path in self.channel_input_dirs.items():
+            env['channel_%s' % name] = path
+
+        for key, value in self.hyperparameters.items():
+            env['hp_%s' % key] = value
+
+        env['training_env'] = dict(self)
+
+        return _mapping.to_env_vars(env)
+
     @property
     def hosts(self):  # type: () -> list
         """The list of names of all containers on the container network, sorted lexicographically.

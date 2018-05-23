@@ -14,6 +14,7 @@ from __future__ import absolute_import
 
 import collections
 import itertools
+import json
 
 import six
 
@@ -33,51 +34,26 @@ def to_env_vars(mapping):  # type: (dict) -> dict
          (dict): Dictionary of env vars
      """
 
-    def transform_to_keys(key, value):
-        """Transform a key value pair in one or more env keys"""
-        keys = {}
-
-        def format_key(name):
-            """Decode a key, adds a SAGEMAKER_ prefix to the key and upper case it"""
-            if not key:
-                return u''
-
-            name = _decode(name).upper()
-            return name if name.startswith(u'SAGEMAKER') else u'SAGEMAKER_%s' % name
-
-        # e.f SAGEMAKER_KEY_NAME
-        formatted_key = format_key(key)
-
-        # if value is a dictionary, e.g {a:1, b:2}
-        if hasattr(value, 'items'):
-
-            # SAGEMAKER_KEY_NAME = a,b
-            keys[formatted_key] = u','.join(sorted(value))
-
-            for _k, _v in value.items():
-                # SAGEMAKER_KEY_NAME_A
-                _name = format_key('%s_%s' % (formatted_key, _k))
-
-                # RECURSIVELY CREATE KEYS
-                sub_keys = transform_to_keys(_name, _v)
-                keys.update(sub_keys)
-
-        elif isinstance(value, collections.Sequence) and not isinstance(value, six.string_types) and not isinstance(
-                value, six.binary_type):
-
-            decoded_seq = sorted([_decode(element) for element in value])
-
-            keys[formatted_key] = u','.join(decoded_seq)
+    def format_key(key):
+        """Decode a key, adds a SM_ prefix to the key and upper case it"""
+        if key:
+            decoded_name = 'SM_%s' % str(key).upper()
+            return decoded_name
         else:
-            keys[formatted_key] = _decode(value)
-        return keys
+            return ''
 
-    result = {}
+    def format_value(_mapping):
+        if hasattr(_mapping, 'items'):
+            return json.dumps(_mapping, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+        elif six.PY3 and isinstance(_mapping, six.binary_type):
+            # transforms a byte string (b'') in unicode
+            return _mapping.decode('latin1')
+        elif _mapping is None:
+            return ''
+        else:
+            return str(_mapping)
 
-    for k, v in mapping.items():
-        result.update(transform_to_keys(k, v))
-
-    return result
+    return {format_key(k): format_value(v) for k, v in mapping.items()}
 
 
 def to_cmd_args(mapping):  # type: (dict) -> list
@@ -124,6 +100,8 @@ def _decode(obj):  # type: (bytes or str or unicode or object) -> unicode
     Returns:
         object decoded in unicode.
     """
+    if obj is None:
+        return u''
     if six.PY3 and isinstance(obj, six.binary_type):
         # transforms a byte string (b'') in unicode
         return obj.decode('latin1')
