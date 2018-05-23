@@ -196,7 +196,7 @@ def test_env_vars_round_trip():
     assert env_vars['SM_NETWORK_INTERFACE_NAME'] == 'ethwe'
     assert env_vars['SM_LOG_LEVEL'] == '20'
     assert env_vars['SM_INPUT_DIR'].endswith('/opt/ml/input')
-    assert env_vars['SM_NUM_CPUS'] == '4'
+    assert env_vars['SM_NUM_CPUS'] == str(training_env.num_cpus)
     assert env_vars['SM_HP_BATCH_SIZE'] == '64'
     assert env_vars['SM_CHANNEL_TRAIN'].endswith('/opt/ml/input/data/train')
     assert env_vars['SM_CHANNEL_VALIDATION'].endswith('/opt/ml/input/data/validation')
@@ -210,7 +210,7 @@ def test_env_vars_round_trip():
     assert env_vars['SM_OUTPUT_DIR'].endswith('/opt/ml/output')
     assert env_vars['SM_MODEL_DIR'].endswith('/opt/ml/model')
     assert env_vars['SM_HOSTS'] == "['algo-1', 'algo-2', 'algo-3']"
-    assert env_vars['SM_NUM_GPUS'] == '0'
+    assert env_vars['SM_NUM_GPUS'] == str(training_env.num_gpus)
     assert env_vars['SM_MODULE_DIR'] == 's3/something'
     assert env_vars['SM_CURRENT_HOST'] == 'algo-1'
     assert env_vars['SM_CHANNELS'] == "['train', 'validation']"
