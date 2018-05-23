@@ -136,11 +136,11 @@ def test_to_cmd_args(target, expected):
       {u'SAGEMAKER_NESTED': u"1,['2', '3', [['6']]]"}),
 
      ({'map': {'a': [1, 3, 4]}, 'channel_dirs': {'train': 'foo', 'eval': 'bar'}},
-      {'SAGEMAKER_CHANNEL_DIRS': 'eval,train', 'SAGEMAKER_CHANNEL_DIRS_TRAIN': 'foo',
-       'SAGEMAKER_CHANNEL_DIRS_EVAL': 'bar', 'SAGEMAKER_MAP': 'a', 'SAGEMAKER_MAP_A': '1,3,4'}),
+      {u'SAGEMAKER_CHANNEL_DIRS': u'eval,train', u'SAGEMAKER_CHANNEL_DIRS_TRAIN': u'foo',
+       u'SAGEMAKER_CHANNEL_DIRS_EVAL': u'bar', u'SAGEMAKER_MAP': 'a', u'SAGEMAKER_MAP_A': u'1,3,4'}),
 
      ({'truthy': True, 'falsy': False},
-      {'SAGEMAKER_FALSY': 'False', 'SAGEMAKER_TRUTHY': 'True'})
+      {u'SAGEMAKER_FALSY': 'uFalse', u'SAGEMAKER_TRUTHY': u'True'})
 
      ])
 def test_to_env_vars(target, expected):
