@@ -114,3 +114,36 @@ def test_to_cmd_args(target, expected):
     actual = _mapping.to_cmd_args(target)
 
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    'target, expected',
+    [({'model_dir': '/opt/ml/model', 'OUTPUT_DIR': '/opt/ml/output'},
+      {u'SAGEMAKER_MODEL_DIR': u'/opt/ml/model', u'SAGEMAKER_OUTPUT_DIR': u'/opt/ml/output'}),
+
+     ({},
+      {}),
+
+     ({'': ''}, {u'': u''}),
+
+     ({'SAGEMAKER_value': 'some value'},
+      {u'SAGEMAKER_VALUE': u'some value'}),
+
+     ({'unicode': u'¡ø', 'bytes': b'2', 'floats': 4., 'int': 2},
+      {u'SAGEMAKER_BYTES': u'2', u'SAGEMAKER_FLOATS': u'4.0', u'SAGEMAKER_INT': u'2', u'SAGEMAKER_UNICODE': u'¡ø'}),
+
+     ({'nested': ['1', ['2', '3', [['6']]]]},
+      {u'SAGEMAKER_NESTED': u"1,['2', '3', [['6']]]"}),
+
+     ({'map': {'a': [1, 3, 4]}, 'channel_dirs': {'train': 'foo', 'eval': 'bar'}},
+      {'SAGEMAKER_CHANNEL_DIRS': 'eval,train', 'SAGEMAKER_CHANNEL_DIRS_TRAIN': 'foo',
+       'SAGEMAKER_CHANNEL_DIRS_EVAL': 'bar', 'SAGEMAKER_MAP': 'a', 'SAGEMAKER_MAP_A': '1,3,4'}),
+
+     ({'truthy': True, 'falsy': False},
+      {'SAGEMAKER_FALSY': 'False', 'SAGEMAKER_TRUTHY': 'True'})
+
+     ])
+def test_to_env_vars(target, expected):
+    actual = _mapping.to_env_vars(target)
+
+    assert actual == expected

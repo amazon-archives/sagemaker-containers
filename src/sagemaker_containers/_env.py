@@ -22,8 +22,6 @@ import subprocess
 
 from sagemaker_containers import _mapping, _params
 
-logger = logging.getLogger(__name__)
-
 _BASE_PATH_ENV = 'base_dir'  # type: str
 
 base_dir = os.environ.get(_BASE_PATH_ENV, os.path.join('/opt', 'ml'))  # type: str
@@ -108,7 +106,7 @@ def read_hyperparameters():  # type: () -> dict
     try:
         return {k: json.loads(v) for k, v in hyperparameters.items()}
     except (ValueError, TypeError):  # pragma: py2 no cover
-        logger.info("Failed to parse hyperparameters' values to Json. Returning the hyperparameters instead:")
+        logging.info("Failed to parse hyperparameters' values to Json. Returning the hyperparameters instead:")
         return hyperparameters
 
 
@@ -186,7 +184,7 @@ def num_gpus():  # type: () -> int
         output = subprocess.check_output(cmd).decode('utf-8')
         return sum([1 for x in output.split('\n') if x.startswith('GPU ')])
     except (OSError, subprocess.CalledProcessError):
-        logger.info('No GPUs detected (normal if no gpus installed)')
+        logging.info('No GPUs detected (normal if no gpus installed)')
         return 0
 
 

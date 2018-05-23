@@ -20,6 +20,66 @@ import six
 SplitResultSpec = collections.namedtuple('SplitResultSpec', 'included excluded')
 
 
+def to_env_vars(mapping):  # type: (dict) -> dict
+    """Transform a dictionary in a dictionary of env vars.
+     Example:
+         >>>env_vars = mapping.to_env_vars({'model_dir': '/opt/ml/model', 'batch_size': 25})
+         >>>
+         >>>print(args)
+         ['MODEL_DIR', '/opt/ml/model', 'BATCH_SIZE', 25]
+     Args:
+         mapping (dict[str, object]): A Python mapping.
+     Returns:
+         (dict): Dictionary of env vars
+     """
+
+    def transform_to_keys(key, value):
+        """Transform a key value pair in one or more env keys"""
+        keys = {}
+
+        def format_key(name):
+            """Decode a key, adds a SAGEMAKER_ prefix to the key and upper case it"""
+            if not key:
+                return u''
+
+            name = _decode(name).upper()
+            return name if name.startswith(u'SAGEMAKER') else u'SAGEMAKER_%s' % name
+
+        # e.f SAGEMAKER_KEY_NAME
+        formatted_key = format_key(key)
+
+        # if value is a dictionary, e.g {a:1, b:2}
+        if hasattr(value, 'items'):
+
+            # SAGEMAKER_KEY_NAME = a,b
+            keys[formatted_key] = u','.join(sorted(value))
+
+            for _k, _v in value.items():
+                # SAGEMAKER_KEY_NAME_A
+                _name = format_key('%s_%s' % (formatted_key, _k))
+
+                # RECURSIVELY CREATE KEYS
+                sub_keys = transform_to_keys(_name, _v)
+                keys.update(sub_keys)
+
+        elif isinstance(value, collections.Sequence) and not isinstance(value, six.string_types) and not isinstance(
+                value, six.binary_type):
+
+            decoded_seq = sorted([_decode(element) for element in value])
+
+            keys[formatted_key] = u','.join(decoded_seq)
+        else:
+            keys[formatted_key] = _decode(value)
+        return keys
+
+    result = {}
+
+    for k, v in mapping.items():
+        result.update(transform_to_keys(k, v))
+
+    return result
+
+
 def to_cmd_args(mapping):  # type: (dict) -> list
     """Transform a dictionary in a list of cmd arguments.
     Example:
