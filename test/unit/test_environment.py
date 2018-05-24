@@ -41,7 +41,12 @@ INPUT_DATA_CONFIG = {
     }
 }
 
-USER_HYPERPARAMETERS = dict(batch_size=32, learning_rate=.001)
+USER_HYPERPARAMETERS = {
+    'batch_size':    32,
+    'learning_rate': .001,
+    'hosts':         ['algo-1', 'algo-2'],
+}
+
 SAGEMAKER_HYPERPARAMETERS = {
     'sagemaker_region':                    'us-west-2',
     'default_user_module_name':            'net',
@@ -51,6 +56,7 @@ SAGEMAKER_HYPERPARAMETERS = {
     'sagemaker_enable_cloudwatch_metrics': True,
     'sagemaker_container_log_level':       logging.WARNING,
     '_tuning_objective_metric':            'loss:3.4',
+    'sagemaker_channels':                  {'train': '/opt/input/data/train', 'eval': '/opt/input/data/eva/', },
 }
 
 ALL_HYPERPARAMETERS = dict(itertools.chain(USER_HYPERPARAMETERS.items(), SAGEMAKER_HYPERPARAMETERS.items()))
@@ -62,20 +68,19 @@ def test_read_hyperparameters():
     assert _env.read_hyperparameters() == ALL_HYPERPARAMETERS
 
 
-def test_read_key_serialized_hyperparameters():
-    key_serialized_hps = {k: json.dumps(v) for k, v in ALL_HYPERPARAMETERS.items()}
-    test.write_json(key_serialized_hps, _env.hyperparameters_file_dir)
+def test_read_value_serialized_hyperparameters():
+    serialized_hps = {k: json.dumps(v) for k, v in ALL_HYPERPARAMETERS.items()}
+    test.write_json(serialized_hps, _env.hyperparameters_file_dir)
 
     assert _env.read_hyperparameters() == ALL_HYPERPARAMETERS
 
 
-def test_read_key_serialized_and_non_key_serialized_hyperparameters():
-    hps_to_serialize = ('default_user_module_name', 'sagemaker_job_name', 'sagemaker-training-job',
-                        'sagemaker_program', 'sagemaker_submit_directory')
+def test_read_value_serialized_and_non_value_serialized_hyperparameters():
+    hyperparameters = {k: json.dumps(v) for k, v in SAGEMAKER_HYPERPARAMETERS.items()}
 
-    key_serialized_hps = {k: json.dumps(v) if k in hps_to_serialize else v for k, v in ALL_HYPERPARAMETERS.items()}
+    hyperparameters.update(USER_HYPERPARAMETERS)
 
-    test.write_json(key_serialized_hps, _env.hyperparameters_file_dir)
+    test.write_json(hyperparameters, _env.hyperparameters_file_dir)
 
     assert _env.read_hyperparameters() == ALL_HYPERPARAMETERS
 
