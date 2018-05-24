@@ -28,29 +28,29 @@ builtins_open = '__builtin__.open' if six.PY2 else 'builtins.open'
 RESOURCE_CONFIG = dict(current_host='algo-1', hosts=['algo-1', 'algo-2', 'algo-3'])
 
 INPUT_DATA_CONFIG = {
-    'train': {
-        'ContentType': 'trainingContentType',
-        'TrainingInputMode': 'File',
+    'train':      {
+        'ContentType':        'trainingContentType',
+        'TrainingInputMode':  'File',
         'S3DistributionType': 'FullyReplicated',
-        'RecordWrapperType': 'None'
+        'RecordWrapperType':  'None'
     },
     'validation': {
-        'TrainingInputMode': 'File',
+        'TrainingInputMode':  'File',
         'S3DistributionType': 'FullyReplicated',
-        'RecordWrapperType': 'None'
+        'RecordWrapperType':  'None'
     }
 }
 
 USER_HYPERPARAMETERS = dict(batch_size=32, learning_rate=.001)
 SAGEMAKER_HYPERPARAMETERS = {
-    'sagemaker_region': 'us-west-2',
-    'default_user_module_name': 'net',
-    'sagemaker_job_name': 'sagemaker-training-job',
-    'sagemaker_program': 'main.py',
-    'sagemaker_submit_directory': 'imagenet',
+    'sagemaker_region':                    'us-west-2',
+    'default_user_module_name':            'net',
+    'sagemaker_job_name':                  'sagemaker-training-job',
+    'sagemaker_program':                   'main.py',
+    'sagemaker_submit_directory':          'imagenet',
     'sagemaker_enable_cloudwatch_metrics': True,
-    'sagemaker_container_log_level': logging.WARNING,
-    '_tuning_objective_metric': 'loss:3.4'
+    'sagemaker_container_log_level':       logging.WARNING,
+    '_tuning_objective_metric':            'loss:3.4'
 }
 
 ALL_HYPERPARAMETERS = dict(itertools.chain(USER_HYPERPARAMETERS.items(), SAGEMAKER_HYPERPARAMETERS.items()))
