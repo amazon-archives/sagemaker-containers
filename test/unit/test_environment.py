@@ -50,7 +50,7 @@ SAGEMAKER_HYPERPARAMETERS = {
     'sagemaker_submit_directory':          'imagenet',
     'sagemaker_enable_cloudwatch_metrics': True,
     'sagemaker_container_log_level':       logging.WARNING,
-    '_tuning_objective_metric':            'loss:3.4'
+    '_tuning_objective_metric':            'loss:3.4',
 }
 
 ALL_HYPERPARAMETERS = dict(itertools.chain(USER_HYPERPARAMETERS.items(), SAGEMAKER_HYPERPARAMETERS.items()))
