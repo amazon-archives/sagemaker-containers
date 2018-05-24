@@ -105,11 +105,18 @@ def read_hyperparameters():  # type: () -> dict
     """
     hyperparameters = _read_json(hyperparameters_file_dir)
 
-    try:
-        return {k: json.loads(v) for k, v in hyperparameters.items()}
-    except (ValueError, TypeError):  # pragma: py2 no cover
-        logger.info("Failed to parse hyperparameters' values to Json. Returning the hyperparameters instead:")
-        return hyperparameters
+    deserialized_hps = {}
+
+    for k, v in hyperparameters.items():
+        try:
+            v = json.loads(v)
+        except (ValueError, TypeError):
+            logger.info("Failed to parse hyperparameter %s value %s to Json.\n"
+                        "Returning the value itself", k, v)
+
+        deserialized_hps[k] = v
+
+    return deserialized_hps
 
 
 def read_resource_config():  # type: () -> dict
@@ -407,6 +414,8 @@ class TrainingEnv(_Env):
             my_module:main
 
         network_interface_name (str): Name of the network interface used for distributed training
+
+        job_name (str): The name of the current training job
     """
 
     def __init__(self, resource_config=None, input_data_config=None, hyperparameters=None):
@@ -447,6 +456,16 @@ class TrainingEnv(_Env):
         self._input_dir = input_dir
         self._input_config_dir = input_config_dir
         self._output_dir = output_dir
+        self._job_name = os.environ.get(_params.TRAINING_JOB_ENV.upper(), None)
+
+    @property
+    def job_name(self):  # type: () -> str
+        """The name of the current training job.
+
+        Returns:
+            str: the training job name.
+        """
+        return self._job_name
 
     def to_cmd_args(self):
         """Command line arguments representation of the training environment.
@@ -464,14 +483,15 @@ class TrainingEnv(_Env):
         """
 
         env = {
-            'hosts': self.hosts, 'network_interface_name': self.network_interface_name, 'hps': self.hyperparameters,
-            'resource_config': self.resource_config, 'input_data_config': self.input_data_config,
-            'output_data_dir': self.output_data_dir, 'channels': sorted(self.channel_input_dirs.keys()),
-            'current_host': self.current_host, 'module_name': self.module_name, 'log_level': self.log_level,
+            'hosts':            self.hosts, 'network_interface_name': self.network_interface_name,
+            'hps':              self.hyperparameters,
+            'resource_config':  self.resource_config, 'input_data_config': self.input_data_config,
+            'output_data_dir':  self.output_data_dir, 'channels': sorted(self.channel_input_dirs.keys()),
+            'current_host':     self.current_host, 'module_name': self.module_name, 'log_level': self.log_level,
             'framework_module': self.framework_module, 'input_dir': self.input_dir,
             'input_config_dir': self.input_config_dir, 'output_dir': self.output_dir, 'num_cpus': self.num_cpus,
-            'num_gpus': self.num_gpus, 'model_dir': self.model_dir, 'module_dir': self.module_dir,
-            'training_env': dict(self), 'user_args': self.to_cmd_args()
+            'num_gpus':         self.num_gpus, 'model_dir': self.model_dir, 'module_dir': self.module_dir,
+            'training_env':     dict(self), 'user_args': self.to_cmd_args()
         }
 
         for name, path in self.channel_input_dirs.items():
