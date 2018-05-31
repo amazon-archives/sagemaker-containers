@@ -6,20 +6,27 @@ SageMaker Containers contains common functionality necessary to create a contain
 pip install sagemaker-containers
 ```
 
+SageMaker Containers gives you tools to create SageMaker-compatible containers, and has additional tools for letting you create Frameworks (SageMaker-compatible containers that can run arbitrary python scripts)
+
+[SageMaker Chainer Container](https://github.com/aws/sagemaker-chainer-container) uses sagemaker-containers.
+
+[SageMaker TensorFlow Container](https://github.com/aws/sagemaker-tensorflow-container) and [SageMaker MXNet Container](https://github.com/aws/sagemaker-mxnet-container) will be ported to use it as well in the future. 
+
 ## Getting Started -  How an user script is executed for training in SageMaker
 
-The objective of this tutorial is to explain how a script is executed inside any container using **SageMaker Containeirs**.
+The objective of this tutorial is to explain how a script is executed inside any SageMaker-compatible container using **SageMaker Containers**.
 
 ### Creating the training job
 
-A SageMaker training job created using [SageMaker Python SDK](https://github.com/aws/sagemaker-python-sdk#sagemaker-python-sdk-overview) takes an user script containing the model to be trained, the Hyperparameters required by the script, and information about the input data. For example:
+A SageMaker training job created using the [SageMaker Python SDK](https://github.com/aws/sagemaker-python-sdk#sagemaker-python-sdk-overview) [```Chainer```](https://github.com/aws/sagemaker-python-sdk#chainer-sagemaker-estimators), [```TensorFlow```](https://github.com/aws/sagemaker-python-sdk#tensorflow-sagemaker-estimators). and [```MXNet```](https://github.com/aws/sagemaker-python-sdk#mxnet-sagemaker-estimators) takes an user script containing the model to be trained, the Hyperparameters required by the script, and information about the input data. For example:
 
 ```python
+from sagemaker.chainer import Chainer
 
 # for complete list of parameters, see 
 # https://github.com/aws/sagemaker-python-sdk#sagemaker-python-sdk-overview
 estimator = Chainer(entry_point='user-script.py', 
-                    hyperparameters={'batch-size':256, 'learning-rate':0.0001, communicator:'pure_nccl'},
+                    hyperparameters={'batch-size':256, 'learning-rate':0.0001, 'communicator':'pure_nccl'},
                     ...) 
 
 # starts the training job with an input data channel named training pointing to s3://bucket/path/to/training/data
@@ -34,14 +41,14 @@ When the container starts for training, **SageMaker Containers** installs the us
 
 After that, the Python interpreter executes the user module, passing ```hyperparameters``` as script arguments. The example above will be executed by **SageMaker Containers** as follow:
 
-```python
+```bash
 python -m user-script --batch-size 256 --learning_rate 0.0001 --communicator pure_nccl
 ```
 
-An user provide script consumes the hyperparameters using any argument parsing library, for example:
+A user provide script consumes the hyperparameters using any argument parsing library, for example:
 
 ```python
-  if __name__ == '__main__':
+if __name__ == '__main__':
   parser = argparse.ArgumentParser()
 
   parser.add_argument('--learning-rate', type=int, default=1)
@@ -55,13 +62,13 @@ An user provide script consumes the hyperparameters using any argument parsing l
 
 ### Reading additional information from the container
 
-Very often, an user script needs additional information from the container that is not available in ```hyperparameters```.
+Very often, a user script needs additional information from the container that is not available in ```hyperparameters```.
 SageMaker Containers writes this information as **environment variables** that are available inside the script.
 
 For example, the example above can read information about the **training** channel provided in the training job request:
 
 ```python
-  if __name__ == '__main__':
+if __name__ == '__main__':
   parser = argparse.ArgumentParser()
 
   ...
@@ -76,7 +83,7 @@ For example, the example above can read information about the **training** chann
 ### List of provided environment variables by SageMaker Containers
 
 The list of the environment variables is logged and available in cloudwatch logs. From the example above:
-```json
+```bash
 SM_NUM_GPUS=1
 SM_NUM_CPUS=4
 SM_NETWORK_INTERFACE_NAME=ethwe
@@ -85,16 +92,12 @@ SM_CURRENT_HOST=algo-1
 SM_HOSTS=["algo-1","algo-2"]
 SM_LOG_LEVEL=20
 
-SM_USER_ARGS=["--batch-size","256","--learning_rate","0.0001","--communicator","pure_nccl"]
+SM_USER_ARGS=["--batch-size","256","--learning-rate","0.0001","--communicator","pure_nccl"]
 
 SM_HP_LEARNING_RATE=0.0001
 SM_HP_BATCH-SIZE=10000
 
-SM_HPS=
-{
-    "batch-size": 10000,
-    "epochs": 1
-}
+SM_HPS={"batch-size": '256', "learning-rate": "0.0001","communicator": "pure_nccl"}
 
 SM_CHANNELS=["testing","training"]
 SM_CHANNEL_TRAINING=/opt/ml/input/data/training
@@ -184,60 +187,134 @@ SM_TRAINING_ENV=
     }
 }
 ```
+## IMPORTANT ENVIRONMENT VARIABLES
+
+### SM_MODEL_DIR
+```json
+SM_MODEL_DIR=/opt/ml/model
+```
+When the training job finishes, the container will be **deleted** including its file system expect by **/opt/ml/model** and **/opt/ml/output**. Use **/opt/ml/model** to save the model checkpoints. These checkpoints will be uploaded to the default S3 bucket. Usage example:
+```python
+# using it in argparse
+parser.add_argument('model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
+
+# using it as variable
+model_dir = os.environ['SM_MODEL_DIR']
+
+# saving checkpoints to model dir in chainer
+serializers.save_npz(os.path.join(os.environ['SM_MODEL_DIR'], 'model.npz'), model)
+```
+
+For more information, see: [How Amazon SageMaker Processes Training Output](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html#your-algorithms-training-algo-envvariables)
+
+### SM_CHANNELS
+```bash
+SM_CHANNELS='["testing","training"]'
+```
+Contains the list of input data channels in the container.
+
+When you run training, you can partition your training data into different logical "channels".
+Depending on your problem, some common channel ideas are: "training", "testing", "evaluation" or "images',"labels".
+
+```SM_CHANNELS``` includes the name of the available channels in the container as a JSON encoded list. Usage example:
+
+```python
+import json
+
+# using it in argparse
+parser.add_argument('channel_names', type=int, default=json.loads(os.environ['SM_CHANNELS'])))
+
+# using it as variable
+channel_names = json.loads(os.environ['SM_CHANNELS']))
+```
+
+### SM_CHANNEL_```{channel_name}```
+```bash
+SM_CHANNEL_TRAINING='/opt/ml/input/data/training'
+SM_CHANNEL_TESTING='/opt/ml/input/data/testing'
+```
+Contains the directory where the channel named ```channel_name``` is located in the container. Usage examples:
+
+```python
+import json
+
+parser.add_argument('--train', type=str, default=os.environ['SM_CHANNEL_TRAINING'])
+parser.add_argument('--test', type=str, default=os.environ['SM_CHANNEL_TESTING'])
+
+    
+args = parser.parse_args()
+
+train_file = np.load(os.path.join(args.train, 'train.npz'))
+test_file = np.load(os.path.join(args.test, 'test.npz'))
+```
+
+### SM_HPS
+```bash
+SM_HPS='{"batch-size": "256", "learning-rate": "0.0001","communicator": "pure_nccl"}'
+```
+Contains a JSON encoded dictionary with the user provided hyperparameters. Example usage:
+
+```python
+import json
+
+hyperparameters = json.loads(os.environ['SM_HPS']))
+# {"batch-size": 256, "learning-rate": 0.0001, "communicator": "pure_nccl"}
+```
+### SM_HP_```{hyperparameter_name}```
+```bash
+SM_HP_LEARNING-RATE=0.0001
+SM_HP_BATCH-SIZE=10000
+SM_HP_COMMUNICATOR=pure_nccl
+```
+Contains value of the hyperparameter named ```hyperparameter_name```. Usage examples:
+
+```python
+learning_rate = float(os.environ['SM_HP_LEARNING-RATE'])
+batch_size = int(os.environ['SM_HP_BATCH-SIZE'])
+comminicator = os.environ['SM_HP_COMMUNICATOR']
+```
 ## Environment Variables full specification:
-
+            
 #### SM_NUM_GPUS
-The number of gpus available in the current container.
-
-##### Usage example
-###### log
 ```json
 SM_NUM_GPUS=1
 ```
-###### script (arg parse)
+The number of gpus available in the current container. Usage example:
+
 ```python
+# using it in argparse
 parser.add_argument('num_gpus', type=int, default=os.environ['SM_NUM_GPUS'])
-```
-###### script (as variable)
-```python
-num_gpus = int(os.environ['SM_NUM_GPUS'])
+
 ```
 
 
 #### SM_NUM_CPUS
-The number of cpus available in the current container.
-
-##### Usage example
-###### log
 ```json
 SM_NUM_CPUS=32
 ```
-###### script (arg parse)
+The number of cpus available in the current container. Usage example:
 ```python
+# using it in argparse
 parser.add_argument('num_cpus', type=int, default=os.environ['SM_NUM_CPUS'])
-```
-###### script (as variable)
-```python
+
+# using it as variable
 num_cpus = int(os.environ['SM_NUM_CPUS'])
 ```
 
-### SM_NETWORK_INTERFACE_NAME
-Name of the network interface, useful for distributed training.
 
-#### Usage example
-###### log
+
+### SM_NETWORK_INTERFACE_NAME
 ```json
 SM_NETWORK_INTERFACE_NAME=ethwe
 ```
-###### script (arg parse)
+Name of the network interface, useful for distributed training. Usage example:
 ```python
+# using it in argparse
 parser.add_argument('network_interface', type=str, default=os.environ['SM_NETWORK_INTERFACE_NAME'])
-```
-###### script (as variable)
-```python
+
+# using it as variable
 network_interface = os.environ['SM_NETWORK_INTERFACE_NAME']
 ```
-
 
 ## License
 
