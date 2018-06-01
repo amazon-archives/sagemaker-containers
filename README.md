@@ -26,10 +26,13 @@ from sagemaker.chainer import Chainer
 # for complete list of parameters, see 
 # https://github.com/aws/sagemaker-python-sdk#sagemaker-python-sdk-overview
 estimator = Chainer(entry_point='user-script.py', 
-                    hyperparameters={'batch-size':256, 'learning-rate':0.0001, 'communicator':'pure_nccl'},
+                    hyperparameters={'batch-size':256, 
+                                     'learning-rate':0.0001, 
+                                     'communicator':'pure_nccl'},
                     ...) 
 
-# starts the training job with an input data channel named training pointing to s3://bucket/path/to/training/data
+# starts the training job with an input data channel named training pointing to 
+# s3://bucket/path/to/training/data
 # for more information about data channels, see
 # https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html#your-algorithms-training-algo-running-container-inputdataconfig
 chainer_estimator.fit({'training': 's3://bucket/path/to/training/data', 'testing': 's3://bucket/path/to/testing/data')
@@ -214,7 +217,7 @@ SM_CHANNELS='["testing","training"]'
 Contains the list of input data channels in the container.
 
 When you run training, you can partition your training data into different logical "channels".
-Depending on your problem, some common channel ideas are: "training", "testing", "evaluation" or "images',"labels".
+Depending on your problem, some common channel ideas are: "training", "testing", "evaluation" or "images'and "labels".
 
 ```SM_CHANNELS``` includes the name of the available channels in the container as a JSON encoded list. Usage example:
 
@@ -369,22 +372,20 @@ JSON encoded list with the script arguments provided for training.
 ```json
 SM_INPUT_DIR=/opt/ml/input/
 ```
-The path of the input directory, e.g. /opt/ml/input/
-The input_dir, e.g. /opt/ml/input/, is the directory where SageMaker saves input data and configuration files before and during training.
+The path of the input directory, e.g. ```/opt/ml/input/```
+The input_dir, e.g. ```/opt/ml/input/```, is the directory where SageMaker saves input data and configuration files before and during training.
 
 ### SM_INPUT_CONFIG_DIR
 ```json
 SM_INPUT_DIR=/opt/ml/input/config
 ```
-The path of the input directory, e.g. /opt/ml/input/config/
-The directory where standard SageMaker configuration files are located, e.g. /opt/ml/input/config/.
+The path of the input directory, e.g. ```/opt/ml/input/config/```. The directory where standard SageMaker configuration files are located, e.g. ```/opt/ml/input/config/```.
+
 SageMaker training creates the following files in this folder when training starts:
-    - `hyperparameters.json`: Amazon SageMaker makes the hyperparameters in a CreateTrainingJob
-        request available in this file.
-    - `inputdataconfig.json`: You specify data channel information in the InputDataConfig parameter
-        in a CreateTrainingJob request. Amazon SageMaker makes this information available
-        in this file.
-    - `resourceconfig.json`: name of the current host and all host containers in the training
+- `hyperparameters.json`: Amazon SageMaker makes the hyperparameters in a CreateTrainingJob request available in this file.
+- `inputdataconfig.json`: You specify data channel information in the InputDataConfig parameter in a CreateTrainingJob request. Amazon SageMaker makes this information available in this file.
+- `resourceconfig.json`: name of the current host and all host containers in the training.
+
 More information about this files can be find here:
     https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html
 
@@ -392,7 +393,7 @@ More information about this files can be find here:
 ```json
 SM_OUTPUT_DATA_DIR=/opt/ml/output/data/algo-1
 ```
-The dir to write non-model training artifacts (e.g. evaluation results) which will be retained by SageMaker, e.g. /opt/ml/output/data. 
+The dir to write non-model training artifacts (e.g. evaluation results) which will be retained by SageMaker, e.g. ```/opt/ml/output/data```. 
 
 As your algorithm runs in a container, it generates output including the status of the training job and model and output artifacts. Your algorithm should write this information to the this directory.
 
@@ -400,9 +401,9 @@ As your algorithm runs in a container, it generates output including the status 
 ```json
 SM_RESOURCE_CONFIG='{"current_host":"algo-1","hosts":["algo-1","algo-2"]}'
 ```
-The contents from /opt/ml/input/config/resourceconfig.json. It has the following keys:
+The contents from ```/opt/ml/input/config/resourceconfig.json```. It has the following keys:
 - current_host: The name of the current container on the container network.
-    For example, 'algo-1'.
+    For example, ```'algo-1'```.
 -  hosts: The list of names of all containers on the container network,
     sorted lexicographically. For example, `['algo-1', 'algo-2', 'algo-3']`
     for a three-node cluster.
@@ -425,28 +426,10 @@ SM_INPUT_DATA_CONFIG='{
     }
 }'
 ```
-Input data configuration from /opt/ml/input/config/inputdataconfig.json.
-        For example, suppose that you specify three data channels (train, evaluation, and
-        validation) in your request. This dictionary will contain:
-        {'train': {
-            'ContentType':  'trainingContentType',
-            'TrainingInputMode': 'File',
-            'S3DistributionType': 'FullyReplicated',
-            'RecordWrapperType': 'None'
-        },
-        'evaluation' : {
-            'ContentType': 'evalContentType',
-            'TrainingInputMode': 'File',
-            'S3DistributionType': 'FullyReplicated',
-            'RecordWrapperType': 'None'
-        },
-        'validation': {
-            'TrainingInputMode': 'File',
-            'S3DistributionType': 'FullyReplicated',
-            'RecordWrapperType': 'None'
-        }}
-        For more information about inpudataconfig.json:
-https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html#your-algorithms-training-algo-running-container-dist-training
+Input data configuration from ```/opt/ml/input/config/inputdataconfig.json```.
+
+For more information about inpudataconfig.json:
+  https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html#your-algorithms-training-algo-running-container-dist-training
 
 ### SM_TRAINING_ENV
 ```python
