@@ -37,6 +37,9 @@ DEFAULT_CONFIG = dict(ContentType="application/x-numpy", TrainingInputMode="File
 DEFAULT_HYPERPARAMETERS = dict(sagemaker_region='us-west-2', sagemaker_job_name='sagemaker-training-job',
                                sagemaker_enable_cloudwatch_metrics=False, sagemaker_container_log_level=logging.WARNING)
 
+# Should resolve to test/data, regardless of where the current working directory is.
+TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+
 
 def sagemaker_session(region_name=DEFAULT_REGION):  # type: (str) -> sagemaker.Session
     return sagemaker.Session(boto3.Session(region_name=region_name))
