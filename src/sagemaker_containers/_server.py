@@ -17,6 +17,7 @@ import signal
 import subprocess
 
 import pkg_resources
+
 import sagemaker_containers
 from sagemaker_containers import _env
 
