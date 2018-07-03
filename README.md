@@ -10,7 +10,7 @@ SageMaker Containers gives you tools to create SageMaker-compatible containers, 
 
 [SageMaker Chainer Container](https://github.com/aws/sagemaker-chainer-container) uses sagemaker-containers.
 
-[SageMaker TensorFlow Container](https://github.com/aws/sagemaker-tensorflow-container) and [SageMaker MXNet Container](https://github.com/aws/sagemaker-mxnet-container) will be ported to use it as well in the future. 
+[SageMaker TensorFlow Container](https://github.com/aws/sagemaker-tensorflow-containers) and [SageMaker MXNet Container](https://github.com/aws/sagemaker-mxnet-containers) will be ported to use it as well in the future. 
 
 ## Getting Started -  Executing User Scripts on Amazon SageMaker
 
