@@ -152,19 +152,23 @@ def download_and_install(url, name=DEFAULT_MODULE_NAME, cache=True):
 
     if not should_use_cache:
         with _files.tmpdir() as tmpdir:
-            dst = os.path.join(tmpdir, 'tar_file')
-            s3_download(url, dst)
+            module_path = url
 
-            module_path = os.path.join(tmpdir, 'module_dir')
+            if url.startswith('s3://'):
+                dst = os.path.join(tmpdir, 'tar_file')
+                s3_download(url, dst)
+                module_path = os.path.join(tmpdir, 'module_dir')
+                os.makedirs(module_path)
 
-            os.makedirs(module_path)
+                with tarfile.open(name=dst, mode='r:gz') as t:
+                    t.extractall(path=module_path)
 
-            with tarfile.open(name=dst, mode='r:gz') as t:
-                t.extractall(path=module_path)
+            elif url.startswith('file://'):
+                module_path = module_path.replace('file://', '', 1)
 
-                prepare(module_path, name)
+            prepare(module_path, name)
 
-                install(module_path)
+            install(module_path)
 
 
 def run(module_name, args=None, env_vars=None):  # type: (str, list, dict) -> None
@@ -269,9 +273,9 @@ def import_module_from_s3(url, name=DEFAULT_MODULE_NAME, cache=True):  # type: (
         six.reraise(_errors.ImportModuleError, _errors.ImportModuleError(e), sys.exc_info()[2])
 
 
-def run_module_from_s3(url, args, env_vars=None, name=DEFAULT_MODULE_NAME, cache=True):
+def run_module(url, args, env_vars=None, name=DEFAULT_MODULE_NAME, cache=True):
     # type: (str, list, dict, str) -> None
-    """Download, prepare and executes a compressed tar file from S3 as a module.
+    """Download, prepare and executes a compressed tar file from S3 or provided directory as a module.
 
     SageMaker Python SDK saves the user provided scripts as compressed tar files in S3
     https://github.com/aws/sagemaker-python-sdk.
