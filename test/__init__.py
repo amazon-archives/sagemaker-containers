@@ -172,6 +172,18 @@ class UserModule(object):
             self._s3.Object(self.bucket, self.key).upload_file(tar_name)
         return self
 
+    def create_tmp_dir_with_files(self, tmp_dir_path):
+        for _file in self._files:
+            name = os.path.join(tmp_dir_path, _file.name)
+            with open(name, 'w+') as f:
+
+                if isinstance(_file.data, six.string_types):
+                    data = _file.data
+                else:
+                    data = '\n'.join(_file.data)
+
+                f.write(data)
+
 
 class Channel(collections.namedtuple('Channel', ['name', 'config'])):  # type: (str, dict) -> Channel
 
