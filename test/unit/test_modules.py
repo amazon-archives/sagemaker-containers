@@ -154,7 +154,7 @@ def test_run():
 def test_run_module_from_s3():
     with patch('sagemaker_containers._modules.download_and_install') as download_and_install:
         with patch('sagemaker_containers._modules.run') as run:
-            _modules.run_module(url='s3://url', args=['42'], cache=True)
+            _modules.run_module(uri='s3://url', args=['42'], cache=True)
 
             download_and_install.assert_called_with('s3://url', 'default_user_module_name', True)
             run.assert_called_with('default_user_module_name', ['42'], {})
@@ -171,7 +171,7 @@ class TestDownloadAndImport(test.TestBase):
 
     def test_without_cache(self):
         with tarfile.open() as tar_file:
-            module = _modules.import_module_from_s3('s3://bucket/my-module', cache=False)
+            module = _modules.import_module('s3://bucket/my-module', cache=False)
 
             assert module == importlib.import_module(_modules.DEFAULT_MODULE_NAME)
 
@@ -186,7 +186,7 @@ class TestDownloadAndImport(test.TestBase):
         with tarfile.open() as tar_file:
             _modules.exists.return_value = True
 
-            module = _modules.import_module_from_s3('s3://bucket/my-module', cache=True)
+            module = _modules.import_module('s3://bucket/my-module', cache=True)
 
             assert module == importlib.import_module(_modules.DEFAULT_MODULE_NAME)
 
@@ -201,7 +201,7 @@ class TestDownloadAndImport(test.TestBase):
         with tarfile.open() as tar_file:
             _modules.exists.return_value = False
 
-            module = _modules.import_module_from_s3('s3://bucket/my-module', cache=True)
+            module = _modules.import_module('s3://bucket/my-module', cache=True)
 
             assert module == importlib.import_module(_modules.DEFAULT_MODULE_NAME)
 
@@ -216,7 +216,7 @@ class TestDownloadAndImport(test.TestBase):
         with tarfile.open() as tar_file:
             _modules.exists.return_value = False
 
-            module = _modules.import_module_from_s3('s3://bucket/my-module', 'another_module_name', cache=True)
+            module = _modules.import_module('s3://bucket/my-module', 'another_module_name', cache=True)
 
             assert module == importlib.import_module('another_module_name')
 

@@ -131,7 +131,7 @@ def exists(name):  # type: (str) -> bool
         return True
 
 
-def download_and_install(url, name=DEFAULT_MODULE_NAME, cache=True):
+def download_and_install(uri, name=DEFAULT_MODULE_NAME, cache=True):
     # type: (str, str, bool) -> module
     """Download, prepare and install a compressed tar file from S3 as a module.
 
@@ -142,7 +142,7 @@ def download_and_install(url, name=DEFAULT_MODULE_NAME, cache=True):
 
     Args:
         name (str): name of the script or module.
-        url (str): the s3 url of the file.
+        uri (str): the location of the module.
         cache (bool): default True. It will not download and install the module again if it is already installed.
 
     Returns:
@@ -152,19 +152,21 @@ def download_and_install(url, name=DEFAULT_MODULE_NAME, cache=True):
 
     if not should_use_cache:
         with _files.tmpdir() as tmpdir:
-            module_path = url
-
-            if url.startswith('s3://'):
+            if uri.startswith('s3://'):
                 dst = os.path.join(tmpdir, 'tar_file')
-                s3_download(url, dst)
+                s3_download(uri, dst)
                 module_path = os.path.join(tmpdir, 'module_dir')
                 os.makedirs(module_path)
 
                 with tarfile.open(name=dst, mode='r:gz') as t:
                     t.extractall(path=module_path)
 
-            elif url.startswith('file://'):
-                module_path = module_path.replace('file://', '', 1)
+            elif uri.startswith('file://'):
+                module_path = uri.replace('file://', '', 1)
+
+            else:
+                raise ValueError('Module URI must be a valid S3 or File URI: must start with "s3://" or "file://" '
+                                 'given: {}'.format(uri))
 
             prepare(module_path, name)
 
@@ -250,19 +252,19 @@ def python_executable():
     return sys.executable
 
 
-def import_module_from_s3(url, name=DEFAULT_MODULE_NAME, cache=True):  # type: (str, str, bool) -> module
-    """Download, prepare and install a compressed tar file from S3 as a module.
+def import_module(uri, name=DEFAULT_MODULE_NAME, cache=True):  # type: (str, str, bool) -> module
+    """Download, prepare and install a compressed tar file from S3 or provided directory as a module.
     SageMaker Python SDK saves the user provided scripts as compressed tar files in S3
     https://github.com/aws/sagemaker-python-sdk.
-    This function downloads this compressed file, transforms it as a module, and installs it.
+    This function downloads this compressed file, if provided, and transforms it as a module, and installs it.
     Args:
         name (str): name of the script or module.
-        url (str): the s3 url of the file.
+        uri (str): the location of the module.
         cache (bool): default True. It will not download and install the module again if it is already installed.
     Returns:
         (module): the imported module
     """
-    download_and_install(url, name, cache)
+    download_and_install(uri, name, cache)
 
     try:
         module = importlib.import_module(name)
@@ -273,7 +275,7 @@ def import_module_from_s3(url, name=DEFAULT_MODULE_NAME, cache=True):  # type: (
         six.reraise(_errors.ImportModuleError, _errors.ImportModuleError(e), sys.exc_info()[2])
 
 
-def run_module(url, args, env_vars=None, name=DEFAULT_MODULE_NAME, cache=True):
+def run_module(uri, args, env_vars=None, name=DEFAULT_MODULE_NAME, cache=True):
     # type: (str, list, dict, str) -> None
     """Download, prepare and executes a compressed tar file from S3 or provided directory as a module.
 
@@ -281,7 +283,7 @@ def run_module(url, args, env_vars=None, name=DEFAULT_MODULE_NAME, cache=True):
     https://github.com/aws/sagemaker-python-sdk.
     This function downloads this compressed file, transforms it as a module, and executes it.
     Args:
-        url (str): the s3 url of the file.
+        uri (str): the location of the module.
         args (list):  A list of program arguments.
         env_vars (dict): A map containing the environment variables to be written.
         name (str): name of the script or module.
@@ -290,7 +292,7 @@ def run_module(url, args, env_vars=None, name=DEFAULT_MODULE_NAME, cache=True):
     env_vars = env_vars or {}
     env_vars = env_vars.copy()
 
-    download_and_install(url, name, cache)
+    download_and_install(uri, name, cache)
 
     write_env_vars(env_vars)
 

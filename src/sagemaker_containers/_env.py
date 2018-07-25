@@ -222,7 +222,7 @@ class _Env(_mapping.MappingMixin):
     def __init__(self):
         current_host = os.environ.get(_params.CURRENT_HOST_ENV)
         module_name = os.environ.get(_params.USER_PROGRAM_ENV, None)
-        module_dir = os.environ.get(_params.SUBMIT_DIR_ENV, None)
+        module_dir = os.environ.get(_params.SUBMIT_DIR_ENV, 'file:///opt/ml/code')
         log_level = int(os.environ.get(_params.LOG_LEVEL_ENV, logging.INFO))
 
         self._current_host = current_host
@@ -448,16 +448,9 @@ class TrainingEnv(_Env):
         self._current_host = current_host
 
         # override base class attributes
-        if os.environ.get(_params.TRAIN_USER_PROGRAM_ENV, None) is None:
+        if self._module_name is None:
             self._module_name = str(sagemaker_hyperparameters[_params.USER_PROGRAM_PARAM])
-        else:
-            self._module_name = os.environ[_params.TRAIN_USER_PROGRAM_ENV]
-
-        if os.environ.get(_params.TRAIN_DIR_ENV, None) is None:
-            self._module_dir = str(sagemaker_hyperparameters[_params.SUBMIT_DIR_PARAM])
-        else:
-            self._module_dir = os.environ[_params.TRAIN_DIR_ENV]
-
+        self._module_dir = str(sagemaker_hyperparameters.get(_params.SUBMIT_DIR_PARAM, 'file:///opt/ml/code'))
         self._log_level = sagemaker_hyperparameters.get(_params.LOG_LEVEL_PARAM, logging.INFO)
         self._framework_module = os.environ.get(_params.FRAMEWORK_TRAINING_MODULE_ENV, None)
 
@@ -682,13 +675,6 @@ class ServingEnv(_Env):
         model_server_timeout = int(os.environ.get(_params.MODEL_SERVER_TIMEOUT_ENV, '60'))
         model_server_workers = int(os.environ.get(_params.MODEL_SERVER_WORKERS_ENV, num_cpus()))
         framework_module = os.environ.get(_params.FRAMEWORK_SERVING_MODULE_ENV, None)
-
-        # override base class attributes
-        if os.environ.get(_params.SERVE_DIR_ENV, None) is not None:
-            self._module_name = os.environ[_params.SERVE_USER_PROGRAM_ENV]
-
-        if os.environ.get(_params.SERVE_USER_PROGRAM_ENV, None) is not None:
-            self._module_dir = os.environ[_params.SERVE_DIR_ENV]
 
         self._use_nginx = use_nginx
         self._model_server_timeout = model_server_timeout
