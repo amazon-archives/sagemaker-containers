@@ -133,12 +133,12 @@ def exists(name):  # type: (str) -> bool
 
 def download_and_install(uri, name=DEFAULT_MODULE_NAME, cache=True):
     # type: (str, str, bool) -> module
-    """Download, prepare and install a compressed tar file from S3 as a module.
+    """Download, prepare and install a compressed tar file from S3 or local directory as a module.
 
     SageMaker Python SDK saves the user provided scripts as compressed tar files in S3
     https://github.com/aws/sagemaker-python-sdk.
 
-    This function downloads this compressed file, transforms it as a module, and installs it.
+    This function downloads this compressed file, if provided, and transforms it as a module, and installs it.
 
     Args:
         name (str): name of the script or module.
@@ -161,12 +161,8 @@ def download_and_install(uri, name=DEFAULT_MODULE_NAME, cache=True):
                 with tarfile.open(name=dst, mode='r:gz') as t:
                     t.extractall(path=module_path)
 
-            elif uri.startswith('file://'):
-                module_path = uri.replace('file://', '', 1)
-
             else:
-                raise ValueError('Module URI must be a valid S3 or File URI: must start with "s3://" or "file://" '
-                                 'given: {}'.format(uri))
+                module_path = uri
 
             prepare(module_path, name)
 
