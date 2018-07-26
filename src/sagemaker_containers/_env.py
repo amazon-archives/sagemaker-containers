@@ -514,11 +514,11 @@ class TrainingEnv(_Env):
 
         sagemaker_hyperparameters = split_result.included
 
-        sagemaker_region = sagemaker_hyperparameters.get(_params.REGION_NAME_PARAM, None)
+        sagemaker_region = sagemaker_hyperparameters.get(_params.REGION_NAME_PARAM, boto3.session.Session().region_name)
 
         os.environ[_params.JOB_NAME_ENV] = sagemaker_hyperparameters.get(_params.JOB_NAME_PARAM, '')
         os.environ[_params.CURRENT_HOST_ENV] = current_host
-        os.environ[_params.REGION_NAME_ENV] = sagemaker_region or boto3.session.Session().region_name
+        os.environ[_params.REGION_NAME_ENV] = sagemaker_region or ''
 
         self._hosts = hosts
         self._network_interface_name = network_interface_name
