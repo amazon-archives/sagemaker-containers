@@ -58,11 +58,12 @@ def write_json(obj, path):  # type: (object, str) -> None
         json.dump(obj, f)
 
 
-def prepare(user_module, hyperparameters, channels, current_host='algo-1', hosts=None):
+def prepare(user_module, hyperparameters, channels, current_host='algo-1', hosts=None, local=False):
     # type: (UserModule, dict, list, str, list) -> None
     hosts = hosts or ['algo-1']
 
-    user_module.upload()
+    if not local:
+        user_module.upload()
 
     create_hyperparameters_config(hyperparameters, user_module.url)
     create_resource_config(current_host, hosts)
