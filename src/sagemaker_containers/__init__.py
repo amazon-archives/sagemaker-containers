@@ -12,10 +12,6 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-from sagemaker_containers import _logging
-
-logger = _logging.get_logger()
-
 
 def training_env():
     """Create a TrainingEnv.
