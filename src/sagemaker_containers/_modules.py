@@ -229,12 +229,23 @@ def run(module_name, args=None, env_vars=None):  # type: (str, list, dict) -> No
 
 
 def _check_error(cmd, error_class, **kwargs):
-    process = subprocess.Popen(cmd, stderr=subprocess.PIPE, env=os.environ, **kwargs)
-    stdout, stderr = process.communicate()
+    process = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, env=os.environ, **kwargs)
 
-    return_code = process.poll()
-    if return_code:
+    return_code = None
+
+    while return_code is None:
+        stdout = process.stdout.readline().decode("utf-8")
+
+        sys.stdout.write(stdout)
+        return_code = process.poll()
+
+    process.stdout.close()
+    if return_code != 0:
+        stderr = process.stderr.read()
+        process.stderr.close()
         raise error_class(return_code=return_code, cmd=' '.join(cmd), output=stderr)
+
+    return return_code
 
 
 def python_executable():

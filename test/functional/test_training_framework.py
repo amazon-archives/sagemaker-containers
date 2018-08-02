@@ -29,11 +29,16 @@ from test import fake_ml_framework
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
+@pytest.fixture(name='user_module_name')
+def set_user_module_name():
+    return modules.DEFAULT_MODULE_NAME
+
+
 @pytest.fixture(autouse=True)
-def erase_user_module():
+def erase_user_module(user_module_name):
     yield
     try:
-        cmd = shlex.split('pip uninstall -y --quiet %s' % modules.DEFAULT_MODULE_NAME)
+        cmd = shlex.split('pip uninstall -y --quiet %s' % user_module_name)
         subprocess.check_call(cmd)
     except subprocess.CalledProcessError:
         pass
@@ -176,6 +181,69 @@ def test_trainer_report_success(user_script):
     test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
 
     os.environ['SAGEMAKER_TRAINING_MODULE'] = 'test.functional.simple_framework:train'
+
+    assert execute_an_wrap_exit(trainer.train) == trainer.SUCCESS_CODE
+
+    model_path = os.path.join(env.model_dir, 'saved_model')
+
+    model = fake_ml_framework.Model.load(model_path)
+
+    assert model.epochs == 10
+    assert model.batch_size == 64
+    assert model.optimizer == 'SGD'
+    assert os.path.exists(os.path.join(env.output_dir, 'success'))
+
+
+BYOC_SCRIPT_MODE = """
+import argparse
+import os
+import test.fake_ml_framework as fake_ml
+import numpy as np
+
+parser = argparse.ArgumentParser()
+
+# Data and model checkpoints directories
+parser.add_argument('--data_dir', type=str)
+parser.add_argument('--epochs', type=int)
+parser.add_argument('--batch_size', type=int)
+parser.add_argument('--model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
+
+args = parser.parse_args()
+
+data = np.load(args.data_dir)
+x_train = data['features']
+y_train = data['labels']
+
+model = fake_ml.Model(loss='elastic', optimizer='SGD')
+
+model.fit(x=x_train, y=y_train, epochs=args.epochs, batch_size=args.batch_size)
+
+model_file = os.path.join(args.model_dir, 'saved_model')
+model.save(model_file)
+"""
+
+
+@pytest.mark.parametrize('user_module_name', ['byoc_script'])
+def test_trainer_script_mode(tmpdir, user_module_name):
+    channel = test.Channel.create(name='training')
+
+    features = [1, 2, 3, 4]
+    labels = [0, 1, 0, 1]
+    np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
+
+    module = test.UserModule(test.File(name='byoc_script.py', data=BYOC_SCRIPT_MODE))
+    module.create_tmp_dir_with_files(str(tmpdir))
+
+    hyperparameters = dict(data_dir=os.path.join(channel.path, 'training_data.npz'),
+                           sagemaker_program='byoc_script.py', epochs=10,
+                           sagemaker_submit_directory=str(tmpdir), batch_size=64)
+
+    test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel], local=True)
+
+    os.environ['SAGEMAKER_TRAINING_MODULE'] = user_module_name
+
+    modules.prepare(str(tmpdir), user_module_name)
+    modules.install(str(tmpdir))
 
     assert execute_an_wrap_exit(trainer.train) == trainer.SUCCESS_CODE
 

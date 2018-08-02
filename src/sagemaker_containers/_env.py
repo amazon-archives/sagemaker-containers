@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
+import argparse
 from distutils import util
 import json
 import logging
@@ -30,12 +31,6 @@ logger = _logging.get_logger()
 
 SAGEMAKER_BASE_PATH = os.path.join('/opt', 'ml')  # type: str
 BASE_PATH_ENV = 'SAGEMAKER_BASE_DIR'  # type: str
-
-
-def _write_json(obj, path):  # type: (object, str) -> None
-    """Writes a serializeable object as a JSON file"""
-    with open(path, 'w') as f:
-        json.dump(obj, f)
 
 
 def _is_training_path_configured():  # type: () -> bool
@@ -66,18 +61,15 @@ def _set_base_path_env():  # type: () -> None
         (bool): indicating whe
     """
 
-    local_config_dir = os.path.join(os.path.expanduser('~'), 'sagemaker_local', 'jobs',
-                                    str(time.time()), 'opt', 'ml')
+    if not _is_training_path_configured() and not os.path.exists(SAGEMAKER_BASE_PATH):
+        local_config_dir = os.path.join(os.path.expanduser('~'), 'sagemaker_local', 'jobs',
+                                        str(time.time()), 'opt', 'ml')
 
-    logger.info('Setting environment variable SAGEMAKER_BASE_DIR as %s .' % local_config_dir)
-    os.environ[BASE_PATH_ENV] = local_config_dir
+        logger.info('Setting environment variable SAGEMAKER_BASE_DIR as %s .' % local_config_dir)
+        os.environ[BASE_PATH_ENV] = local_config_dir
 
 
-_is_path_configured = _is_training_path_configured()
-
-if not _is_path_configured:
-    logger.info('Directory /opt/ml does not exist.')
-    _set_base_path_env()
+_set_base_path_env()
 
 base_dir = os.environ.get(BASE_PATH_ENV, SAGEMAKER_BASE_PATH)  # type: str
 
@@ -137,29 +129,76 @@ input_data_config_file_dir = os.path.join(input_config_dir, INPUT_DATA_CONFIG_FI
 resource_config_file_dir = os.path.join(input_config_dir, RESOURCE_CONFIG_FILE)  # type: str
 
 
-def _create_training_directories():
-    """Creates the directory structure and files necessary for training under the base path
+def _write_json(obj, path):  # type: (object, str) -> None
+    """Writes a serializeable object as a JSON file"""
+    with open(path, 'w') as f:
+        json.dump(obj, f)
+
+
+def _extract_hyperparameters_from_argv():  # type: () -> dict
+    """Extracts hyperparameters from sys.argv. Supports only key pair arguments, e.g --batch-size 123
+
+    Returns:
+        (Dict[string, string]) with the script arguments conversed to hyperparameters, e.g. {'batch-size' : '123'}
     """
-    logger.info('Creating a new training folder under %s .' % base_dir)
-
-    os.makedirs(model_dir)
-    os.makedirs(input_config_dir)
-    os.makedirs(output_data_dir)
-
-    _write_json({}, hyperparameters_file_dir)
-    _write_json({}, input_data_config_file_dir)
-
-    host_name = socket.gethostname()
-
-    resources_dict = {
-        "current_host": host_name,
-        "hosts":        [host_name]
-    }
-    _write_json(resources_dict, resource_config_file_dir)
+    _, argv = argparse.ArgumentParser().parse_known_args() or []
+    script_arguments, script_values = argv[::2], argv[1::2]
+    any_argument_does_not_start_with_dashes = any(not argument.startswith('-') for argument in script_arguments)
+    if any_argument_does_not_start_with_dashes or len(script_arguments) != len(script_values):
+        raise ValueError('The script arguments must be key value pairs, %s does not match the requirement' % argv)
+    arguments_without_dashes = [arg[1:] if len(arg) == 2 else arg[2:] for arg in script_arguments]
+    hyperparameters = dict(zip(arguments_without_dashes, script_values))
+    return hyperparameters
 
 
-if not _is_path_configured:
-    _create_training_directories()
+def _create_training_directories():
+    """Creates the directory structure and files necessary for training under the base path.
+
+    Creates an empty hyperparameters.json file if dit oes not exist.
+
+    If sys.argv has any arguments, add these arguments to hyperparameters.json file.
+
+    Example: --batch-size 123 -G 32 translates to the json {"batch-size":"123", "G":"32"}
+
+    Creates an empty resourcesconfig.json file if it does not exist.
+
+    If inputdataconfig.json does not exist, creates the file with any folder
+    under /opt/ml/input/data as channels.
+
+    If resourcesconfig.json does not exist, creates the file with the current host name.
+    """
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+
+    if not os.path.exists(input_config_dir):
+        os.makedirs(input_config_dir)
+
+    if not os.path.exists(output_data_dir):
+        os.makedirs(output_data_dir)
+
+    if not os.path.exists(_input_data_dir):
+        os.makedirs(_input_data_dir)
+
+    if not os.path.exists(hyperparameters_file_dir):
+        hyperparameters = _extract_hyperparameters_from_argv()
+
+        _write_json(hyperparameters, hyperparameters_file_dir)
+
+    if not os.path.exists(input_data_config_file_dir):
+        input_data_config_dict = {channel: {} for channel in os.listdir(_input_data_dir)}
+        _write_json(input_data_config_dict, input_data_config_file_dir)
+
+    if not os.path.exists(resource_config_file_dir):
+        host_name = socket.gethostname()
+
+        resources_dict = {
+            "current_host": host_name,
+            "hosts":        [host_name]
+        }
+        _write_json(resources_dict, resource_config_file_dir)
+
+
+_create_training_directories()
 
 
 def _read_json(path):  # type: (str) -> dict
