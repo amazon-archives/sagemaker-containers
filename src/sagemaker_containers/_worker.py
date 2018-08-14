@@ -15,7 +15,7 @@ from __future__ import absolute_import
 import flask
 from six.moves import http_client
 
-from sagemaker_containers import _content_types, _env, _logging, _mapping, _status_codes
+from sagemaker_containers import _content_types, _env, _logging, _mapping
 
 env = _env.ServingEnv()
 
