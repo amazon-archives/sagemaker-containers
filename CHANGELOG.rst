@@ -9,9 +9,9 @@ CHANGELOG
 
 2.1.0
 =====
+
 * Allow for local modules to work with AWS SageMaker framework containers.
 * Support for training outside of AWS SageMaker Training.
-
 
 2.0.4
 =====
