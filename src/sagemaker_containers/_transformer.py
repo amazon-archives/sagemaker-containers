@@ -175,5 +175,5 @@ class Transformer(object):
     def _error_response(self, error, status_code):
         body = json.dumps({'error': error.__class__.__name__,
                            'error-message': str(error),
-                           'stack-trace': traceback.format_tb(error.__traceback__)})
+                           'stack-trace': traceback.format_exc()})
         return _worker.Response(response=body, status=status_code)
