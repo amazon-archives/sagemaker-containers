@@ -250,17 +250,17 @@ class Transformer(object):
 
 class UnsupportedContentTypeError(Exception):
     def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__(args[1:], **kwargs)
         self.message = 'Requested unsupported ContentType: ' + args[0]
+        super(Exception, self).__init__(self.message, *args, **kwargs)
 
 
 class UnsupportedAcceptTypeError(Exception):
     def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__(args[1:], **kwargs)
         self.message = 'Requested unsupported ContentType in Accept: ' + args[0]
+        super(Exception, self).__init__(self.message, *args, **kwargs)
 
 
 class UnsupportedInputShapeError(Exception):
     def __init__(self, *args, **kwargs):
-        super(Exception, self).__init__(args[1:], **kwargs)
         self.message = 'Model can have only 1 input data, but it has: ' + str(args[0])
+        super(Exception, self).__init__(self.message, *args, **kwargs)
