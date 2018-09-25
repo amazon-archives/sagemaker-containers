@@ -2,6 +2,11 @@
 CHANGELOG
 =========
 
+1.0.7
+=====
+
+* bug: Pip dependencies should be installed when the server start
+
 1.0.6
 =====
 
