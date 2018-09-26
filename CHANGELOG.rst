@@ -6,6 +6,7 @@ CHANGELOG
 =====
 
 * bug: Pip dependencies should be installed when the server start
+* bug-fix: Utils: Fix region-choosing when making S3 client
 
 1.0.6
 =====
