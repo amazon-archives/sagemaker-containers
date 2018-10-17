@@ -10,10 +10,13 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import json
+
 from mock import MagicMock, patch
 import pytest
+from six.moves import http_client
 
-from sagemaker_containers import _content_types, _env, _errors, _status_codes, _transformer
+from sagemaker_containers import _content_types, _env, _errors, _transformer
 import test
 
 
@@ -77,6 +80,34 @@ def test_transformer_transform_with_client_error(input_fn, predict_fn, output_fn
     assert e.value.args[0] == error_from_fn
 
 
+def test_transformer_transform_with_unsupported_content_type():
+    bad_request = test.request(data=None, content_type='fake/content-type')
+    with patch('sagemaker_containers._worker.Request', lambda: bad_request):
+        response = _transformer.Transformer().transform()
+
+    assert response.status_code == http_client.UNSUPPORTED_MEDIA_TYPE
+
+    response_body = json.loads(response.response[0].decode('utf-8'))
+    assert response_body['error'] == 'UnsupportedFormatError'
+    assert bad_request.content_type in response_body['error-message']
+
+
+def test_transformer_transform_with_unsupported_accept_type():
+    def empty_fn(*args):
+        pass
+
+    bad_request = test.request(data=None, accept='fake/content_type')
+    with patch('sagemaker_containers._worker.Request', lambda: bad_request):
+        t = _transformer.Transformer(model_fn=empty_fn, input_fn=empty_fn, predict_fn=empty_fn)
+        response = t.transform()
+
+    assert response.status_code == http_client.NOT_ACCEPTABLE
+
+    response_body = json.loads(response.response[0].decode('utf-8'))
+    assert response_body['error'] == 'UnsupportedFormatError'
+    assert bad_request.accept in response_body['error-message']
+
+
 @patch('sagemaker_containers._worker.Request', lambda: request)
 def test_transformer_with_default_predict_fn():
     with pytest.raises(NotImplementedError):
@@ -117,7 +148,7 @@ def test_transformer_transform_backwards_compatibility():
 
     transform.initialize()
 
-    assert transform.transform().status_code == _status_codes.OK
+    assert transform.transform().status_code == http_client.OK
 
     input_fn.assert_called_with(request.content, request.content_type)
     predict_fn.assert_called_with(input_fn(), model_fn())

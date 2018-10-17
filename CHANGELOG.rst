@@ -2,11 +2,28 @@
 CHANGELOG
 =========
 
+2.2.2
+=====
+
+* bug-fix: Fix choosing region for S3 client
+
+2.2.1
+=====
+
+* bug-fix: Use regional endpoint for S3 clients
+
+2.2.0
+=====
+
+* [breaking change] Remove ``status_codes`` module and use ``six.moves.http_client`` instead
+* [breaking change] Move ``UnsupportedFormatError`` from ``encoders`` module to ``errors`` module
+* Return 4XX status codes for ``UnsupportedFormatError`` from default input/output handlers
+
 2.1.0
 =====
+
 * Allow for local modules to work with AWS SageMaker framework containers.
 * Support for training outside of AWS SageMaker Training.
-
 
 2.0.4
 =====
