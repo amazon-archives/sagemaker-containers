@@ -135,8 +135,10 @@ class Transformer(object):
         if transform_fn and (input_fn or predict_fn or output_fn):
             raise ValueError('Cannot use transform_fn implementation with input_fn, predict_fn, and/or output_fn')
 
-        self._transform_fn = _functions.error_wrapper(transform_fn, error_class) \
-            if transform_fn else self._default_transform_fn
+        if transform_fn is not None:
+            self._transform_fn = _functions.error_wrapper(transform_fn, error_class)
+        else:
+            self._transform_fn = self._default_transform_fn
 
         self._input_fn = _functions.error_wrapper(input_fn, error_class) if input_fn else default_input_fn
         self._predict_fn = _functions.error_wrapper(predict_fn, error_class) if predict_fn else default_predict_fn
