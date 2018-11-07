@@ -10,7 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from mock import call, patch, PropertyMock
+from mock import call, patch, PropertyMock, Mock
 
 from sagemaker_containers import _env, _server
 
@@ -40,8 +40,11 @@ def test_start_no_nginx(popen):
 @patch.object(_env.ServingEnv, 'model_server_workers', PropertyMock(return_value=2))
 @patch.object(_env.ServingEnv, 'model_server_timeout', PropertyMock(return_value=100))
 @patch.object(_env.ServingEnv, 'use_nginx', PropertyMock(return_value=True))
-@patch('pkg_resources.resource_filename', lambda x, y: '/tmp/nginx.conf')
 @patch('sagemaker_containers._env.num_gpus', lambda: 0)
+@patch('sagemaker_containers._server.nginx_config_file', '/tmp/nginx.conf')
+@patch('sagemaker_containers._server.nginx_config_template_file', '/tmp/nginx.conf.template')
+@patch('sagemaker_containers._files.read_file', lambda x: 'random_string')
+@patch('sagemaker_containers._files.write_file', Mock())
 @patch('os.wait', lambda: (-1, 0))
 @patch('subprocess.Popen')
 def test_start_with_nginx(popen):

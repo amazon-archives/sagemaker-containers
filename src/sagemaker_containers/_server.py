@@ -27,12 +27,12 @@ logger = _logging.get_logger()
 UNIX_SOCKET_BIND = 'unix:/tmp/gunicorn.sock'
 PORT = os.getenv("SAGEMAKER_BIND_TO_PORT", "8080")
 HTTP_BIND = '0.0.0.0:{}'.format(PORT)
+
 nginx_config_file = pkg_resources.resource_filename(sagemaker_containers.__name__, '/etc/nginx.conf')
+nginx_config_template_file = pkg_resources.resource_filename(sagemaker_containers.__name__, '/etc/nginx.conf.template')
 
 
 def _create_nginx_config():
-    nginx_config_template_file = pkg_resources.resource_filename(sagemaker_containers.__name__,
-                                                                 '/etc/nginx.conf.template')
     template = _files.read_file(nginx_config_template_file)
 
     pattern = re.compile(r'%(\w+)%')
