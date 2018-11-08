@@ -12,8 +12,9 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-import flask
 import os
+
+import flask
 from six.moves import http_client
 
 from sagemaker_containers import _content_types, _env, _logging, _mapping
