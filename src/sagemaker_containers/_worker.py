@@ -120,11 +120,15 @@ class Request(flask.Request, _mapping.MappingMixin):
     """
     default_mimetype = _content_types.JSON
 
-    def __init__(self, environ=None):
+    def __init__(self, environ=None, serving_env=None):  # type: (dict, _env.ServingEnv) -> None
         super(Request, self).__init__(environ=environ or flask.request.environ)
 
+        serving_env = serving_env or env
+
+        self._default_accept = serving_env.default_accept
+
     @property
-    def content_type(self):  # type () -> str
+    def content_type(self):  # type: () -> str
         """The request's content-type.
 
         Returns:
@@ -139,10 +143,10 @@ class Request(flask.Request, _mapping.MappingMixin):
         """The content-type for the response to the client.
 
         Returns:
-            (str): The value of the header 'Accept' or the user-supplied SageMaker accept environment variable.
-                    Otherwise, returns 'Application/Json' as default
+            (str): The value of the header 'Accept' or the user-supplied SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT
+                    environment variable. Otherwise, returns 'Application/Json' as default
         """
-        return self.headers.get('Accept') or os.environ.get('SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT', _content_types.JSON)
+        return self.headers.get('Accept') or self._default_accept
 
     @property
     def content(self):  # type: () -> object
