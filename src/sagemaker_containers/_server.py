@@ -20,7 +20,7 @@ import subprocess
 import pkg_resources
 
 import sagemaker_containers
-from sagemaker_containers import _env, _logging, _files
+from sagemaker_containers import _env, _files, _logging
 
 logger = _logging.get_logger()
 

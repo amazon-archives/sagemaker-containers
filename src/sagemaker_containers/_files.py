@@ -85,12 +85,7 @@ def read_file(path, mode='r'):
     Returns:
     """
     with open(path, mode) as f:
-        data = f.read()
-
-        if not data:
-            raise ValueError('failed to read {}'.format(path))
-
-        return data
+        return f.read()
 
 
 def read_json(path):  # type: (str) -> dict
