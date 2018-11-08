@@ -97,7 +97,7 @@ def test_request():
     np.testing.assert_array_equal(result, np.array([6, 9.3]))
 
 
-@patch.dict(os.environ,{'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT':'4242'})
+@patch.dict(os.environ, {'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT': '4242'}, clear=True)
 def test_request_accept_env():
     request = test.request()
     assert request.accept == '4242'
