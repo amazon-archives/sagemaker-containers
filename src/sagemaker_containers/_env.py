@@ -766,7 +766,10 @@ class ServingEnv(_Env):
             model_server_workers (int): Number of worker processes the model server will use.
             framework_module (str):  Name of the framework module and entry point. For example:
                 my_module:main
-            default_accept (str): The desired default MIME type of the inference in the response, it is overridden if bla bla bal. For example: application/json
+            default_accept (str): The desired default MIME type of the inference in the response
+                as specified in the user-supplied SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT environment
+                variable. Otherwise, returns 'application/json' by default.
+                For example: application/json
     """
 
     def __init__(self):
