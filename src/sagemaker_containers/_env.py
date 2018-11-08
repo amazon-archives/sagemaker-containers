@@ -24,7 +24,7 @@ import time
 
 import boto3
 
-from sagemaker_containers import _logging, _mapping, _params, _content_types
+from sagemaker_containers import _content_types, _logging, _mapping, _params
 
 logger = _logging.get_logger()
 
