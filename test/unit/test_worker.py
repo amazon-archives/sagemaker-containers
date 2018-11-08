@@ -12,6 +12,8 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
+import os
+
 from mock import MagicMock, patch, PropertyMock
 import numpy as np
 import pytest
@@ -93,6 +95,12 @@ def test_request():
 
     result = _encoders.decode(request.data, _content_types.NPY)
     np.testing.assert_array_equal(result, np.array([6, 9.3]))
+
+
+@patch.dict(os.environ,{'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT':'4242'})
+def test_request_accept_env():
+    request = test.request()
+    assert request.accept == '4242'
 
 
 def test_request_content_type():
