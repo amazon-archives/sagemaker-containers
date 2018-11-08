@@ -766,7 +766,7 @@ class ServingEnv(_Env):
             model_server_workers (int): Number of worker processes the model server will use.
             framework_module (str):  Name of the framework module and entry point. For example:
                 my_module:main
-            default_accept (str): The desired MIME type of the inference in the response. For example: application/json
+            default_accept (str): The desired default MIME type of the inference in the response, it is overridden if bla bla bal. For example: application/json
     """
 
     def __init__(self):
