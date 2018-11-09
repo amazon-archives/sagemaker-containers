@@ -185,11 +185,12 @@ class Server(object):
 
         :return: 200 response, with transformer result in body.
         """
+        env = cs.HostingEnvironment()
 
         # Accepting both ContentType and Content-Type headers. ContentType because Coral and Content-Type because,
         # well, it is just the html standard
         input_content_type = request.headers.get('ContentType', request.headers.get('Content-Type', JSON_CONTENT_TYPE))
-        requested_output_content_type = request.headers.get('Accept', JSON_CONTENT_TYPE)
+        requested_output_content_type = request.headers.get('Accept') or env.default_accept or JSON_CONTENT_TYPE
 
         # utf-8 decoding is automatic in Flask if the Content-Type is valid. But that does not happens always.
         content = request.get_data().decode('utf-8') if input_content_type in UTF8_CONTENT_TYPES else request.get_data()

@@ -294,6 +294,7 @@ class HostingEnvironment(ContainerEnvironment):
 
     MODEL_SERVER_WORKERS_PARAM = 'SAGEMAKER_MODEL_SERVER_WORKERS'
     MODEL_SERVER_TIMEOUT_PARAM = "SAGEMAKER_MODEL_SERVER_TIMEOUT"
+    DEFAULT_INVOCATIONS_ACCEPT_ENV = 'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT'
 
     def __init__(self, base_dir=ContainerEnvironment.BASE_DIRECTORY):
         super(HostingEnvironment, self).__init__(base_dir)
@@ -310,7 +311,9 @@ class HostingEnvironment(ContainerEnvironment):
 
         self.port = os.environ.get(ContainerEnvironment.SAGEMAKER_BIND_TO_PORT_ENV, '8080')
 
-        self.port_range = os.environ(ContainerEnvironment.SAGEMAKER_SAFE_PORT_RANGE_ENV, None)
+        self.port_range = os.environ.get(ContainerEnvironment.SAGEMAKER_SAFE_PORT_RANGE_ENV, None)
+
+        self.default_accept = os.environ.get(HostingEnvironment.DEFAULT_INVOCATIONS_ACCEPT_ENV, None)
 
         self.model_server_workers = int(os.environ.get(
             HostingEnvironment.MODEL_SERVER_WORKERS_PARAM,
