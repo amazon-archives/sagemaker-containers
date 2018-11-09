@@ -1,21 +1,21 @@
 #  Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#  
+#
 #  Licensed under the Apache License, Version 2.0 (the "License").
 #  You may not use this file except in compliance with the License.
 #  A copy of the License is located at
-#  
+#
 #      http://www.apache.org/licenses/LICENSE-2.0
-#  
-#  or in the "license" file accompanying this file. This file is distributed 
-#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either 
-#  express or implied. See the License for the specific language governing 
+#
+#  or in the "license" file accompanying this file. This file is distributed
+#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+#  express or implied. See the License for the specific language governing
 #  permissions and limitations under the License.
 
 import os
 import json
 import signal
 
-from mock import patch
+from mock import patch, Mock
 import pytest
 
 from container_support.serving import (Server,
@@ -138,8 +138,8 @@ def test_unsupported_accept_type_exception():
 @patch('os.path.exists')
 @patch('container_support.HostingEnvironment')
 def test_download_user_module_already_exists(env, os_path_exists):
-    env.code_dir.return_value = "code_dir"
-    env.user_script_name.return_value = "script"
+    env.code_dir = "code_dir"
+    env.user_script_name = "script"
     os_path_exists.return_value = True
     Server._download_user_module_internal(env)
     env.download_user_module.assert_not_called()
@@ -180,6 +180,8 @@ def test_sigterm_hander(exit, kill):
     exit.assert_called_with(0)
 
 
+@patch('container_support.utils.read_file', lambda x: 'random_string')
+@patch('container_support.utils.write_file', Mock())
 @patch('container_support.Server._download_user_module')
 @patch('subprocess.check_call')
 @patch('subprocess.Popen')
@@ -220,4 +222,3 @@ def _unsupported_accept_transform(data, input_content_type, output_content_type)
 
 def _unsupported_input_shape_transform(data, input_content_type, output_content_type):
     raise UnsupportedInputShapeError(3)
-

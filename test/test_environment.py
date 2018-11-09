@@ -130,15 +130,33 @@ def test_model_server_workers(hosting):
         assert env.model_server_workers == 2
 
 
+def test_default_port(hosting):
+    env = HostingEnvironment(hosting)
+    assert env.port == '8080'
+
+
+def test_port(hosting):
+    with patch.dict('os.environ', {'SAGEMAKER_BIND_TO_PORT': '42'}):
+        env = HostingEnvironment(hosting)
+        assert env.port == '42'
+
+
+def test_safe_port_range(hosting):
+    with patch.dict('os.environ', {'SAGEMAKER_SAFE_PORT_RANGE': '1234'}):
+        env = HostingEnvironment(hosting)
+        assert env.port_range == '1234'
+
+
+def test_default_accept(hosting):
+    with patch.dict('os.environ', {'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT': 'json'}):
+        env = HostingEnvironment(hosting)
+        assert env.default_accept == 'json'
+
+
 def test_user_requirements_file(hosting):
     with patch.dict('os.environ', {'SAGEMAKER_CONTAINER_LOG_LEVEL': '20', 'SAGEMAKER_REGION': 'us-west-2'}):
         env = HostingEnvironment(hosting)
         assert env.user_requirements_file == 'requirements.txt'
-
-
-def test_container_log_level_unset(hosting):
-    with pytest.raises(KeyError):
-        HostingEnvironment(hosting)
 
 
 def test_container_log_level(hosting):

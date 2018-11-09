@@ -19,6 +19,8 @@ import os
 import subprocess
 import sys
 import tempfile
+
+import boto3
 import pkg_resources
 
 import container_support as cs
@@ -320,9 +322,11 @@ class HostingEnvironment(ContainerEnvironment):
             self.available_cpus))
         "The number of model server processes to run concurrently."
 
-        self.container_log_level = int(os.environ[ContainerEnvironment.CONTAINER_LOG_LEVEL_PARAM.upper()])
+        self.container_log_level = int(os.environ.get(
+            ContainerEnvironment.CONTAINER_LOG_LEVEL_PARAM.upper(), logging.INFO))
 
-        self.sagemaker_region = os.environ[ContainerEnvironment.SAGEMAKER_REGION_PARAM_NAME.upper()]
+        self.sagemaker_region = os.environ.get(ContainerEnvironment.SAGEMAKER_REGION_PARAM_NAME.upper(),
+                                               boto3.session.Session().region_name)
         os.environ[ContainerEnvironment.SAGEMAKER_REGION_PARAM_NAME.upper()] = self.sagemaker_region
 
         os.environ[ContainerEnvironment.JOB_NAME_ENV] = os.environ.get(
