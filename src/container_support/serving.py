@@ -14,6 +14,8 @@
 import json
 import logging
 import os
+import re
+
 import pkg_resources
 import shutil
 import signal
@@ -31,6 +33,9 @@ CSV_CONTENT_TYPE = "text/csv"
 OCTET_STREAM_CONTENT_TYPE = "application/octet-stream"
 ANY_CONTENT_TYPE = '*/*'
 UTF8_CONTENT_TYPES = [JSON_CONTENT_TYPE, CSV_CONTENT_TYPE]
+
+nginx_config_file = pkg_resources.resource_filename('container_support', '/etc/nginx.conf')
+nginx_config_template_file = pkg_resources.resource_filename('container_support', '/etc/nginx.conf.template')
 
 
 class Server(object):
@@ -82,14 +87,14 @@ class Server(object):
         framework.load_dependencies()
 
         nginx_pid = 0
-        gunicorn_bind_address = '0.0.0.0:8080'
+        gunicorn_bind_address = '0.0.0.0:{}'.format(env.port)
         if env.use_nginx:
             logger.info("starting nginx")
-            nginx_conf = pkg_resources.resource_filename('container_support', 'etc/nginx.conf')
+            Server._create_nginx_config(env)
             subprocess.check_call(['ln', '-sf', '/dev/stdout', '/var/log/nginx/access.log'])
             subprocess.check_call(['ln', '-sf', '/dev/stderr', '/var/log/nginx/error.log'])
             gunicorn_bind_address = 'unix:/tmp/gunicorn.sock'
-            nginx_pid = subprocess.Popen(['nginx', '-c', nginx_conf]).pid
+            nginx_pid = subprocess.Popen(['nginx', '-c', nginx_config_file]).pid
 
         logger.info("starting gunicorn")
         gunicorn_pid = subprocess.Popen(["gunicorn",
@@ -133,6 +138,18 @@ class Server(object):
             except OSError:
                 pass
             raise
+
+    @staticmethod
+    def _create_nginx_config(serving_env):
+        template = cs.utils.read_file(nginx_config_template_file)
+        pattern = re.compile(r'%(\w+)%')
+
+        template_values = {
+            'NGINX_HTTP_PORT': serving_env.port
+        }
+        config = pattern.sub(lambda x: template_values[x.group(1)], template)
+        logger.info('nginx config: \n%s\n', config)
+        cs.utils.write_file(nginx_config_file, config)
 
     @staticmethod
     def _sigterm_handler(nginx_pid, gunicorn_pid):
