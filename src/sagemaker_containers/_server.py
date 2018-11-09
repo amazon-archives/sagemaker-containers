@@ -25,19 +25,17 @@ from sagemaker_containers import _env, _files, _logging
 logger = _logging.get_logger()
 
 UNIX_SOCKET_BIND = 'unix:/tmp/gunicorn.sock'
-PORT = os.getenv("SAGEMAKER_BIND_TO_PORT", "8080")
-HTTP_BIND = '0.0.0.0:{}'.format(PORT)
 
 nginx_config_file = pkg_resources.resource_filename(sagemaker_containers.__name__, '/etc/nginx.conf')
 nginx_config_template_file = pkg_resources.resource_filename(sagemaker_containers.__name__, '/etc/nginx.conf.template')
 
 
-def _create_nginx_config():
+def _create_nginx_config(serving_env):
     template = _files.read_file(nginx_config_template_file)
 
     pattern = re.compile(r'%(\w+)%')
     template_values = {
-        'NGINX_HTTP_PORT': PORT
+        'NGINX_HTTP_PORT': serving_env.port
     }
 
     config = pattern.sub(lambda x: template_values[x.group(1)], template)
@@ -65,13 +63,13 @@ def _add_sigterm_handler(nginx, gunicorn):
 
 def start(module_app):
     env = _env.ServingEnv()
-    gunicorn_bind_address = HTTP_BIND
+    gunicorn_bind_address = '0.0.0.0:{}'.format(env.port)
 
     nginx = None
 
     if env.use_nginx:
         gunicorn_bind_address = UNIX_SOCKET_BIND
-        _create_nginx_config()
+        _create_nginx_config(env)
         nginx = subprocess.Popen(['nginx', '-c', nginx_config_file])
 
     gunicorn = subprocess.Popen(['gunicorn',

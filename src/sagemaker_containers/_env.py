@@ -770,6 +770,8 @@ class ServingEnv(_Env):
                 as specified in the user-supplied SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT environment
                 variable. Otherwise, returns 'application/json' by default.
                 For example: application/json
+            port (str): Port that SageMaker will use to handle invocations and pings against the
+                running Docker container. Default should be 8080. For example: 8080
     """
 
     def __init__(self):
@@ -780,12 +782,14 @@ class ServingEnv(_Env):
         model_server_workers = int(os.environ.get(_params.MODEL_SERVER_WORKERS_ENV, num_cpus()))
         framework_module = os.environ.get(_params.FRAMEWORK_SERVING_MODULE_ENV, None)
         default_accept = os.environ.get(_params.DEFAULT_INVOCATIONS_ACCEPT_ENV, _content_types.JSON)
+        port = os.getenv(_params.SAGEMAKER_BIND_TO_PORT_ENV, '8080')
 
         self._use_nginx = use_nginx
         self._model_server_timeout = model_server_timeout
         self._model_server_workers = model_server_workers
         self._framework_module = framework_module
         self._default_accept = default_accept
+        self._port = port
 
     @property
     def use_nginx(self):  # type: () -> bool
@@ -819,3 +823,10 @@ class ServingEnv(_Env):
             str: The desired MIME type of the inference in the response. For example: application/json.
                 Default: application/json"""
         return self._default_accept
+
+    @property
+    def port(self):  # type: () -> str
+        """Returns:
+            str: Port that SageMaker will use to handle invocations and pings against the running
+                Docker container. Default should be 8080. For example: 8080"""
+        return self._port

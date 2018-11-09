@@ -62,7 +62,3 @@ def test_start_with_nginx(popen):
     ]
     _server.start('my_module')
     popen.assert_has_calls(calls)
-
-
-def test_default_port():
-    assert _server.PORT == '8080'
