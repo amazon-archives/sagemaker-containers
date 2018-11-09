@@ -131,24 +131,28 @@ def test_model_server_workers(hosting):
 
 
 def test_default_port(hosting):
-    env = HostingEnvironment(hosting)
-    assert env.port == '8080'
+    with patch.dict('os.environ', {'SAGEMAKER_REGION': 'us-west-2'}):
+        env = HostingEnvironment(hosting)
+        assert env.port == '8080'
 
 
 def test_port(hosting):
-    with patch.dict('os.environ', {'SAGEMAKER_BIND_TO_PORT': '42'}):
+    with patch.dict('os.environ', {'SAGEMAKER_BIND_TO_PORT': '42',
+                                   'SAGEMAKER_REGION': 'us-west-2'}):
         env = HostingEnvironment(hosting)
         assert env.port == '42'
 
 
 def test_safe_port_range(hosting):
-    with patch.dict('os.environ', {'SAGEMAKER_SAFE_PORT_RANGE': '1234'}):
+    with patch.dict('os.environ', {'SAGEMAKER_SAFE_PORT_RANGE': '1234',
+                                   'SAGEMAKER_REGION': 'us-west-2'}):
         env = HostingEnvironment(hosting)
         assert env.port_range == '1234'
 
 
 def test_default_accept(hosting):
-    with patch.dict('os.environ', {'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT': 'json'}):
+    with patch.dict('os.environ', {'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT': 'json',
+                                   'SAGEMAKER_REGION': 'us-west-2'}):
         env = HostingEnvironment(hosting)
         assert env.default_accept == 'json'
 
