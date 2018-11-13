@@ -311,7 +311,7 @@ class HostingEnvironment(ContainerEnvironment):
         self.use_nginx = os.environ.get(ContainerEnvironment.USE_NGINX_ENV, 'true') == 'true'
         "Use nginx as front-end HTTP server instead of gunicorn."
 
-        self.port = os.environ.get(ContainerEnvironment.SAGEMAKER_BIND_TO_PORT_ENV, '8080')
+        self.http_port = os.environ.get(ContainerEnvironment.SAGEMAKER_BIND_TO_PORT_ENV, '8080')
 
         self.port_range = os.environ.get(ContainerEnvironment.SAGEMAKER_SAFE_PORT_RANGE_ENV, None)
 

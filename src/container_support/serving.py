@@ -34,8 +34,8 @@ OCTET_STREAM_CONTENT_TYPE = "application/octet-stream"
 ANY_CONTENT_TYPE = '*/*'
 UTF8_CONTENT_TYPES = [JSON_CONTENT_TYPE, CSV_CONTENT_TYPE]
 
-nginx_config_file = pkg_resources.resource_filename('container_support', '/etc/nginx.conf')
 nginx_config_template_file = pkg_resources.resource_filename('container_support', '/etc/nginx.conf.template')
+nginx_config_file = os.path.join('/etc', 'sagemaker-nginx.conf')
 
 
 class Server(object):
@@ -87,7 +87,7 @@ class Server(object):
         framework.load_dependencies()
 
         nginx_pid = 0
-        gunicorn_bind_address = '0.0.0.0:{}'.format(env.port)
+        gunicorn_bind_address = '0.0.0.0:{}'.format(env.http_port)
         if env.use_nginx:
             logger.info("starting nginx")
             Server._create_nginx_config(env)
@@ -140,12 +140,29 @@ class Server(object):
             raise
 
     @staticmethod
+    def next_safe_port(port_range, after=None):
+        first_and_last_port = port_range.split('-')
+        first_safe_port = int(first_and_last_port[0])
+        last_safe_port = int(first_and_last_port[1])
+
+        safe_port = first_safe_port
+
+        if after:
+            safe_port = int(after) + 1
+
+            if safe_port < first_safe_port or safe_port > last_safe_port:
+                raise ValueError(
+                    '{} is outside of the acceptable port range for SageMaker: {}'.format(safe_port, port_range))
+
+        return str(safe_port)
+
+    @staticmethod
     def _create_nginx_config(serving_env):
         template = cs.utils.read_file(nginx_config_template_file)
         pattern = re.compile(r'%(\w+)%')
 
         template_values = {
-            'NGINX_HTTP_PORT': serving_env.port
+            'NGINX_HTTP_PORT': serving_env.http_port
         }
         config = pattern.sub(lambda x: template_values[x.group(1)], template)
         logger.info('nginx config: \n%s\n', config)

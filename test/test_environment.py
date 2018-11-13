@@ -133,14 +133,14 @@ def test_model_server_workers(hosting):
 def test_default_port(hosting):
     with patch.dict('os.environ', {'SAGEMAKER_REGION': 'us-west-2'}):
         env = HostingEnvironment(hosting)
-        assert env.port == '8080'
+        assert env.http_port == '8080'
 
 
 def test_port(hosting):
     with patch.dict('os.environ', {'SAGEMAKER_BIND_TO_PORT': '42',
                                    'SAGEMAKER_REGION': 'us-west-2'}):
         env = HostingEnvironment(hosting)
-        assert env.port == '42'
+        assert env.http_port == '42'
 
 
 def test_safe_port_range(hosting):

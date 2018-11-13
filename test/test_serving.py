@@ -26,6 +26,9 @@ from container_support.serving import (Server,
 
 JSON_CONTENT_TYPE = "application/json"
 JSON_DATA = json.dumps([1, 2])
+FIRST_PORT = '1111'
+LAST_PORT = '2222'
+SAFE_PORT_RANGE = '{}-{}'.format(FIRST_PORT, LAST_PORT)
 
 
 @pytest.fixture(scope="module")
@@ -206,6 +209,34 @@ def test_sigterm_hander(exit, kill):
 
     kill.assert_called_with(2, signal.SIGTERM)
     exit.assert_called_with(0)
+
+
+def test_next_safe_port_first():
+    safe_port = Server.next_safe_port(SAFE_PORT_RANGE)
+
+    assert safe_port == FIRST_PORT
+
+
+def test_next_safe_port_after():
+    safe_port = Server.next_safe_port(SAFE_PORT_RANGE, FIRST_PORT)
+
+    next_safe_port = str(int(FIRST_PORT) + 1)
+
+    assert safe_port == next_safe_port
+
+
+def test_next_safe_port_greater_than_range_exception():
+    current_port = str(int(LAST_PORT) + 1)
+
+    with pytest.raises(ValueError):
+        Server.next_safe_port(SAFE_PORT_RANGE, current_port)
+
+
+def test_next_safe_port_less_than_range_exception():
+    current_port = str(int(FIRST_PORT) - 100)
+
+    with pytest.raises(ValueError):
+        Server.next_safe_port(SAFE_PORT_RANGE, current_port)
 
 
 def test_unsupported_input_shape_exception():
