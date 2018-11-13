@@ -192,7 +192,8 @@ def test_training_env(training_env):
     assert training_env.channel_input_dirs['train'].endswith('/opt/ml/input/data/train')
     assert training_env.channel_input_dirs['validation'].endswith('/opt/ml/input/data/validation')
     assert training_env.current_host == RESOURCE_CONFIG['current_host']
-    assert training_env.module_name == 'main'
+    with pytest.warns(DeprecationWarning):
+        assert training_env.module_name == 'main.py'
     assert training_env.module_dir == 'imagenet'
     assert training_env.log_level == logging.WARNING
     assert training_env.network_interface_name == 'ethwe'
@@ -206,7 +207,8 @@ def test_serving_env(serving_env):
     assert serving_env.use_nginx is False
     assert serving_env.model_server_timeout == 20
     assert serving_env.model_server_workers == 8
-    assert serving_env.module_name == 'main'
+    with pytest.warns(DeprecationWarning):
+        assert serving_env.module_name == 'main.py'
     assert serving_env.framework_module is None
 
 
@@ -215,19 +217,13 @@ def test_env_mapping_properties(training_env):
         ['additional_framework_parameters', 'channel_input_dirs', 'current_host', 'framework_module', 'hosts',
          'hyperparameters', 'input_config_dir', 'input_data_config', 'input_dir', 'log_level', 'model_dir',
          'module_dir', 'module_name', 'network_interface_name', 'num_cpus', 'num_gpus', 'output_data_dir',
-         'output_dir', 'resource_config', 'job_name'])
+         'output_dir', 'resource_config', 'job_name', 'user_program'])
 
 
 def test_serving_env_properties(serving_env):
     assert serving_env.properties() == ['current_host', 'default_accept', 'framework_module', 'log_level', 'model_dir',
                                         'model_server_timeout', 'model_server_workers', 'module_dir', 'module_name',
-                                        'num_cpus', 'num_gpus', 'use_nginx']
-
-
-def test_request_properties(serving_env):
-    assert serving_env.properties() == ['current_host', 'default_accept', 'framework_module', 'log_level', 'model_dir',
-                                        'model_server_timeout', 'model_server_workers', 'module_dir', 'module_name',
-                                        'num_cpus', 'num_gpus', 'use_nginx']
+                                        'num_cpus', 'num_gpus', 'use_nginx', 'user_program']
 
 
 @patch('sagemaker_containers._env.num_cpus', lambda: 8)
@@ -240,7 +236,7 @@ def test_env_dictionary():
 
     assert len(env) == len(env.properties())
 
-    assert env['module_name'] == 'my_app'
+    assert env['module_name'] == 'my_app.py'
     assert env['log_level'] == logging.INFO
 
 
@@ -249,8 +245,10 @@ def test_env_module_name(sagemaker_program):
     session_mock = Mock()
     session_mock.region_name = 'us-west-2'
     os.environ[_params.USER_PROGRAM_ENV] = sagemaker_program
-    module_name = _env._Env().module_name
+
+    with pytest.warns(DeprecationWarning):
+        module_name = _env._Env().module_name
 
     del os.environ[_params.USER_PROGRAM_ENV]
 
-    assert module_name == 'program'
+    assert module_name == sagemaker_program

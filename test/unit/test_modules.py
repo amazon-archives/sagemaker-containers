@@ -17,16 +17,34 @@ import importlib
 import os
 import sys
 import tarfile
-import textwrap
 
-from mock import call, mock_open, patch
+
+from mock import call, patch
 import pytest
 from six import PY2
 
-from sagemaker_containers import _errors, _modules, _params
+from sagemaker_containers import _env, _errors, _modules, _params
 import test
 
 builtins_open = '__builtin__.open' if PY2 else 'builtins.open'
+
+
+@pytest.fixture
+def entrypoint_type_module():
+    with patch('os.listdir', lambda x: ('setup.py',)):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def entrypoint_type_script():
+    with patch('os.listdir', lambda x: ()):
+        yield
+
+
+@pytest.fixture()
+def has_requirements():
+    with patch('os.path.exists', lambda x: x.endswith('requirements.txt')):
+        yield
 
 
 @patch('boto3.resource', autospec=True)
@@ -43,47 +61,27 @@ def test_s3_download(resource, url, bucket_name, key, dst):
     assert resource.mock_calls == chain.call_list()
 
 
-@patch(builtins_open, mock_open())
-@patch('os.path.exists', lambda x: False)
-def test_prepare():
-    _modules.prepare('c:/path/to/', 'my-module')
+@patch.object(sys, 'path')
+def test_prepare_module(path, entrypoint_type_module):
+    _modules.prepare('/opt/ml/code', 'python_module')
 
-    open.assert_any_call('c:/path/to/setup.py', 'w')
-    open.assert_any_call('c:/path/to/setup.cfg', 'w')
-    open.assert_any_call('c:/path/to/MANIFEST.in', 'w')
-
-    data = textwrap.dedent("""
-    from setuptools import setup
-
-    setup(packages=[''],
-          name="my-module",
-          version='1.0.0',
-          include_package_data=True)
-    """)
-
-    open().write.assert_any_call(data)
-
-    data = textwrap.dedent("""
-    [wheel]
-    universal = 1
-    """)
-    open().write.assert_any_call(data)
-
-    data = textwrap.dedent("""
-    recursive-include . *
-
-    recursive-exclude . __pycache__*
-    recursive-exclude . *.pyc
-    recursive-exclude . *.pyo
-    """)
-    open().write.assert_any_call(data)
+    path.insert.assert_called_with(0, '/opt/ml/code')
 
 
-@patch(builtins_open, mock_open())
-@patch('os.path.exists', lambda x: True)
-def test_prepare_already_prepared():
-    _modules.prepare('c:/path/to/', 'my-module')
-    open.assert_not_called()
+@patch.object(sys, 'path')
+def test_prepare_script(path, entrypoint_type_script):
+    _modules.prepare('/opt/ml/code', 'train.py')
+
+    path.insert.assert_called_with(0, '/opt/ml/code')
+
+
+@patch('os.chmod')
+@patch.object(sys, 'path')
+def test_prepare_command(path, chmod, entrypoint_type_script):
+    _modules.prepare('/opt/ml/code', 'train.sh')
+
+    path.insert.assert_called_with(0, '/opt/ml/code')
+    chmod.assert_called_with('/opt/ml/code/train.sh', 777)
 
 
 def test_s3_download_wrong_scheme():
@@ -92,30 +90,42 @@ def test_s3_download_wrong_scheme():
 
 
 @patch('sagemaker_containers._modules._check_error', autospec=True)
-def test_install(check_error):
+def test_install_module(check_error, entrypoint_type_module):
     path = 'c://sagemaker-pytorch-container'
-    _modules.install(path)
+    _modules.install(path, 'python_module.py')
 
     cmd = [sys.executable, '-m', 'pip', 'install', '-U', '.']
     check_error.assert_called_with(cmd, _errors.InstallModuleError, cwd=path)
 
     with patch('os.path.exists', return_value=True):
-        _modules.install(path)
+        _modules.install(path, 'python_module.py')
 
         check_error.assert_called_with(cmd + ['-r', 'requirements.txt'], _errors.InstallModuleError, cwd=path)
 
 
 @patch('sagemaker_containers._modules._check_error', autospec=True)
-def test_install_fails(check_error):
+def test_install_script_with_requirements(check_error, entrypoint_type_script, has_requirements):
+    path = 'c://sagemaker-pytorch-container'
+    _modules.install(path, 'train.py')
+
+    with patch('os.path.exists', return_value=True):
+        _modules.install(path, 'python_module.py')
+
+        cmd = [sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt']
+        check_error.assert_called_with(cmd, _errors.InstallModuleError, cwd=path)
+
+
+@patch('sagemaker_containers._modules._check_error', autospec=True)
+def test_install_fails(check_error, entrypoint_type_module):
     check_error.side_effect = _errors.ClientError()
     with pytest.raises(_errors.ClientError):
-        _modules.install('git://aws/container-support')
+        _modules.install('git://aws/container-support', 'script')
 
 
 @patch('sys.executable', None)
-def test_install_no_python_executable():
+def test_install_no_python_executable(has_requirements):
     with pytest.raises(RuntimeError) as e:
-        _modules.install('git://aws/container-support')
+        _modules.install('git://aws/container-support', 'train.py')
     assert str(e.value) == 'Failed to retrieve the real path for the Python executable binary'
 
 
@@ -148,40 +158,38 @@ def test_python_executable_exception():
             _modules.python_executable()
 
 
-@patch('sagemaker_containers.training_env', lambda: {})
-def test_run():
-    _modules.run('pytest', ['--version'])
-
-
 def test_run_module_wait():
     with patch('sagemaker_containers._modules.download_and_install') as download_and_install:
         with patch('sagemaker_containers._modules.run') as run:
-            _modules.run_module(uri='s3://url', args=['42'], cache=True)
+            with pytest.warns(DeprecationWarning):
+                _modules.run_module(uri='s3://url', args=['42'], cache=True)
 
-            download_and_install.assert_called_with('s3://url', 'default_user_module_name', True)
-            run.assert_called_with('default_user_module_name', ['42'], {}, True)
+                download_and_install.assert_called_with('s3://url', 'default_user_module_name', _env.code_dir)
+                run.assert_called_with('default_user_module_name', ['42'], {}, True)
 
 
 def test_run_module_no_wait():
     with patch('sagemaker_containers._modules.download_and_install') as download_and_install:
         with patch('sagemaker_containers._modules.run') as run:
-            _modules.run_module(uri='s3://url', args=['42'], cache=True, wait=False)
+            with pytest.warns(DeprecationWarning):
 
-            download_and_install.assert_called_with('s3://url', 'default_user_module_name', True)
-            run.assert_called_with('default_user_module_name', ['42'], {}, False)
+                _modules.run_module(uri='s3://url', args=['42'], cache=True, wait=False)
+
+                download_and_install.assert_called_with('s3://url', 'default_user_module_name', _env.code_dir)
+                run.assert_called_with('default_user_module_name', ['42'], {}, False)
 
 
-def test_download_and_install_local_directory():
-    uri = '/opt/ml/code'
-
+@patch('shutil.copy2')
+def test_download_and_install_local_directory(copy2):
     with patch('sagemaker_containers._modules.s3_download') as s3_download, \
             patch('sagemaker_containers._modules.prepare') as prepare, \
             patch('sagemaker_containers._modules.install') as install:
-        _modules.download_and_install(uri)
+        _modules.download_and_install('tmp', 'script', _env.code_dir)
 
         s3_download.assert_not_called()
-        prepare.assert_called_with(uri, 'default_user_module_name')
-        install.assert_called_with(uri)
+        prepare.assert_called_with(_env.code_dir, 'script')
+        install.assert_called_with(_env.code_dir, 'script')
+        copy2.assert_called_with('tmp', os.path.join(_env.code_dir, 'script'))
 
 
 class TestDownloadAndImport(test.TestBase):
@@ -195,22 +203,21 @@ class TestDownloadAndImport(test.TestBase):
 
     def test_without_cache(self):
         with tarfile.open() as tar_file:
-            module = _modules.import_module('s3://bucket/my-module', cache=False)
+            module = _modules.import_module('s3://bucket/my-module')
 
             assert module == importlib.import_module(_modules.DEFAULT_MODULE_NAME)
 
             _modules.s3_download.assert_called_with('s3://bucket/my-module', '/tmp/tar_file')
-            os.makedirs.assert_called_with('/tmp/module_dir')
 
-            tar_file.extractall.assert_called_with(path='/tmp/module_dir')
-            _modules.prepare.assert_called_with('/tmp/module_dir', _modules.DEFAULT_MODULE_NAME)
-            _modules.install.assert_called_with('/tmp/module_dir')
+            tar_file.extractall.assert_called_with(path=_env.code_dir)
+            _modules.prepare.assert_called_with(_env.code_dir, _modules.DEFAULT_MODULE_NAME)
+            _modules.install.assert_called_with(_env.code_dir, _modules.DEFAULT_MODULE_NAME)
 
     def test_with_cache_and_module_already_installed(self):
         with tarfile.open() as tar_file:
             _modules.exists.return_value = True
 
-            module = _modules.import_module('s3://bucket/my-module', cache=True)
+            module = _modules.import_module('s3://bucket/my-module')
 
             assert module == importlib.import_module(_modules.DEFAULT_MODULE_NAME)
 
@@ -225,28 +232,28 @@ class TestDownloadAndImport(test.TestBase):
         with tarfile.open() as tar_file:
             _modules.exists.return_value = False
 
-            module = _modules.import_module('s3://bucket/my-module', cache=True)
+            module = _modules.import_module('s3://bucket/my-module')
 
             assert module == importlib.import_module(_modules.DEFAULT_MODULE_NAME)
 
             _modules.s3_download.assert_called_with('s3://bucket/my-module', '/tmp/tar_file')
-            os.makedirs.assert_called_with('/tmp/module_dir')
+            os.makedirs.assert_called_with(_env.code_dir)
 
-            tar_file.extractall.assert_called_with(path='/tmp/module_dir')
-            _modules.prepare.assert_called_with('/tmp/module_dir', _modules.DEFAULT_MODULE_NAME)
-            _modules.install.assert_called_with('/tmp/module_dir')
+            tar_file.extractall.assert_called_with(path=_env.code_dir)
+            _modules.prepare.assert_called_with(_env.code_dir, _modules.DEFAULT_MODULE_NAME)
+            _modules.install.assert_called_with(_env.code_dir, _modules.DEFAULT_MODULE_NAME)
 
     def test_any_name(self):
         with tarfile.open() as tar_file:
             _modules.exists.return_value = False
 
-            module = _modules.import_module('s3://bucket/my-module', 'another_module_name', cache=True)
+            module = _modules.import_module('s3://bucket/my-module', 'another_module_name')
 
             assert module == importlib.import_module('another_module_name')
 
             _modules.s3_download.assert_called_with('s3://bucket/my-module', '/tmp/tar_file')
-            os.makedirs.assert_called_with('/tmp/module_dir')
+            os.makedirs.assert_called_with(_env.code_dir)
 
-            tar_file.extractall.assert_called_with(path='/tmp/module_dir')
-            _modules.prepare.assert_called_with('/tmp/module_dir', 'another_module_name')
-            _modules.install.assert_called_with('/tmp/module_dir')
+            tar_file.extractall.assert_called_with(path=_env.code_dir)
+            _modules.prepare.assert_called_with(_env.code_dir, 'another_module_name')
+            _modules.install.assert_called_with(_env.code_dir, 'another_module_name')

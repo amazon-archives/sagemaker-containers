@@ -21,6 +21,7 @@ import shlex
 import socket
 import subprocess
 import time
+import warnings
 
 import boto3
 
@@ -160,6 +161,15 @@ def _create_training_directories():
 
 if not _is_path_configured:
     _create_training_directories()
+
+
+def _create_code_dir():  # type: () -> None
+    """Creates /opt/ml/code when the module is imported."""
+    if not os.path.exists(code_dir):
+        os.makedirs(code_dir)
+
+
+_create_code_dir()
 
 
 def _read_json(path):  # type: (str) -> dict
@@ -302,14 +312,14 @@ class _Env(_mapping.MappingMixin):
 
     def __init__(self):
         current_host = os.environ.get(_params.CURRENT_HOST_ENV)
-        module_name = os.environ.get(_params.USER_PROGRAM_ENV, None)
+        user_program = os.environ.get(_params.USER_PROGRAM_ENV, None)
         module_dir = os.environ.get(_params.SUBMIT_DIR_ENV, code_dir)
         log_level = int(os.environ.get(_params.LOG_LEVEL_ENV, logging.INFO))
 
         self._current_host = current_host
         self._num_gpus = num_gpus()
         self._num_cpus = num_cpus()
-        self._module_name = module_name
+        self._user_program = user_program
         self._module_dir = module_dir
         self._log_level = log_level
         self._model_dir = model_dir
@@ -350,7 +360,10 @@ class _Env(_mapping.MappingMixin):
         Returns:
             str: name of the user provided module
         """
-        return self._parse_module_name(self._module_name)
+        msg = 'TrainingEnv.module_name is deprecated and will be removed in future versions. ' \
+              'Use TrainingEnv.user_program instead. '
+        warnings.warn(msg, DeprecationWarning)
+        return self._user_program
 
     @property
     def module_dir(self):  # type: () -> str
@@ -368,18 +381,13 @@ class _Env(_mapping.MappingMixin):
         """
         return self._log_level
 
-    @staticmethod
-    def _parse_module_name(program_param):
-        """Given a module name or a script name, Returns the module name.
-        This function is used for backwards compatibility.
-        Args:
-            program_param (str): Module or script name.
+    @property
+    def user_program(self):  # type: () -> str
+        """The name of provided user entrypoint.
         Returns:
-            str: Module name
+            str: The name of provided user entrypoint
         """
-        if program_param and program_param.endswith('.py'):
-            return program_param[:-3]
-        return program_param
+        return self._user_program
 
 
 class TrainingEnv(_Env):
@@ -533,10 +541,8 @@ class TrainingEnv(_Env):
         self._output_data_dir = output_data_dir
         self._channel_input_dirs = {channel: channel_path(channel) for channel in input_data_config}
         self._current_host = current_host
+        self._user_program = sagemaker_hyperparameters.get(_params.USER_PROGRAM_PARAM)
 
-        # override base class attributes
-        if self._module_name is None:
-            self._module_name = str(sagemaker_hyperparameters.get(_params.USER_PROGRAM_PARAM, None))
         self._module_dir = str(sagemaker_hyperparameters.get(_params.SUBMIT_DIR_PARAM, code_dir))
         self._log_level = sagemaker_hyperparameters.get(_params.LOG_LEVEL_PARAM, logging.INFO)
         self._framework_module = os.environ.get(_params.FRAMEWORK_TRAINING_MODULE_ENV, None)
@@ -588,7 +594,7 @@ class TrainingEnv(_Env):
             'framework_params': self.additional_framework_parameters,
             'resource_config':  self.resource_config, 'input_data_config': self.input_data_config,
             'output_data_dir':  self.output_data_dir, 'channels': sorted(self.channel_input_dirs.keys()),
-            'current_host':     self.current_host, 'module_name': self.module_name, 'log_level': self.log_level,
+            'current_host':     self.current_host, 'user_program': self.user_program, 'log_level': self.log_level,
             'framework_module': self.framework_module, 'input_dir': self.input_dir,
             'input_config_dir': self.input_config_dir, 'output_dir': self.output_dir, 'num_cpus': self.num_cpus,
             'num_gpus':         self.num_gpus, 'model_dir': self.model_dir, 'module_dir': self.module_dir,

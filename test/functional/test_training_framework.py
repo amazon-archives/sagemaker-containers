@@ -44,17 +44,16 @@ import os
 import test.fake_ml_framework as fake_ml
 import numpy as np
 
-def train(channel_input_dirs, hyperparameters):
-    data = np.load(os.path.join(channel_input_dirs['training'], hyperparameters['training_data_file']))
-    x_train = data['features']
-    y_train = data['labels']
-    optimizer = hyperparameters['optimizer']
+data = np.load(os.path.join(channel_input_dirs['training'], hyperparameters['training_data_file']))
+x_train = data['features']
+y_train = data['labels']
+optimizer = hyperparameters['optimizer']
 
-    model = fake_ml.Model(optimizer=optimizer)
+model = fake_ml.Model(optimizer=optimizer)
 
-    model.fit(x=x_train, y=y_train, epochs=hyperparameters['epochs'], batch_size=hyperparameters['batch_size'])
+model.fit(x=x_train, y=y_train, epochs=hyperparameters['epochs'], batch_size=hyperparameters['batch_size'])
 
-    return model
+return model
 """
 
 USER_SCRIPT_WITH_SAVE = """
@@ -101,7 +100,7 @@ parser.add_argument('--model_dir', type=str)
 
 args = parser.parse_args()
 
-data = np.load(args.training_data_file)
+data = np.load(os.path.join(os.environ['SM_CHANNEL_TRAINING'], args.training_data_file))
 x_train = data['features']
 y_train = data['labels']
 
@@ -109,9 +108,11 @@ model = fake_ml.Model(loss='elastic', optimizer='SGD')
 
 model.fit(x=x_train, y=y_train, epochs=args.epochs, batch_size=args.batch_size)
 
-model_file = os.path.join(args.model_dir, 'saved_model')
+model_file = os.path.join(os.environ['SM_MODEL_DIR'], 'saved_model')
 model.save(model_file)
 """
+
+BASH_SCRIPT = '#!/usr/bin/env python\n%s' % USER_MODE_SCRIPT
 
 PARAMETER_SERVER_SCRIPT = """
 from time import sleep
@@ -121,11 +122,19 @@ while True:
     sleep(1)
 """
 
+SETUP = """
+from setuptools import setup
+setup(packages=[''],
+      name="user_script",
+      version='1.0.0',
+      include_package_data=True)
+"""
+
 
 def framework_training_fn():
     training_env = sagemaker_containers.training_env()
 
-    mod = modules.import_module(training_env.module_dir, training_env.module_name, False)
+    mod = modules.import_module(training_env.module_dir, training_env.module_name)
 
     model = mod.train(**functions.matching_args(mod.train, training_env))
 
@@ -148,7 +157,8 @@ def test_training_framework(user_script):
     labels = [0, 1, 0, 1]
     np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    module = test.UserModule(test.File(name='user_script.py', data=user_script))
+    file = test.File(name='user_script.py', data=user_script)
+    module = test.UserModule(file).add_file(test.File('setup.py', SETUP))
 
     hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py', epochs=10,
                            batch_size=64, optimizer='Adam')
@@ -165,8 +175,11 @@ def test_training_framework(user_script):
     assert model.optimizer == 'Adam'
 
 
-@pytest.mark.parametrize('user_script', [USER_SCRIPT, USER_SCRIPT_WITH_SAVE])
-def test_trainer_report_success(user_script):
+@pytest.mark.parametrize('user_script, sagemaker_program', [
+    [USER_MODE_SCRIPT, 'user_script.py'],
+    [BASH_SCRIPT, 'bash_script']
+])
+def test_trainer_report_success(user_script, sagemaker_program):
     with pytest.raises(ImportError):
         importlib.import_module(modules.DEFAULT_MODULE_NAME)
 
@@ -176,14 +189,12 @@ def test_trainer_report_success(user_script):
     labels = [0, 1, 0, 1]
     np.savez(os.path.join(channel.path, 'training_data'), features=features, labels=labels)
 
-    module = test.UserModule(test.File(name='user_script.py', data=user_script))
+    module = test.UserModule(test.File(name=sagemaker_program, data=user_script))
 
-    hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program='user_script.py', epochs=10,
-                           batch_size=64, optimizer='SGD')
+    hyperparameters = dict(training_data_file='training_data.npz', sagemaker_program=sagemaker_program, epochs=10,
+                           batch_size=64)
 
     test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[channel])
-
-    os.environ['SAGEMAKER_TRAINING_MODULE'] = 'test.functional.simple_framework:train'
 
     assert execute_an_wrap_exit(trainer.train) == trainer.SUCCESS_CODE
 
@@ -228,7 +239,7 @@ def framework_training_with_script_mode_fn():
     training_env = sagemaker_containers.training_env()
 
     modules.run_module(training_env.module_dir, training_env.to_cmd_args(), training_env.to_env_vars(),
-                       training_env.module_name, cache=False)
+                       training_env.user_program)
 
 
 def test_parameter_server():
@@ -238,7 +249,7 @@ def test_parameter_server():
     test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[test.Channel.create(name='training')])
     training_env = sagemaker_containers.training_env()
     process = modules.run_module(training_env.module_dir, training_env.to_cmd_args(), training_env.to_env_vars(),
-                                 training_env.module_name, cache=False, wait=False)
+                                 training_env.module_name, wait=False)
     # confirm the ps process is still hanging
     assert process.poll() is None
     process.kill()
@@ -330,7 +341,7 @@ def test_script_mode_client_import_error():
     requirements_file = test.File('requirements.txt', '42/0')
 
     user_script = test.File(name='user_script.py', data='42/0')
-    module = test.UserModule(user_script).add_file(requirements_file).upload()
+    module = test.UserModule(user_script).add_file(requirements_file).add_file(test.File('setup.py', SETUP)).upload()
 
     hyperparameters = dict(sagemaker_program='user_script.py')
 

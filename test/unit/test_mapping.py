@@ -204,7 +204,7 @@ def test_env_vars_round_trip():
     assert env_vars['SM_HPS'] == '{"batch_size":64,"epochs":10,"loss":"SGD","precision":5.434322}'
     assert env_vars['SM_HP_PRECISION'] == '5.434322'
     assert env_vars['SM_RESOURCE_CONFIG'] == '{"current_host":"algo-1","hosts":["algo-1","algo-2","algo-3"]}'
-    assert env_vars['SM_MODULE_NAME'] == 'user_script'
+    assert env_vars['SM_USER_PROGRAM'] == 'user_script.py'
     assert env_vars['SM_INPUT_CONFIG_DIR'].endswith('/opt/ml/input/config')
     assert env_vars['SM_USER_ARGS'] == '--batch_size 64 --epochs 10 --loss SGD --precision 5.434322'
     assert env_vars['SM_OUTPUT_DIR'].endswith('/opt/ml/output')
