@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
+import enum
 import importlib
 import os
 import shlex
@@ -64,7 +65,7 @@ def prepare(path, name):  # type: (str, str) -> None
     if path not in sys.path:
         sys.path.insert(0, path)
 
-    if _entry_point_type(path, name) == _COMMAND:
+    if _entry_point_type(path, name) is EntryPointType.COMMAND:
         os.chmod(os.path.join(path, name), 511)
 
 
@@ -79,7 +80,7 @@ def install(path, name):  # type: (str, str) -> None
     """
     entry_point_type = _entry_point_type(path, name)
 
-    if entry_point_type == _PYTHON_PACKAGE:
+    if entry_point_type is EntryPointType.PYTHON_PACKAGE:
         cmd = '%s -m pip install -U . ' % python_executable()
 
         if os.path.exists(os.path.join(path, 'requirements.txt')):
@@ -113,16 +114,11 @@ def download_and_install(uri, name, path):  # type: (str, str, str) -> None
     SageMaker Python SDK saves the user provided entry points as compressed tar files in S3
     https://github.com/aws/sagemaker-python-sdk.
 
-    This function downloads this compressed file, if provided, and transforms it as a module, and installs it.
-
     Args:
         name (str): name of the entry point.
         uri (str): the location of the entry point.
         path (bool): The path where the script will be installed. It will not download and install the
                         if the path already has the user entry point.
-
-    Returns:
-        (module): the imported module
     """
     if not os.path.exists(path):
         os.makedirs(path)
@@ -188,9 +184,9 @@ def run(module_name, args=None, env_vars=None, wait=True):  # type: (str, list, 
     # TODO (mvsusp): module_name will be deprecated to entry_point_name in a follow up pr that will refactor _modules
     entry_point_type = _entry_point_type(_env.code_dir, module_name)
 
-    if entry_point_type == _PYTHON_PACKAGE:
+    if entry_point_type is EntryPointType.PYTHON_PACKAGE:
         cmd = [python_executable(), '-m', module_name.replace('.py', '')] + args
-    elif entry_point_type == _PYTHON_PROGRAM:
+    elif entry_point_type is EntryPointType.PYTHON_PROGRAM:
         cmd = [python_executable(), module_name] + args
     else:
         cmd = ['/bin/sh', '-c', './%s %s' % (module_name, ' '.join(args))]
@@ -300,18 +296,19 @@ def write_env_vars(env_vars=None):  # type: (dict) -> None
         os.environ[name] = value
 
 
-_PYTHON_PACKAGE = 'PYTHON_PACKAGE'
-_PYTHON_PROGRAM = 'PYTHON_PROGRAM'
-_COMMAND = 'COMMAND'
+class EntryPointType(enum.Enum):
+    PYTHON_PACKAGE = 'PYTHON_PACKAGE'
+    PYTHON_PROGRAM = 'PYTHON_PROGRAM'
+    COMMAND = 'COMMAND'
 
 
-def _entry_point_type(path, name):  # type: (str, str) -> str
+def _entry_point_type(path, name):  # type: (str, str) -> EntryPointType
     if 'setup.py' in os.listdir(path):
-        return _PYTHON_PACKAGE
+        return EntryPointType.PYTHON_PACKAGE
     elif name.endswith('.py'):
-        return _PYTHON_PROGRAM
+        return EntryPointType.PYTHON_PROGRAM
     else:
-        return _COMMAND
+        return EntryPointType.COMMAND
 
 
 def _has_requirements(path):  # type: (str) -> None

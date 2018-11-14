@@ -1,5 +1,6 @@
 from glob import glob
 import os
+import sys
 
 from setuptools import find_packages, setup
 
@@ -10,6 +11,12 @@ def read(file_name):
 
 packages = find_packages(where='src', exclude=('test',))
 packages.append('sagemaker_containers.etc')
+
+required_packages = ['boto3', 'six', 'pip', 'flask', 'gunicorn', 'gevent', 'werkzeug']
+
+# enum is introduced in Python 3.4. Installing enum back port
+if sys.version_info < (3, 4):
+    required_packages.append('enum34 >= 1.1.6')
 
 setup(
     name='sagemaker_containers',
@@ -37,7 +44,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.5',
     ],
-    install_requires=['boto3', 'six', 'pip', 'flask', 'gunicorn', 'gevent', 'werkzeug'],
+    install_requires=required_packages,
 
     extras_require={
         'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker', 'numpy']
