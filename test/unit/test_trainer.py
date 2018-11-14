@@ -23,6 +23,10 @@ class TrainingEnv(Mock):
     log_level = 20
 
 
+class SriptTrainingEnv(Mock):
+    framework_module = None
+
+
 @patch('importlib.import_module')
 @patch('sagemaker_containers.training_env', TrainingEnv)
 def test_train(import_module):
@@ -49,11 +53,23 @@ def test_train_with_success(_exit, import_module):
     _exit.assert_called_with(_trainer.SUCCESS_CODE)
 
 
+@patch('sagemaker_containers._modules.run_module')
+@patch('sagemaker_containers.training_env', new_callable=SriptTrainingEnv)
+@patch('sagemaker_containers._trainer._exit_processes')
+def test_train_script(_exit, training_env, run_module):
+    _trainer.train()
+
+    env = training_env()
+    run_module.assert_called_with(env.module_dir, env.to_cmd_args(),
+                                  env.to_env_vars(), env.user_program)
+
+    _exit.assert_called_with(_trainer.SUCCESS_CODE)
+
+
 @patch('importlib.import_module')
 @patch('sagemaker_containers.training_env', TrainingEnv)
 @patch('sagemaker_containers._trainer._exit_processes')
 def test_train_fails(_exit, import_module):
-
     def fail():
         raise OSError(os.errno.ENOENT, 'No such file or directory')
 
@@ -69,7 +85,6 @@ def test_train_fails(_exit, import_module):
 @patch('sagemaker_containers.training_env', TrainingEnv)
 @patch('sagemaker_containers._trainer._exit_processes')
 def test_train_with_client_error(_exit, import_module):
-
     def fail():
         raise _errors.ClientError(os.errno.ENOENT, 'No such file or directory')
 

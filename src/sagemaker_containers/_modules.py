@@ -61,10 +61,11 @@ def prepare(path, name):  # type: (str, str) -> None
         path (str): path to directory with the script or module.
         name (str): name of the script or module.
     """
-    sys.path.insert(0, path)
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
     if _entry_point_type(path, name) == _COMMAND:
-        os.chmod(os.path.join(path, name), 777)
+        os.chmod(os.path.join(path, name), 511)
 
 
 def install(path, name):  # type: (str, str) -> None
@@ -87,8 +88,6 @@ def install(path, name):  # type: (str, str) -> None
         logger.info('Installing module with the following command:\n%s', cmd)
 
         _check_error(shlex.split(cmd), _errors.InstallModuleError, cwd=path)
-    else:
-        _install_requirements(path)
 
 
 def exists(name):  # type: (str) -> bool
@@ -194,7 +193,7 @@ def run(module_name, args=None, env_vars=None, wait=True):  # type: (str, list, 
     elif entry_point_type == _PYTHON_PROGRAM:
         cmd = [python_executable(), module_name] + args
     else:
-        cmd = ['/bin/sh', '-c', 'chmod +x %s && ./%s %s' % (module_name, module_name, ' '.join(args))]
+        cmd = ['/bin/sh', '-c', './%s %s' % (module_name, ' '.join(args))]
 
     _logging.log_script_invocation(cmd, env_vars)
 

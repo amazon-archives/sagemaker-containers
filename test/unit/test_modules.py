@@ -18,7 +18,6 @@ import os
 import sys
 import tarfile
 
-
 from mock import call, patch
 import pytest
 from six import PY2
@@ -81,7 +80,7 @@ def test_prepare_command(path, chmod, entrypoint_type_script):
     _modules.prepare('/opt/ml/code', 'train.sh')
 
     path.insert.assert_called_with(0, '/opt/ml/code')
-    chmod.assert_called_with('/opt/ml/code/train.sh', 777)
+    chmod.assert_called_with('/opt/ml/code/train.sh', 511)
 
 
 def test_s3_download_wrong_scheme():
@@ -104,15 +103,12 @@ def test_install_module(check_error, entrypoint_type_module):
 
 
 @patch('sagemaker_containers._modules._check_error', autospec=True)
-def test_install_script_with_requirements(check_error, entrypoint_type_script, has_requirements):
+def test_install_script(check_error, entrypoint_type_script, has_requirements):
     path = 'c://sagemaker-pytorch-container'
     _modules.install(path, 'train.py')
 
     with patch('os.path.exists', return_value=True):
         _modules.install(path, 'python_module.py')
-
-        cmd = [sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt']
-        check_error.assert_called_with(cmd, _errors.InstallModuleError, cwd=path)
 
 
 @patch('sagemaker_containers._modules._check_error', autospec=True)
@@ -123,7 +119,7 @@ def test_install_fails(check_error, entrypoint_type_module):
 
 
 @patch('sys.executable', None)
-def test_install_no_python_executable(has_requirements):
+def test_install_no_python_executable(has_requirements, entrypoint_type_module):
     with pytest.raises(RuntimeError) as e:
         _modules.install('git://aws/container-support', 'train.py')
     assert str(e.value) == 'Failed to retrieve the real path for the Python executable binary'
@@ -141,6 +137,42 @@ def test_exists(import_module):
     import_module.side_effect = ImportError()
 
     assert not _modules.exists('my_module')
+
+
+@patch('subprocess.Popen')
+@patch('sagemaker_containers._logging.log_script_invocation')
+def test_run_bash(log, popen, entrypoint_type_script):
+
+    with pytest.raises(_errors.ExecuteUserScriptError):
+        _modules.run('launcher.sh', ['--lr', '13'])
+
+    cmd = ['/bin/sh', '-c', './launcher.sh --lr 13']
+    popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ)
+    log.assert_called_with(cmd, {})
+
+
+@patch('subprocess.Popen')
+@patch('sagemaker_containers._logging.log_script_invocation')
+def test_run_python(log, popen, entrypoint_type_script):
+
+    with pytest.raises(_errors.ExecuteUserScriptError):
+        _modules.run('launcher.py', ['--lr', '13'])
+
+    cmd = [sys.executable, 'launcher.py', '--lr', '13']
+    popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ)
+    log.assert_called_with(cmd, {})
+
+
+@patch('subprocess.Popen')
+@patch('sagemaker_containers._logging.log_script_invocation')
+def test_run_module(log, popen, entrypoint_type_module):
+
+    with pytest.raises(_errors.ExecuteUserScriptError):
+        _modules.run('module.py', ['--lr', '13'])
+
+    cmd = [sys.executable, '-m', 'module', '--lr', '13']
+    popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ)
+    log.assert_called_with(cmd, {})
 
 
 @patch('sagemaker_containers.training_env', lambda: {})
@@ -172,24 +204,70 @@ def test_run_module_no_wait():
     with patch('sagemaker_containers._modules.download_and_install') as download_and_install:
         with patch('sagemaker_containers._modules.run') as run:
             with pytest.warns(DeprecationWarning):
-
                 _modules.run_module(uri='s3://url', args=['42'], cache=True, wait=False)
 
                 download_and_install.assert_called_with('s3://url', 'default_user_module_name', _env.code_dir)
                 run.assert_called_with('default_user_module_name', ['42'], {}, False)
 
 
+@patch('os.makedirs')
 @patch('shutil.copy2')
-def test_download_and_install_local_directory(copy2):
+@patch('sagemaker_containers._modules.s3_download')
+@patch('sagemaker_containers._modules.prepare')
+@patch('sagemaker_containers._modules.install')
+@patch('os.path.exists')
+@pytest.mark.parametrize('exists', [False, True])
+def test_download_and_install_local_file(path_exists, install, prepare, s3_download,
+                                         copy2, makedirs, exists):
+    path_exists.return_value = exists
+    makedirs.return_value = exists
+
+    _modules.download_and_install('/tmp/file', 'script', _env.code_dir)
+
+    s3_download.assert_not_called()
+    prepare.assert_called_with(_env.code_dir, 'script')
+    install.assert_called_with(_env.code_dir, 'script')
+
+    if not exists:
+        makedirs.assert_called_with(_env.code_dir)
+    copy2.assert_called_with('/tmp/file', os.path.join(_env.code_dir, 'script'))
+
+
+@patch('os.makedirs')
+@patch('shutil.rmtree')
+@patch('shutil.copytree')
+@patch('sagemaker_containers._modules.s3_download')
+@patch('sagemaker_containers._modules.prepare')
+@patch('sagemaker_containers._modules.install')
+@patch('os.path.exists')
+@pytest.mark.parametrize('exists', [False, True])
+def test_download_and_install_local_folder(path_exists, install, prepare, s3_download, copytree,
+                                           rmtree, makedirs, exists):
+    path_exists.return_value = exists
+    makedirs.return_value = exists
+
+    _modules.download_and_install('/tmp', 'script', _env.code_dir)
+
+    s3_download.assert_not_called()
+    prepare.assert_called_with(_env.code_dir, 'script')
+    install.assert_called_with(_env.code_dir, 'script')
+
+    if exists:
+        rmtree.assert_any_call(_env.code_dir)
+    copytree.assert_called_with('/tmp', _env.code_dir)
+
+
+@patch('shutil.copytree')
+def test_download_and_install_local_directory(copytree):
     with patch('sagemaker_containers._modules.s3_download') as s3_download, \
             patch('sagemaker_containers._modules.prepare') as prepare, \
             patch('sagemaker_containers._modules.install') as install:
-        _modules.download_and_install('tmp', 'script', _env.code_dir)
+        _modules.download_and_install('/tmp', 'script', _env.code_dir)
 
         s3_download.assert_not_called()
         prepare.assert_called_with(_env.code_dir, 'script')
         install.assert_called_with(_env.code_dir, 'script')
-        copy2.assert_called_with('tmp', os.path.join(_env.code_dir, 'script'))
+        copytree.assert_called_with('/tmp', _env.code_dir)
 
 
 class TestDownloadAndImport(test.TestBase):
