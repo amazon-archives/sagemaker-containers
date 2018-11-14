@@ -11,8 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from mock import call, Mock, patch, PropertyMock
+import pytest
 
 from sagemaker_containers import _env, _server
+
+
+FIRST_PORT = '1111'
+LAST_PORT = '2222'
+SAFE_PORT_RANGE = '{}-{}'.format(FIRST_PORT, LAST_PORT)
 
 
 @patch.object(_env.ServingEnv, 'model_server_workers', PropertyMock(return_value=2))
@@ -62,3 +68,29 @@ def test_start_with_nginx(popen):
     ]
     _server.start('my_module')
     popen.assert_has_calls(calls)
+
+
+def test_next_safe_port_first():
+    safe_port = _server.next_safe_port(SAFE_PORT_RANGE)
+    assert safe_port == FIRST_PORT
+
+
+def test_next_safe_port_after():
+    safe_port = _server.next_safe_port(SAFE_PORT_RANGE, FIRST_PORT)
+    next_safe_port = str(int(FIRST_PORT) + 1)
+
+    assert safe_port == next_safe_port
+
+
+def test_next_safe_port_greater_than_range_exception():
+    current_port = str(int(LAST_PORT) + 1)
+
+    with pytest.raises(ValueError):
+        _server.next_safe_port(SAFE_PORT_RANGE, current_port)
+
+
+def test_next_safe_port_less_than_range_exception():
+    current_port = str(int(FIRST_PORT) - 100)
+
+    with pytest.raises(ValueError):
+        _server.next_safe_port(SAFE_PORT_RANGE, current_port)

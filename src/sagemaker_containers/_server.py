@@ -35,7 +35,7 @@ def _create_nginx_config(serving_env):
 
     pattern = re.compile(r'%(\w+)%')
     template_values = {
-        'NGINX_HTTP_PORT': serving_env.port
+        'NGINX_HTTP_PORT': serving_env.http_port
     }
 
     config = pattern.sub(lambda x: template_values[x.group(1)], template)
@@ -63,7 +63,7 @@ def _add_sigterm_handler(nginx, gunicorn):
 
 def start(module_app):
     env = _env.ServingEnv()
-    gunicorn_bind_address = '0.0.0.0:{}'.format(env.port)
+    gunicorn_bind_address = '0.0.0.0:{}'.format(env.http_port)
 
     nginx = None
 
