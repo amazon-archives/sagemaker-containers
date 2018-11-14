@@ -64,11 +64,6 @@ def test_read_file():
     assert _files.read_file(_env.hyperparameters_file_dir) == '\"test\"'
 
 
-def test_read_file_throws_exception():
-    with pytest.raises(IOError):
-        _files.read_file('non-existent-file')
-
-
 @patch('tempfile.mkdtemp')
 @patch('shutil.rmtree')
 def test_tmpdir(rmtree, mkdtemp):

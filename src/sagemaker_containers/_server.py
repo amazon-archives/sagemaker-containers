@@ -26,7 +26,7 @@ logger = _logging.get_logger()
 
 UNIX_SOCKET_BIND = 'unix:/tmp/gunicorn.sock'
 
-nginx_config_file = pkg_resources.resource_filename(sagemaker_containers.__name__, '/etc/nginx.conf')
+nginx_config_file = os.path.join('/etc', 'sagemaker-nginx.conf')
 nginx_config_template_file = pkg_resources.resource_filename(sagemaker_containers.__name__, '/etc/nginx.conf.template')
 
 
@@ -89,3 +89,17 @@ def start(module_app):
         pid, _ = os.wait()
         if pid in pids:
             break
+
+
+def next_safe_port(port_range, after=None):
+    first_and_last_port = port_range.split('-')
+    first_safe_port = int(first_and_last_port[0])
+    last_safe_port = int(first_and_last_port[1])
+    safe_port = first_safe_port
+    if after:
+        safe_port = int(after) + 1
+        if safe_port < first_safe_port or safe_port > last_safe_port:
+            raise ValueError(
+                '{} is outside of the acceptable port range for SageMaker: {}'.format(safe_port, port_range))
+
+    return str(safe_port)

@@ -782,14 +782,16 @@ class ServingEnv(_Env):
         model_server_workers = int(os.environ.get(_params.MODEL_SERVER_WORKERS_ENV, num_cpus()))
         framework_module = os.environ.get(_params.FRAMEWORK_SERVING_MODULE_ENV, None)
         default_accept = os.environ.get(_params.DEFAULT_INVOCATIONS_ACCEPT_ENV, _content_types.JSON)
-        port = os.getenv(_params.SAGEMAKER_BIND_TO_PORT_ENV, '8080')
+        http_port = os.environ.get(_params.SAGEMAKER_BIND_TO_PORT_ENV, '8080')
+        safe_port_range = os.environ.get(_params.SAGEMAKER_SAFE_PORT_RANGE_ENV)
 
         self._use_nginx = use_nginx
         self._model_server_timeout = model_server_timeout
         self._model_server_workers = model_server_workers
         self._framework_module = framework_module
         self._default_accept = default_accept
-        self._port = port
+        self._http_port = http_port
+        self._safe_port_range = safe_port_range
 
     @property
     def use_nginx(self):  # type: () -> bool
@@ -825,8 +827,15 @@ class ServingEnv(_Env):
         return self._default_accept
 
     @property
-    def port(self):  # type: () -> str
+    def http_port(self):  # type: () -> str
         """Returns:
-            str: Port that SageMaker will use to handle invocations and pings against the running
-                Docker container. Default should be 8080. For example: 8080"""
-        return self._port
+            str: HTTP port that SageMaker will use to handle invocations and pings against the running
+                Docker container. Default is 8080. For example: 8080"""
+        return self._http_port
+
+    @property
+    def safe_port_range(self):  # type: () -> str
+        """Returns:
+            str: HTTP port range that can be used by customers to avoid collisions with the HTTP port
+                specified by SageMaker for handling pings and invocations. For example: 8080"""
+        return self._safe_port_range
