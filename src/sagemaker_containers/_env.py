@@ -770,8 +770,11 @@ class ServingEnv(_Env):
                 as specified in the user-supplied SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT environment
                 variable. Otherwise, returns 'application/json' by default.
                 For example: application/json
-            port (str): Port that SageMaker will use to handle invocations and pings against the
-                running Docker container. Default should be 8080. For example: 8080
+            http_port (str): Port that SageMaker will use to handle invocations and pings against the
+                running Docker container. Default is 8080. For example: 8080
+            safe_port_range (str): HTTP port range that can be used by customers to avoid collisions
+                with the HTTP port specified by SageMaker for handling pings and invocations.
+                For example: 1111-2222
     """
 
     def __init__(self):
@@ -837,5 +840,5 @@ class ServingEnv(_Env):
     def safe_port_range(self):  # type: () -> str
         """Returns:
             str: HTTP port range that can be used by customers to avoid collisions with the HTTP port
-                specified by SageMaker for handling pings and invocations. For example: 8080"""
+                specified by SageMaker for handling pings and invocations. For example: 1111-2222"""
         return self._safe_port_range
