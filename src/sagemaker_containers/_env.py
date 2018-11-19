@@ -381,9 +381,9 @@ class _Env(_mapping.MappingMixin):
 
     @property
     def user_entry_point(self):  # type: () -> str
-        """The name of provided user entrypoint.
+        """The name of provided user entry point.
         Returns:
-            str: The name of provided user entrypoint
+            str: The name of provided user entry point
         """
         return self._user_entry_point
 

@@ -15,7 +15,7 @@ import os
 import traceback
 
 import sagemaker_containers
-from sagemaker_containers.beta.framework import entrypoint, errors, files, logging
+from sagemaker_containers.beta.framework import entry_point, errors, files, logging
 
 logger = logging.get_logger()
 
@@ -52,11 +52,11 @@ def train():
             logging.configure_logger(env.log_level)
             logger.info('Imported framework %s', framework_name)
 
-            entry_point = getattr(framework, entry_point_name)
-            entry_point()
+            entrypoint = getattr(framework, entry_point_name)
+            entrypoint()
         else:
             logging.configure_logger(env.log_level)
-            entrypoint.run(env.module_dir, env.user_entry_point, env.to_cmd_args(), env.to_env_vars())
+            entry_point.run(env.module_dir, env.user_entry_point, env.to_cmd_args(), env.to_env_vars())
 
         logger.info('Reporting training SUCCESS')
         files.write_success_file()

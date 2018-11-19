@@ -85,7 +85,7 @@ def test_train_with_client_error(_exit, import_module):
     _exit.assert_called_with(_trainer.DEFAULT_FAILURE_CODE)
 
 
-@patch('sagemaker_containers.entrypoint.run')
+@patch('sagemaker_containers.entry_point.run')
 @patch('sagemaker_containers.training_env', new_callable=SriptTrainingEnv)
 @patch('sagemaker_containers._trainer._exit_processes')
 def test_train_script(_exit, training_env, run):

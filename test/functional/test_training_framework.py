@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 
 import sagemaker_containers
-from sagemaker_containers.beta.framework import entrypoint, env, errors, functions, modules, trainer
+from sagemaker_containers.beta.framework import entry_point, env, errors, functions, modules, trainer
 import test
 from test import fake_ml_framework
 
@@ -237,8 +237,8 @@ def test_trainer_report_failure():
 def framework_training_with_script_mode_fn():
     training_env = sagemaker_containers.training_env()
 
-    entrypoint.run(training_env.module_dir, training_env.user_entry_point, training_env.to_cmd_args(),
-                   training_env.to_env_vars())
+    entry_point.run(training_env.module_dir, training_env.user_entry_point, training_env.to_cmd_args(),
+                    training_env.to_env_vars())
 
 
 def test_parameter_server():
@@ -247,8 +247,8 @@ def test_parameter_server():
 
     test.prepare(user_module=module, hyperparameters=hyperparameters, channels=[test.Channel.create(name='training')])
     training_env = sagemaker_containers.training_env()
-    process = entrypoint.run(training_env.module_dir, training_env.user_entry_point,
-                             training_env.to_cmd_args(), training_env.to_env_vars(), wait=False)
+    process = entry_point.run(training_env.module_dir, training_env.user_entry_point,
+                              training_env.to_cmd_args(), training_env.to_env_vars(), wait=False)
     # confirm the ps process is still hanging
     assert process.poll() is None
     process.kill()

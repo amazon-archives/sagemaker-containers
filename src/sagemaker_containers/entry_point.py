@@ -21,7 +21,7 @@ from sagemaker_containers import _env, _errors, _files, _logging, _modules, _pro
 
 def run(uri, user_entry_point, args, env_vars=None, wait=True):
     # type: (str, str, list, dict, bool) -> subprocess.Popen
-    """Runs the user entry-point, passing env_vars as environment variables and args as command arguments.
+    """Runs the user entry point, passing env_vars as environment variables and args as command arguments.
     If the entry point is:
         - A Python package: executes the packages as >>> env_vars python -m module_name + args
         - A Python script: executes the script as >>> env_vars python module_name + args
@@ -50,7 +50,7 @@ def run(uri, user_entry_point, args, env_vars=None, wait=True):
          SAGEMAKER_MODEL_DIR=/opt/ml/model python -m user_script --batch-size 128 --model_dir /opt/ml/model
 
      Args:
-        user_entry_point (str): name of the user entrypoint
+        user_entry_point (str): name of the user provided entry point
         args (list):  A list of program arguments.
         env_vars (dict): A map containing the environment variables to be written.
         uri (str): the location of the module.
@@ -72,7 +72,7 @@ def run(uri, user_entry_point, args, env_vars=None, wait=True):
 def install(name, dst):
     """Install the user provided entry point to be executed as follow:
         - add the path to sys path
-        - if the entrypoint is a command, gives exec permissions to the script
+        - if the user entry point is a command, gives exec permissions to the script
 
     Args:
         name (str): name of the script or module.
@@ -89,7 +89,7 @@ def install(name, dst):
 
 
 def call(user_entry_point, args=None, env_vars=None, wait=True):  # type: (str, list, dict, bool) -> Popen
-    """Runs the entry-point, passing env_vars as environment variables and args as command arguments.
+    """Runs the user provided entry point, passing env_vars as environment variables and args as command arguments.
     If the entry point is:
         - A Python package: executes the packages as >>> env_vars python -m module_name + args
         - A Python script: executes the script as >>> env_vars python module_name + args
