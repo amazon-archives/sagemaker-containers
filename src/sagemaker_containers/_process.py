@@ -18,12 +18,12 @@ import sys
 
 import six
 
-from sagemaker_containers.beta.framework import env
+from sagemaker_containers import _env
 
 
 def create(cmd, error_class, cwd=None, **kwargs):
     try:
-        return subprocess.Popen(cmd, env=os.environ, cwd=cwd or env.code_dir, **kwargs)
+        return subprocess.Popen(cmd, env=os.environ, cwd=cwd or _env.code_dir, **kwargs)
     except Exception as e:
         six.reraise(error_class, error_class(e), sys.exc_info()[2])
 
