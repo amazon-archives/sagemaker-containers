@@ -83,7 +83,7 @@ def test_install_no_python_executable(has_requirements, entry_point_type_module)
 @patch('sagemaker_containers._logging.log_script_invocation')
 def test_run_bash(log, popen, entry_point_type_script):
     with pytest.raises(_errors.ExecuteUserScriptError):
-        entry_point.call('launcher.sh', ['--lr', '13'])
+        entry_point._call('launcher.sh', ['--lr', '13'])
 
     cmd = ['/bin/sh', '-c', './launcher.sh --lr 13']
     popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ)
@@ -94,7 +94,7 @@ def test_run_bash(log, popen, entry_point_type_script):
 @patch('sagemaker_containers._logging.log_script_invocation')
 def test_run_python(log, popen, entry_point_type_script):
     with pytest.raises(_errors.ExecuteUserScriptError):
-        entry_point.call('launcher.py', ['--lr', '13'])
+        entry_point._call('launcher.py', ['--lr', '13'])
 
     cmd = [sys.executable, 'launcher.py', '--lr', '13']
     popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ)
@@ -105,7 +105,7 @@ def test_run_python(log, popen, entry_point_type_script):
 @patch('sagemaker_containers._logging.log_script_invocation')
 def test_run_module(log, popen, entry_point_type_module):
     with pytest.raises(_errors.ExecuteUserScriptError):
-        entry_point.call('module.py', ['--lr', '13'])
+        entry_point._call('module.py', ['--lr', '13'])
 
     cmd = [sys.executable, '-m', 'module', '--lr', '13']
     popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ)
@@ -115,14 +115,14 @@ def test_run_module(log, popen, entry_point_type_module):
 @patch('sagemaker_containers.training_env', lambda: {})
 def test_run_error():
     with pytest.raises(_errors.ExecuteUserScriptError) as e:
-        entry_point.call('wrong module')
+        entry_point._call('wrong module')
 
     message = str(e.value)
     assert 'ExecuteUserScriptError:' in message
 
 
 @patch('sagemaker_containers._files.download_and_extract')
-@patch('sagemaker_containers.entry_point.call')
+@patch('sagemaker_containers.entry_point._call')
 @patch('os.chmod')
 def test_run_module_wait(chmod, call, download_and_extract):
     entry_point.run(uri='s3://url', user_entry_point='launcher.sh', args=['42'])
@@ -133,7 +133,7 @@ def test_run_module_wait(chmod, call, download_and_extract):
 
 
 @patch('sagemaker_containers._files.download_and_extract')
-@patch('sagemaker_containers.entry_point.call')
+@patch('sagemaker_containers.entry_point._call')
 def test_run_module_no_wait(call, download_and_extract, entry_point_type_module):
     with pytest.raises(_errors.InstallModuleError):
         entry_point.run(uri='s3://url', user_entry_point='default_user_module_name', args=['42'], wait=False)

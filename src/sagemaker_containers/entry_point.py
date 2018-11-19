@@ -21,7 +21,10 @@ from sagemaker_containers import _env, _errors, _files, _logging, _modules, _pro
 
 def run(uri, user_entry_point, args, env_vars=None, wait=True):
     # type: (str, str, list, dict, bool) -> subprocess.Popen
-    """Runs the user entry point, passing env_vars as environment variables and args as command arguments.
+    """Download, prepare and executes a compressed tar file from S3 or provided directory as an user
+    entrypoint. Runs the user entry point, passing env_vars as environment variables and args as command
+    arguments.
+
     If the entry point is:
         - A Python package: executes the packages as >>> env_vars python -m module_name + args
         - A Python script: executes the script as >>> env_vars python module_name + args
@@ -66,7 +69,7 @@ def run(uri, user_entry_point, args, env_vars=None, wait=True):
 
     _env.write_env_vars(env_vars)
 
-    return call(user_entry_point, args, env_vars, wait)
+    return _call(user_entry_point, args, env_vars, wait)
 
 
 def install(name, dst):
@@ -88,43 +91,7 @@ def install(name, dst):
         os.chmod(os.path.join(dst, name), 511)
 
 
-def call(user_entry_point, args=None, env_vars=None, wait=True):  # type: (str, list, dict, bool) -> Popen
-    """Runs the user provided entry point, passing env_vars as environment variables and args as command arguments.
-    If the entry point is:
-        - A Python package: executes the packages as >>> env_vars python -m module_name + args
-        - A Python script: executes the script as >>> env_vars python module_name + args
-        - Any other: executes the command as >>> env_vars /bin/sh -c ./module_name + args
-
-    Example:
-
-        >>>import sagemaker_containers
-        >>>from sagemaker_containers.beta.framework import mapping, modules
-
-        >>>env = sagemaker_containers.training_env()
-        {'channel-input-dirs': {'training': '/opt/ml/input/training'}, 'model_dir': '/opt/ml/model', ...}
-
-
-        >>>hyperparameters = env.hyperparameters
-        {'batch-size': 128, 'model_dir': '/opt/ml/model'}
-
-        >>>args = mapping.to_cmd_args(hyperparameters)
-        ['--batch-size', '128', '--model_dir', '/opt/ml/model']
-
-        >>>env_vars = mapping.to_env_vars()
-        ['SAGEMAKER_CHANNELS':'training', 'SAGEMAKER_CHANNEL_TRAINING':'/opt/ml/input/training',
-        'MODEL_DIR':'/opt/ml/model', ...}
-
-        >>>modules.run('user_script', args, env_vars)
-        SAGEMAKER_CHANNELS=training SAGEMAKER_CHANNEL_TRAINING=/opt/ml/input/training \
-        SAGEMAKER_MODEL_DIR=/opt/ml/model python -m user_script --batch-size 128 --model_dir /opt/ml/model
-
-    Args:
-        user_entry_point (str): module name in the same format required by python -m <module-name> cli command.
-        args (list):  A list of program arguments.
-        env_vars (dict): A map containing the environment variables to be written.
-        wait (bool): If True, holds the process executing the user entry-point.
-                     If False, returns the process that is executing it.
-    """
+def _call(user_entry_point, args=None, env_vars=None, wait=True):  # type: (str, list, dict, bool) -> Popen
     args = args or []
     env_vars = env_vars or {}
 
