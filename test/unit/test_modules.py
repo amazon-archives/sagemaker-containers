@@ -129,12 +129,15 @@ def test_exists(import_module):
 
 
 @patch('sagemaker_containers.training_env', lambda: {})
-def test_run_error():
+@pytest.mark.parametrize('capture_error', [True, False])
+def test_run_error(capture_error):
     with pytest.raises(_errors.ExecuteUserScriptError) as e:
-        _modules.run('wrong module')
+        _modules.run('wrong module', capture_error=capture_error)
 
     message = str(e.value)
     assert 'ExecuteUserScriptError:' in message
+    if capture_error:
+        assert ' No module named wrong module' in message
 
 
 @patch('sagemaker_containers._process.python_executable')
