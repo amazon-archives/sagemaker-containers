@@ -108,7 +108,8 @@ def install(path, capture_error=False):  # type: (str) -> None
     _process.check_error(shlex.split(cmd), _errors.InstallModuleError, cwd=path, capture_error=capture_error)
 
 
-def run(module_name, args=None, env_vars=None, wait=True, capture_error=False):  # type: (str, list, dict, bool) -> Popen
+def run(module_name, args=None, env_vars=None, wait=True, capture_error=False):
+    # type: (str, list, dict, bool, bool) -> Popen
     """Run Python module as a script.
 
     Search sys.path for the named module and execute its contents as the __main__ module.

@@ -51,12 +51,14 @@ def test_install(check_error):
     _modules.install(path)
 
     cmd = [sys.executable, '-m', 'pip', 'install', '-U', '.']
-    check_error.assert_called_with(cmd, _errors.InstallModuleError, cwd=path)
+    check_error.assert_called_with(cmd, _errors.InstallModuleError, cwd=path, capture_error=False)
 
     with patch('os.path.exists', return_value=True):
         _modules.install(path)
 
-        check_error.assert_called_with(cmd + ['-r', 'requirements.txt'], _errors.InstallModuleError, cwd=path)
+        check_error.assert_called_with(
+            cmd + ['-r', 'requirements.txt'], _errors.InstallModuleError,
+            capture_error=False, cwd=path)
 
 
 @patch('sagemaker_containers._process.check_error', autospec=True)
@@ -148,18 +150,20 @@ def test_run(log_script_invocation,  check_error, executable):
 
     expected_cmd = [executable(), '-m', 'pytest', '--version']
     log_script_invocation.assert_called_with(expected_cmd, {})
-    check_error.assert_called_with(expected_cmd, _errors.ExecuteUserScriptError)
+    check_error.assert_called_with(expected_cmd, _errors.ExecuteUserScriptError,
+                                   capture_error=False)
 
 
 @patch('sagemaker_containers._process.python_executable')
 @patch('sagemaker_containers._process.create')
 @patch('sagemaker_containers._logging.log_script_invocation')
 def test_run_no_wait(log_script_invocation,  create, executable):
-    _modules.run('pytest', ['--version'], {'PYPATH': '/opt/ml/code'}, wait=False)
+    _modules.run('pytest', ['--version'], {'PYPATH': '/opt/ml/code'}, wait=False, capture_error=True)
 
     expected_cmd = [executable(), '-m', 'pytest', '--version']
     log_script_invocation.assert_called_with(expected_cmd, {'PYPATH': '/opt/ml/code'})
-    create.assert_called_with(expected_cmd, _errors.ExecuteUserScriptError)
+    create.assert_called_with(expected_cmd, _errors.ExecuteUserScriptError,
+                              capture_error=True)
 
 
 @pytest.mark.parametrize('wait, cache', [[True, False], [True, False]])
@@ -176,7 +180,7 @@ def test_run_module_wait(download_and_extract, write_env_vars, install, run, wai
         write_env_vars.assert_called_with({})
         install.assert_called_with(_env.code_dir)
 
-        run.assert_called_with('default_user_module_name', ['42'], {}, True)
+        run.assert_called_with('default_user_module_name', ['42'], {}, True, False)
 
 
 @patch('sagemaker_containers._files.download_and_extract')
