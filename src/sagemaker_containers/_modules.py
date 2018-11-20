@@ -91,7 +91,7 @@ def prepare(path, name):  # type: (str, str) -> None
         _files.write_file(os.path.join(path, 'MANIFEST.in'), data)
 
 
-def install(path, capture_error=False):  # type: (str) -> None
+def install(path, capture_error=False):  # type: (str, bool) -> None
     """Install a Python module in the executing Python environment.
     Args:
         path (str):  Real path location of the Python module.
