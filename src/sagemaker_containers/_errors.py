@@ -39,7 +39,7 @@ class _CalledProcessError(ClientError):
 
         error_msg = decode_error() if self.output else ''
 
-        message = '%s:\nCommand "%s"\n%s' % (type(self).__name__, self.cmd, error_msg)
+        message = '%s:\nCommand "%s"%s' % (type(self).__name__, self.cmd, error_msg)
         return message.strip()
 
 
