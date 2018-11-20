@@ -216,8 +216,8 @@ def run_module(uri, args, env_vars=None, name=DEFAULT_MODULE_NAME, cache=None, w
 
     _files.download_and_extract(uri, name, _env.code_dir)
 
-    install(_env.code_dir)
     prepare(_env.code_dir, name)
+    install(_env.code_dir)
 
     _env.write_env_vars(env_vars)
 
