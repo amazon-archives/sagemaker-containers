@@ -91,7 +91,7 @@ def prepare(path, name):  # type: (str, str) -> None
         _files.write_file(os.path.join(path, 'MANIFEST.in'), data)
 
 
-def install(path):  # type: (str) -> None
+def install(path, capture_error=False):  # type: (str) -> None
     """Install a Python module in the executing Python environment.
     Args:
         path (str):  Real path location of the Python module.
@@ -103,10 +103,10 @@ def install(path):  # type: (str) -> None
 
     logger.info('Installing module with the following command:\n%s', cmd)
 
-    _process.check_error(shlex.split(cmd), _errors.InstallModuleError, cwd=path)
+    _process.check_error(shlex.split(cmd), _errors.InstallModuleError, cwd=path, capture_error=capture_error)
 
 
-def run(module_name, args=None, env_vars=None, wait=True):  # type: (str, list, dict, bool) -> Popen
+def run(module_name, args=None, env_vars=None, wait=True, capture_error=False):  # type: (str, list, dict, bool) -> Popen
     """Run Python module as a script.
 
     Search sys.path for the named module and execute its contents as the __main__ module.
@@ -163,10 +163,10 @@ def run(module_name, args=None, env_vars=None, wait=True):  # type: (str, list, 
     _logging.log_script_invocation(cmd, env_vars)
 
     if wait:
-        return _process.check_error(cmd, _errors.ExecuteUserScriptError)
+        return _process.check_error(cmd, _errors.ExecuteUserScriptError, capture_error=capture_error)
 
     else:
-        return _process.create(cmd, _errors.ExecuteUserScriptError)
+        return _process.create(cmd, _errors.ExecuteUserScriptError, capture_error=capture_error)
 
 
 def import_module(uri, name=DEFAULT_MODULE_NAME, cache=None):  # type: (str, str, bool) -> module

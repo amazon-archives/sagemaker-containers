@@ -91,7 +91,7 @@ def install(name, dst):
         os.chmod(os.path.join(dst, name), 511)
 
 
-def _call(user_entry_point, args=None, env_vars=None, wait=True):  # type: (str, list, dict, bool) -> Popen
+def _call(user_entry_point, args=None, env_vars=None, wait=True, capture_error=False):  # type: (str, list, dict, bool) -> Popen
     args = args or []
     env_vars = env_vars or {}
 
@@ -107,10 +107,10 @@ def _call(user_entry_point, args=None, env_vars=None, wait=True):  # type: (str,
     _logging.log_script_invocation(cmd, env_vars)
 
     if wait:
-        return _process.check_error(cmd, _errors.ExecuteUserScriptError)
+        return _process.check_error(cmd, _errors.ExecuteUserScriptError, capture_error=capture_error)
 
     else:
-        return _process.create(cmd, _errors.ExecuteUserScriptError)
+        return _process.create(cmd, _errors.ExecuteUserScriptError, capture_error=capture_error)
 
 
 class EntryPointType(enum.Enum):

@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
+import six
 import textwrap
 
 
@@ -27,13 +28,22 @@ class _CalledProcessError(ClientError):
       cmd, return_code, output
     """
 
-    def __init__(self, cmd, return_code=None):
+    def __init__(self, cmd, return_code=None, output=None):
         self.return_code = return_code
         self.cmd = cmd
+        self.output = output
 
     def __str__(self):
-        message = '%s:\nCommand "%s"' % (type(self).__name__, self.cmd)
+        def decode_error():
+            return '\n%s' % self.output.decode('latin1') if six.PY3 else self.output
+
+        error_msg = decode_error() if self.output else ''
+
+        message = '%s:\nCommand "%s"\n%s' % (type(self).__name__, self.cmd, error_msg)
         return message.strip()
+
+    def decode_error(self):
+        return self.output.decode('latin1') if six.PY3 else self.output
 
 
 class InstallModuleError(_CalledProcessError):
