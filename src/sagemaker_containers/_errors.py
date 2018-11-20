@@ -42,9 +42,6 @@ class _CalledProcessError(ClientError):
         message = '%s:\nCommand "%s"\n%s' % (type(self).__name__, self.cmd, error_msg)
         return message.strip()
 
-    def decode_error(self):
-        return self.output.decode('latin1') if six.PY3 else self.output
-
 
 class InstallModuleError(_CalledProcessError):
     pass
