@@ -34,10 +34,12 @@ class _CalledProcessError(ClientError):
         self.output = output
 
     def __str__(self):
-        def decode_error():
-            return '\n%s' % self.output.decode('latin1') if six.PY3 else self.output
-
-        error_msg = decode_error() if self.output else ''
+        if six.PY3 and self.output:
+            error_msg = '\n%s' % self.output.decode('latin1')
+        elif self.output:
+            error_msg = '\n%s' % self.output
+        else:
+            error_msg = ''
 
         message = '%s:\nCommand "%s"%s' % (type(self).__name__, self.cmd, error_msg)
         return message.strip()
