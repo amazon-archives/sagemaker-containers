@@ -44,7 +44,7 @@ def test_predict_fn():
         _transformer.default_predict_fn('data', 'model')
 
 
-request = test.request(data='42', content_type=_content_types.JSON)
+request = test.request(data='42', headers={'ContentType': _content_types.JSON})
 
 
 def test_transformer_initialize_with_default_model_fn():
@@ -81,7 +81,7 @@ def test_transformer_transform_with_client_error(input_fn, predict_fn, output_fn
 
 
 def test_transformer_transform_with_unsupported_content_type():
-    bad_request = test.request(data=None, content_type='fake/content-type')
+    bad_request = test.request(data=None, headers={'ContentType': 'fake/content-type'})
     with patch('sagemaker_containers._worker.Request', lambda: bad_request):
         response = _transformer.Transformer().transform()
 
@@ -96,7 +96,7 @@ def test_transformer_transform_with_unsupported_accept_type():
     def empty_fn(*args):
         pass
 
-    bad_request = test.request(data=None, accept='fake/content_type')
+    bad_request = test.request(data=None, headers={'Accept': 'fake/content-type'})
     with patch('sagemaker_containers._worker.Request', lambda: bad_request):
         t = _transformer.Transformer(model_fn=empty_fn, input_fn=empty_fn, predict_fn=empty_fn)
         response = t.transform()

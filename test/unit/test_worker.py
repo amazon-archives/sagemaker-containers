@@ -53,9 +53,10 @@ def test_worker_with_initialize(module_name, expected_name):
     assert app.request_class == _worker.Request
 
 
-def test_invocations():
+@pytest.mark.parametrize('content_type', [_content_types.JSON, _content_types.ANY])
+def test_invocations(content_type):
     def transform_fn():
-        return _worker.Response(response='fake data', accept=_content_types.JSON)
+        return _worker.Response(response='fake data', accept=content_type)
 
     app = _worker.Worker(transform_fn=transform_fn, module_name='test_module')
 
@@ -64,7 +65,7 @@ def test_invocations():
             response = client.post('/invocations')
             assert response.status_code == http_client.OK
             assert response.get_data().decode('utf-8') == 'fake data'
-            assert response.mimetype == _content_types.JSON
+            assert response.mimetype == content_type
 
 
 def test_ping():
@@ -77,16 +78,17 @@ def test_ping():
             assert response.mimetype == _content_types.JSON
 
 
-def test_request():
+@pytest.mark.parametrize('content_type_header', ['ContentType', 'Content-Type'])
+def test_request(content_type_header):
     request = test.request(data='42')
 
     assert request.content_type == _content_types.JSON
     assert request.accept == _content_types.JSON
     assert request.content == '42'
 
+    headers = {content_type_header: _content_types.NPY, 'Accept': _content_types.CSV}
     request = test.request(data=_encoders.encode([6, 9.3], _content_types.NPY),
-                           content_type=_content_types.NPY,
-                           accept=_content_types.CSV)
+                           headers=headers)
 
     assert request.content_type == _content_types.NPY
     assert request.accept == _content_types.CSV
@@ -101,8 +103,9 @@ def test_request_accept_env():
     assert request.accept == '42'
 
 
-def test_request_content_type():
-    response = test.request(content_type=_content_types.CSV)
+@pytest.mark.parametrize('content_type_header', ['ContentType', 'Content-Type'])
+def test_request_content_type(content_type_header):
+    response = test.request(headers={content_type_header: _content_types.CSV})
     assert response.content_type == _content_types.CSV
 
     response = test.request(headers={'ContentType': _content_types.NPY})
