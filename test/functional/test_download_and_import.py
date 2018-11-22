@@ -18,6 +18,7 @@ import subprocess
 import textwrap
 
 import pytest
+import six
 
 from sagemaker_containers.beta.framework import errors, modules
 import test
@@ -90,7 +91,7 @@ def test_import_module_with_local_script(user_module, user_module_name, tmpdir):
 def test_import_module_via_download_and_install(user_module, user_module_name):
     user_module.upload()
 
-    modules.download_and_install(user_module.url, name=user_module_name)
+    modules.download_and_install(user_module.url, name=user_module_name, cache=False)
     module = importlib.import_module(user_module_name)
     six.moves.reload_module(module)
 
@@ -103,7 +104,7 @@ def test_import_module_via_download_and_install(user_module, user_module_name):
 def test_import_module_with_s3_script_via_download_and_install(user_module, user_module_name):
     user_module.upload()
 
-    modules.download_and_install(user_module.url, name=user_module_name)
+    modules.download_and_install(user_module.url, name=user_module_name, cache=False)
     module = importlib.import_module(user_module_name)
     six.moves.reload_module(module)
 
@@ -140,7 +141,7 @@ def test_import_module_with_s3_script_with_requirements(user_module, user_module
 def test_import_module_with_requirements_via_download_and_install(user_module, user_module_name):
     user_module = user_module.add_file(REQUIREMENTS_FILE).upload()
 
-    modules.download_and_install(user_module.url, name=user_module_name)
+    modules.download_and_install(user_module.url, name=user_module_name, cache=False)
     module = importlib.import_module(user_module_name)
     six.moves.reload_module(module)
 
