@@ -92,6 +92,7 @@ def test_import_module_via_download_and_install(user_module, user_module_name):
 
     modules.download_and_install(user_module.url, name=user_module_name)
     module = importlib.import_module(user_module_name)
+    six.moves.reload_module(module)
 
     assert module.validate()
 
@@ -104,6 +105,7 @@ def test_import_module_with_s3_script_via_download_and_install(user_module, user
 
     modules.download_and_install(user_module.url, name=user_module_name)
     module = importlib.import_module(user_module_name)
+    six.moves.reload_module(module)
 
     assert module.validate()
 
@@ -140,6 +142,7 @@ def test_import_module_with_requirements_via_download_and_install(user_module, u
 
     modules.download_and_install(user_module.url, name=user_module_name)
     module = importlib.import_module(user_module_name)
+    six.moves.reload_module(module)
 
     assert module.say() == REQUIREMENTS_TXT_ASSERT_STR
 
