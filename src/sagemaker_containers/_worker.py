@@ -144,7 +144,12 @@ class Request(flask.Request, _mapping.MappingMixin):
             (str): The value of the header 'Accept' or the user-supplied SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT
                     environment variable. Otherwise, returns 'application/json' as default
         """
-        return self.headers.get('Accept') or self._default_accept
+        accept = self.headers.get('Accept')
+
+        if not accept or accept == _content_types.ANY:
+            return self._default_accept
+        else:
+            return accept
 
     @property
     def content(self):  # type: () -> object

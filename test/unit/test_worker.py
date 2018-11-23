@@ -13,12 +13,10 @@
 from __future__ import absolute_import
 
 from mock import MagicMock, patch, PropertyMock
-import numpy as np
 import pytest
 from six.moves import http_client, range
 
-from sagemaker_containers import _content_types, _encoders, _env, _worker
-import test
+from sagemaker_containers import _content_types, _worker
 
 
 def test_default_ping_fn():
@@ -76,37 +74,3 @@ def test_ping():
             response = client.get('/ping')
             assert response.status_code == http_client.OK
             assert response.mimetype == _content_types.JSON
-
-
-@pytest.mark.parametrize('content_type_header', ['ContentType', 'Content-Type'])
-def test_request(content_type_header):
-    request = test.request(data='42')
-
-    assert request.content_type == _content_types.JSON
-    assert request.accept == _content_types.JSON
-    assert request.content == '42'
-
-    headers = {content_type_header: _content_types.NPY, 'Accept': _content_types.CSV}
-    request = test.request(data=_encoders.encode([6, 9.3], _content_types.NPY),
-                           headers=headers)
-
-    assert request.content_type == _content_types.NPY
-    assert request.accept == _content_types.CSV
-
-    result = _encoders.decode(request.data, _content_types.NPY)
-    np.testing.assert_array_equal(result, np.array([6, 9.3]))
-
-
-@patch.object(_env.ServingEnv, 'default_accept', PropertyMock(return_value='42'))
-def test_request_accept_env():
-    request = test.request()
-    assert request.accept == '42'
-
-
-@pytest.mark.parametrize('content_type_header', ['ContentType', 'Content-Type'])
-def test_request_content_type(content_type_header):
-    response = test.request(headers={content_type_header: _content_types.CSV})
-    assert response.content_type == _content_types.CSV
-
-    response = test.request(headers={'ContentType': _content_types.NPY})
-    assert response.content_type == _content_types.NPY
