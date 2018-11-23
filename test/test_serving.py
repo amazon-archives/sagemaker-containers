@@ -58,7 +58,7 @@ def test_app_invoke(app):
 
 
 def test_app_invoke_with_accept_any():
-    with patch.dict('os.environ', {'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT': 'application/NPY'}):
+    with patch.dict('os.environ', {'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT': 'application/x-npy'}):
         server = Server("test", Transformer())
         server.app.testing = True
         app = server.app.test_client()
@@ -71,11 +71,11 @@ def test_app_invoke_with_accept_any():
 
         assert 200 == result.status_code
         assert data == result.data.decode('utf-8')
-        assert 'application/NPY' == result.content_type
+        assert 'application/x-npy' == result.content_type
 
 
 def test_app_invoke_with_accept():
-    with patch.dict('os.environ', {'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT': 'application/NPY'}):
+    with patch.dict('os.environ', {'SAGEMAKER_DEFAULT_INVOCATIONS_ACCEPT': 'application/x-npy'}):
         server = Server("test", Transformer())
         server.app.testing = True
         app = server.app.test_client()
