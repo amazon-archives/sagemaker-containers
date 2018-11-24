@@ -781,7 +781,7 @@ class TrainingEnv(_Env):
 
     @property
     def output_intermediate_dir(self):  # type: () -> str
-        """The directory for intermediate outputs artifacts that should be synced to S3.
+        """The directory for intermediate output artifacts that should be synced to S3.
         Any files written to this directory will be uploaded to S3 by a background process
         while training is in progress, but only if sagemaker_s3_output was specified.
         Returns:
