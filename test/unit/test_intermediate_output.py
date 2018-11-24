@@ -25,20 +25,20 @@ S3_BUCKET = 's3://mybucket/'
 
 
 def test_accept_file_output_no_process():
-    intemediate_sync = _intermediate_output.start_intermediate_folder_sync(
+    intemediate_sync = _intermediate_output.start_sync(
         'file://my/favorite/file', REGION)
     assert intemediate_sync is None
 
 
 def test_wrong_output():
     with pytest.raises(ValueError) as e:
-        _intermediate_output.start_intermediate_folder_sync('tcp://my/favorite/url', REGION)
+        _intermediate_output.start_sync('tcp://my/favorite/url', REGION)
     assert 'Expecting \'s3\' scheme' in str(e)
 
 
 @patch('inotify_simple.INotify', MagicMock())
 def test_daemon_process():
-    intemediate_sync = _intermediate_output.start_intermediate_folder_sync(S3_BUCKET, REGION)
+    intemediate_sync = _intermediate_output.start_sync(S3_BUCKET, REGION)
     assert intemediate_sync.daemon is True
 
 
@@ -67,7 +67,7 @@ def test_non_write_ignored(process_mock, upload_file, inotify_mock, copy2):
     process.start.side_effect = watch
 
     _files.write_success_file()
-    _intermediate_output.start_intermediate_folder_sync(S3_BUCKET, REGION)
+    _intermediate_output.start_sync(S3_BUCKET, REGION)
 
     inotify.add_watch.assert_called()
     inotify.read.assert_called()
@@ -96,7 +96,7 @@ def test_modification_triggers_upload(process_mock, upload_file, inotify_mock, c
     process.start.side_effect = watch
 
     _files.write_success_file()
-    _intermediate_output.start_intermediate_folder_sync(S3_BUCKET, REGION)
+    _intermediate_output.start_sync(S3_BUCKET, REGION)
 
     inotify.add_watch.assert_called()
     inotify.read.assert_called()
@@ -129,7 +129,7 @@ def test_new_folders_are_watched(process_mock, upload_file, inotify_mock, copy2)
     process.start.side_effect = watch
 
     _files.write_success_file()
-    _intermediate_output.start_intermediate_folder_sync(S3_BUCKET, REGION)
+    _intermediate_output.start_sync(S3_BUCKET, REGION)
 
     watch_flags = flags.CLOSE_WRITE | flags.CREATE
     inotify.add_watch.assert_any_call(_env.output_intermediate_dir, watch_flags)
