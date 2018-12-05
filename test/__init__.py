@@ -18,6 +18,7 @@ import tarfile
 import time
 
 import boto3
+import netifaces
 import pytest
 import sagemaker
 import six
@@ -27,7 +28,8 @@ import werkzeug.test as werkzeug_test
 
 DEFAULT_REGION = 'us-west-2'
 
-from sagemaker_containers import _env, _files, _params, _worker  # noqa ignore=E402 module level import not at top of file
+from sagemaker_containers import _env, _files, _params, \
+    _worker  # noqa ignore=E402 module level import not at top of file
 
 DEFAULT_CONFIG = dict(ContentType="application/x-numpy", TrainingInputMode="File",
                       S3DistributionType="FullyReplicated", RecordWrapperType="None")
@@ -56,15 +58,16 @@ def write_json(obj, path):  # type: (object, str) -> None
         json.dump(obj, f)
 
 
-def prepare(user_module, hyperparameters, channels, current_host='algo-1', hosts=None, local=False):
-    # type: (UserModule, dict, list, str, list) -> None
+def prepare(user_module, hyperparameters, channels, current_host='algo-1', hosts=None, network_interface_name="ethwe",
+            local=False):
+    # type: (UserModule, dict, list, str, list, str, bool) -> None
     hosts = hosts or ['algo-1']
 
     if not local:
         user_module.upload()
 
     create_hyperparameters_config(hyperparameters, user_module.url)
-    create_resource_config(current_host, hosts)
+    create_resource_config(current_host, hosts, network_interface_name)
     create_input_data_config(channels)
 
 
@@ -75,8 +78,16 @@ def hyperparameters(**kwargs):  # type: (...) -> dict
     return default_hyperparameters
 
 
-def create_resource_config(current_host='algo-1', hosts=None):  # type: (str, list) -> None
-    write_json(dict(current_host=current_host, hosts=hosts or ['algo-1']), _env.resource_config_file_dir)
+def create_resource_config(current_host='algo-1', hosts=None,
+                           network_interface_name="ethwe"):  # type: (str, list, str) -> None
+
+    if network_interface_name:
+        write_json(
+            dict(current_host=current_host, hosts=hosts or ['algo-1'], network_interface_name=network_interface_name),
+            _env.resource_config_file_dir)
+    else:
+        write_json(
+            dict(current_host=current_host, hosts=hosts or ['algo-1']), _env.resource_config_file_dir)
 
 
 def create_input_data_config(channels=None):  # type: (list) -> None
@@ -106,7 +117,6 @@ File = collections.namedtuple('File', ['name', 'data'])  # type: (str, str or li
 def request(path='/', base_url=None, query_string=None, method='GET',
             input_stream=None, content_length=None, headers=None,
             data=None, charset='utf-8', mimetype=None):
-
     _environ = environ(path, base_url, query_string, method, input_stream,
                        content_length, headers, data, charset, mimetype)
 
@@ -116,13 +126,18 @@ def request(path='/', base_url=None, query_string=None, method='GET',
 def environ(path='/', base_url=None, query_string=None, method='GET',
             input_stream=None, content_length=None, headers=None,
             data=None, charset='utf-8', mimetype=None):
-
     headers = headers or {}
     environ_builder = werkzeug_test.EnvironBuilder(
         path=path, base_url=base_url, query_string=query_string, method=method,
         input_stream=input_stream, content_length=content_length, headers=headers,
         data=data, charset=charset, mimetype=mimetype)
     return environ_builder.get_environ()
+
+
+def get_eth_network_interface():  # type: () -> str
+    """Get the eth network interface locally available on your machine"""
+    interface_list = netifaces.interfaces()
+    return list(filter(lambda x: 'e' in x, interface_list))[0]
 
 
 class UserModule(object):

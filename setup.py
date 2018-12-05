@@ -25,9 +25,10 @@ def read(file_name):
 
 packages = find_packages(where='src', exclude=('test',))
 packages.append('sagemaker_containers.etc')
+packages.append('sagemaker_containers.bin')
 
 required_packages = [
-  'boto3', 'six', 'pip', 'flask', 'gunicorn', 'gevent', 'inotify_simple', 'werkzeug'
+    'boto3', 'six', 'pip', 'flask', 'gunicorn', 'gevent', 'inotify_simple', 'werkzeug', 'retrying'
 ]
 
 # enum is introduced in Python 3.4. Installing enum back port
@@ -42,9 +43,10 @@ setup(
     packages=packages,
     package_dir={
         'sagemaker_containers': 'src/sagemaker_containers',
-        'sagemaker_containers.etc': 'etc'
+        'sagemaker_containers.etc': 'etc',
+        'sagemaker_containers.bin': 'bin'
     },
-    package_data={'sagemaker_containers.etc': ['*']},
+    package_data={'sagemaker_containers.etc': ['*'], 'sagemaker_containers.bin': ['*']},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py')],
     long_description=read('README.md'),
     author='Amazon Web Services',
@@ -64,11 +66,11 @@ setup(
     install_requires=required_packages,
 
     extras_require={
-        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker', 'numpy']
+        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker', 'numpy', 'netifaces']
     },
 
     entry_points={
-          'console_scripts': ['serve=sagemaker_containers.cli.serve:main',
-                              'train=sagemaker_containers.cli.train:main'],
+        'console_scripts': ['serve=sagemaker_containers.cli.serve:main',
+                            'train=sagemaker_containers.cli.train:main'],
     }
 )
