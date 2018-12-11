@@ -1,0 +1,50 @@
+# Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the 'License'). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the 'license' file accompanying this file. This file is
+# distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+FROM ubuntu:16.04
+
+# Install basic dependencies and locales
+RUN apt-get update && apt-get install -y \
+    openmpi-bin libopenmpi-dev \
+    openssh-client \
+    openssh-server \
+    wget \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+ # Create SSH key.
+RUN mkdir -p /root/.ssh/ && \
+    ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
+    cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys && \
+    printf "Host *\n  StrictHostKeyChecking no\n" >> /root/.ssh/config
+
+# Install basic dependencies and locales
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3-dev && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+	python get-pip.py --disable-pip-version-check --no-cache-dir "pip==18.1"
+
+# RUN pip install sagemaker-containers
+
+COPY dist/sagemaker_containers-2.3.5.tar.gz sagemaker_containers-2.3.5.tar.gz
+
+RUN pip install sagemaker_containers-2.3.5.tar.gz
+
+RUN mkdir -p /var/run/sshd
+

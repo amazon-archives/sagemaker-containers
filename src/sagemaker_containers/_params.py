@@ -44,3 +44,4 @@ SAGEMAKER_HYPERPARAMETERS = (
     DEFAULT_MODULE_NAME_PARAM, TUNING_METRIC_PARAM, S3_OUTPUT_LOCATION_PARAM)  # type: tuple
 SAGEMAKER_MPI_NUM_PROCESSES_PER_HOST = "sagemaker_mpi_num_of_processes_per_host"  # type: int
 SAGEMAKER_MPI_CUSTOM_MPI_OPTIONS = "sagemaker_mpi_custom_mpi_options"  # type: str
+SAGEMAKER_NETWORK_INTERFACE_NAME = 'sagemaker_network_interface_name'  # type: str

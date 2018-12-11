@@ -16,7 +16,7 @@ from glob import glob
 import os
 import sys
 
-from setuptools import find_packages, setup
+from setuptools import find_packages, setup, Extension
 
 
 def read(file_name):
@@ -25,15 +25,19 @@ def read(file_name):
 
 packages = find_packages(where='src', exclude=('test',))
 packages.append('sagemaker_containers.etc')
-packages.append('sagemaker_containers.bin')
 
 required_packages = [
-    'boto3', 'six', 'pip', 'flask', 'gunicorn', 'gevent', 'inotify_simple', 'werkzeug', 'retrying'
+    'numpy', 'boto3', 'six', 'pip', 'flask', 'gunicorn', 'typing',
+    'gevent', 'inotify_simple', 'werkzeug', 'retrying'
 ]
 
 # enum is introduced in Python 3.4. Installing enum back port
 if sys.version_info < (3, 4):
     required_packages.append('enum34 >= 1.1.6')
+
+gethostname = Extension('libchangehostname',
+                        sources=['src/sagemaker_containers/c/libchangehostname.c'],
+                        extra_compile_args=['-Wall', '-shared', '-export-dynamic', '-ldl'])
 
 setup(
     name='sagemaker_containers',
@@ -48,6 +52,7 @@ setup(
     },
     package_data={'sagemaker_containers.etc': ['*'], 'sagemaker_containers.bin': ['*']},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py')],
+    ext_modules=[gethostname],
     long_description=read('README.md'),
     author='Amazon Web Services',
     url='https://github.com/aws/sagemaker-containers/',
@@ -66,7 +71,7 @@ setup(
     install_requires=required_packages,
 
     extras_require={
-        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker', 'numpy', 'netifaces']
+        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker', 'netifaces']
     },
 
     entry_points={

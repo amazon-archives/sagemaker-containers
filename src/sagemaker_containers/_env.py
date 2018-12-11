@@ -534,7 +534,6 @@ class TrainingEnv(_Env):
         resource_config = resource_config or read_resource_config()
         current_host = resource_config['current_host']
         hosts = resource_config['hosts']
-        network_interface_name = resource_config.get('network_interface_name', 'ethwe')
         input_data_config = input_data_config or read_input_data_config()
 
         all_hyperparameters = hyperparameters or read_hyperparameters()
@@ -554,7 +553,10 @@ class TrainingEnv(_Env):
         os.environ[_params.REGION_NAME_ENV] = sagemaker_region or ''
 
         self._hosts = hosts
-        self._network_interface_name = network_interface_name
+
+        self._network_interface_name = sagemaker_hyperparameters.get(
+            _params.SAGEMAKER_NETWORK_INTERFACE_NAME, 'ethwe')
+
         self._hyperparameters = split_result.excluded
         self._additional_framework_parameters = additional_framework_parameters
         self._resource_config = resource_config
