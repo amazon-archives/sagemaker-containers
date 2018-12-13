@@ -15,7 +15,7 @@
 #include <stdlib.h>
 
 
-int gethostname(char *name, size_t len)
+int libchangehostname(char *name, size_t len)
 {
   const char *val = getenv("SM_CURRENT_HOST");
 
@@ -24,7 +24,7 @@ int gethostname(char *name, size_t len)
 }
 
 
-static PyObject* gethostname_call(PyObject* self, PyObject* args) {
+static PyObject* libchangehostname_call(PyObject* self, PyObject* args) {
     long unsigned command;
     char name[40];
 
@@ -32,38 +32,37 @@ static PyObject* gethostname_call(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    gethostname(name, command);
-    printf("%s", name);
+    libchangehostname(name, command);
 
     return Py_BuildValue("s", name);
 }
 
-static PyMethodDef GethostnameMethods[] = {
+static PyMethodDef LibchangehostnameMethods[] = {
     {
         "call",
-        gethostname_call,
+        libchangehostname_call,
         METH_VARARGS,
     },
     {NULL, NULL, 0, NULL},  // sentinel
 };
 
 #if PY_MAJOR_VERSION >= 3
-static PyModuleDef gethostnamemodule = {
+static PyModuleDef libchangehostnamemodule = {
     PyModuleDef_HEAD_INIT,
-    "gethostname",
+    "libchangehostname",
     "Returns the value of $SM_CURRENT_HOST",
     -1,
-    GethostnameMethods,
+    LibchangehostnameMethods,
 };
 
-PyMODINIT_FUNC PyInit_gethostname() {
-    return PyModule_Create(&gethostnamemodule);
+PyMODINIT_FUNC PyInit_libchangehostname() {
+    return PyModule_Create(&libchangehostnamemodule);
 }
 #else
-PyMODINIT_FUNC inithostnamemodule() {
+PyMODINIT_FUNC initlibchangehostname() {
     PyObject* module;
 
     module = Py_InitModule3(
-        "gethostname", GethostnameMethods, "Returns the value of $SM_CURRENT_HOST");
+        "libchangehostname", LibchangehostnameMethods, "Returns the value of $SM_CURRENT_HOST");
 }
 #endif

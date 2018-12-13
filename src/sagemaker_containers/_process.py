@@ -19,6 +19,7 @@ import sys
 import six
 
 from sagemaker_containers import _env
+from typing import Mapping, List
 
 
 def create(cmd, error_class, cwd=None, capture_error=False, **kwargs):
@@ -29,7 +30,11 @@ def create(cmd, error_class, cwd=None, capture_error=False, **kwargs):
         six.reraise(error_class, error_class(e), sys.exc_info()[2])
 
 
-def check_error(cmd, error_class, capture_error=False, **kwargs):
+def check_error(cmd,
+                error_class,
+                capture_error=False,
+                **kwargs):
+    # type: (List[str], type, bool, Mapping[str, object]) -> subprocess.Popen
     process = create(cmd, error_class, capture_error=capture_error, **kwargs)
 
     if capture_error:

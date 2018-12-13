@@ -67,11 +67,11 @@ def train():
         else:
             logging.configure_logger(env.log_level)
 
-            SAGEMAKER_MPI_ENABLED = 'sagemaker_mpi_enabled'
-            mpi_enabled = env.additional_framework_parameters.get(SAGEMAKER_MPI_ENABLED, False)
+            distributions = {'mpi': {'processes_per_host': 10, 'custom_mpi_options': '--verbose -X banan'}}
+
             entry_point.run(env.module_dir, env.user_entry_point, env.to_cmd_args(),
                             env.to_env_vars(),
-                            mpi_enabled=mpi_enabled)
+                            distributions=env.distributions)
 
         logger.info('Reporting training SUCCESS')
 

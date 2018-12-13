@@ -17,10 +17,11 @@ import os
 import sys
 
 from sagemaker_containers import _env, _errors, _files, _logging, _modules, _mpi, _process
+from typing import Dict, List
 
 
-def run(uri, user_entry_point, args, env_vars=None, wait=True, capture_error=False, mpi_enabled=False):
-    # type: (str, str, list, dict, bool, bool, bool) -> subprocess.Popen
+def run(uri, user_entry_point, args, env_vars=None, capture_error=False, distributions=None):
+    # type: (str, str, list, dict, bool, Dict[str, Dict[str, str]]) -> None
     """Download, prepare and executes a compressed tar file from S3 or provided directory as an user
     entrypoint. Runs the user entry point, passing env_vars as environment variables and args as command
     arguments.
@@ -57,14 +58,20 @@ def run(uri, user_entry_point, args, env_vars=None, wait=True, capture_error=Fal
         args (list):  A list of program arguments.
         env_vars (dict): A map containing the environment variables to be written.
         uri (str): the location of the module.
-        wait (bool): If True, holds the process executing the user entry-point.
-                     If False, returns the process that is executing it.
         capture_error (bool): Default false. If True, the running process captures the
             stderr, and appends it to the returned Exception message in case of errors.
+        distributions (): A dictionary with information on how to run distributed training
+            (default: None). Currently supported only MPI distribution. To enable MPI
+            distribution use the following setup:
+
+           >>> mpi_distribution = {'mpi':{'enabled': bool,
+           >>>                            'processes_per_host': int,
+           >>>                            'custom_mpi_options': List[str]
 
      """
     env_vars = env_vars or {}
     env_vars = env_vars.copy()
+    distributions = distributions or {}
 
     _files.download_and_extract(uri, user_entry_point, _env.code_dir)
 
@@ -72,10 +79,7 @@ def run(uri, user_entry_point, args, env_vars=None, wait=True, capture_error=Fal
 
     _env.write_env_vars(env_vars)
 
-    if mpi_enabled:
-        return _mpi.mpi_run(user_entry_point, _env.code_dir, args, env_vars, wait, capture_error)
-    else:
-        return _call(user_entry_point, args, env_vars, wait, capture_error)
+    _call(user_entry_point, args, env_vars, capture_error, distributions)
 
 
 def install(name, dst, capture_error=False):
@@ -99,10 +103,15 @@ def install(name, dst, capture_error=False):
         os.chmod(os.path.join(dst, name), 511)
 
 
-def _call(user_entry_point, args=None, env_vars=None, wait=True, capture_error=False):
-    # type: (str, list, dict, bool, bool) -> Popen
+def _call(user_entry_point,
+          args=None,
+          env_vars=None,
+          capture_error=False,
+          distributions=None):
+    # type: (str, List[str], Dict[str, str], bool, Dict[str, Dict[str, str]]) -> None
     args = args or []
     env_vars = env_vars or {}
+    distributions = distributions or {}
 
     entrypoint_type = entry_point_type(_env.code_dir, user_entry_point)
 
@@ -115,11 +124,11 @@ def _call(user_entry_point, args=None, env_vars=None, wait=True, capture_error=F
 
     _logging.log_script_invocation(cmd, env_vars)
 
-    if wait:
-        return _process.check_error(cmd, _errors.ExecuteUserScriptError, capture_error=capture_error)
-
+    mpi_distribution = distributions.get('mpi', {})
+    if mpi_distribution.get('enabled'):
+        _mpi.run(cmd, mpi_distribution, env_vars, capture_error)
     else:
-        return _process.create(cmd, _errors.ExecuteUserScriptError, capture_error=capture_error)
+        _process.check_error(cmd, _errors.ExecuteUserScriptError, capture_error)
 
 
 class EntryPointType(enum.Enum):

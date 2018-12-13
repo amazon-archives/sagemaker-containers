@@ -47,10 +47,9 @@ setup(
     packages=packages,
     package_dir={
         'sagemaker_containers': 'src/sagemaker_containers',
-        'sagemaker_containers.etc': 'etc',
-        'sagemaker_containers.bin': 'bin'
+        'sagemaker_containers.etc': 'etc'
     },
-    package_data={'sagemaker_containers.etc': ['*'], 'sagemaker_containers.bin': ['*']},
+    package_data={'sagemaker_containers.etc': ['*']},
     py_modules=[os.path.splitext(os.path.basename(path))[0] for path in glob('src/*.py')],
     ext_modules=[gethostname],
     long_description=read('README.md'),
@@ -71,7 +70,7 @@ setup(
     install_requires=required_packages,
 
     extras_require={
-        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker', 'netifaces']
+        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker==1.16.2', 'netifaces']
     },
 
     entry_points={

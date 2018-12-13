@@ -11,30 +11,76 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import argparse
+import inspect
 import os
-import shutil
 import socket
 import stat
 import subprocess
-import sys
 import time
-from argparse import Namespace
-from typing import List, Mapping, Tuple
+from typing import Dict, List, Tuple, Any
 
+import libchangehostname
 import retrying
-import sagemaker_containers
-from sagemaker_containers import _errors, _logging, _params, _process, _timeout
+from sagemaker_containers import _errors, _logging, _process, _timeout
 
 logger = _logging.get_logger()
 
-_SSHD_EXECUTABLE_PATH = '/usr/sbin/sshd'
+
+def run(cmd,
+        env_vars,
+        mpi_distribution,
+        current_host,
+        hosts,
+        network_interface_name,
+        capture_error):
+    # type: (List[str], Dict[str, str], Dict[str, Any], str, List[str], str, bool) -> None
+    """Prepares and Executes mpirun in SageMaker in the following order:
+
+    - block instances to wait for MPI execution
+    - start the SSHD daemon
+    - call mpirun in the master node
+
+        Args:
+            cmd (List[str]): Command that will be executed by MPI
+            mpi_distribution (Dict[str, str]): Dictionary containing the following MPI
+                settings:
+                    - custom_mpi_options (List[str]): additional options to be sent to
+                      the mpirun call, example: ['--verbose', '--NCCL_DEBUG', 'info'].
+                      These options will overwrite any default MPI settings.
+                    - processes_per_host (int): number of MPI processes per host (SageMaker
+                      instance) that will be created.
+            env_vars (Dict[str, str]): A map containing the environment variables to be written.
+            current_host (str): Hostname of the current host.
+            hosts (str): List with the hostnames of all instances.
+            network_interface_name (str): Name of the network interface.
+            capture_error (bool): Default false. If True, the running process captures the
+                stderr, and appends it to the returned Exception message in case of errors.
+        """
+    _setup_mpi_environment()
+
+    _create_mpi_script(cmd, _MPI_IS_RUNNING, _MPI_IS_FINISHED)
+
+    if is_master(hosts, current_host):
+        logger.info('Starting MPI run as master node')
+        _wait_for_worker_nodes_to_start_sshd(hosts)
+        _run_mpi_on_all_nodes(hosts,
+                              env_vars,
+                              mpi_distribution['processes_per_host'],
+                              mpi_distribution['custom_mpi_options'],
+                              network_interface_name,
+                              capture_error=capture_error)
+    else:
+        logger.info('Starting MPI run as worker node')
+        _wait_for_mpi_to_start_running(current_host)
+        logger.info('MPI started training process on worker node %s', current_host)
+        _wait_until_mpi_stops_running(current_host)
+
 
 # MPI files.
-MPI_FILES_DIR = "/tmp/sm_mpi"
-_MPI_SCRIPT = "/tmp/sm_mpi/mpi_script.sh"
-_MPI_IS_RUNNING = "/tmp/sm_mpi/mpi_is_running"
-_MPI_IS_FINISHED = "/tmp/sm_mpi/mpi_is_finished"
-_CHANGE_HOSTNAME_LIBRARY = "/tmp/sm_mpi/libchangehostname.so"
+_MPI_FILES_DIR = '/tmp/sm_mpi'
+_MPI_SCRIPT = '/tmp/sm_mpi/mpi_script.sh'
+_MPI_IS_RUNNING = '/tmp/sm_mpi/mpi_is_running'
+_MPI_IS_FINISHED = '/tmp/sm_mpi/mpi_is_finished'
 
 _SSH_DAEMON_NOT_FOUND_ERROR_MESSAGE = """
 SSH daemon not found, please install SSH to allow MPI to communicate different nodes in cluster.
@@ -56,34 +102,21 @@ mkdir -p /root/.ssh/ && ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
 """
 
 
-# def _change_hostname(current_host):  # type: (str) -> None
-#     """Compiles a shared library to correct the behavior of the gethostname system call,
-#         which OpenMPI depends on.
-#     Args:
-#         current_host (str): name of the current host, such as algo-1, algo-2, etc.
-#     """
-#     os.system("{} {} {}".format(_CHANGE_HOSTNAME_FILE_PATH, current_host, MPI_FILES_DIR))
+def _start_sshd_daemon():  # type: () -> None
+    sshd_executable = '/usr/sbin/sshd'
 
-
-def _start_ssh_daemon():  # type: () -> None
-    """Starts the ssh daemon
-    """
-    exists = os.path.isfile(_SSHD_EXECUTABLE_PATH)
-    if not exists:
+    if not os.path.exists(sshd_executable):
         raise RuntimeError(_SSH_DAEMON_NOT_FOUND_ERROR_MESSAGE)
 
-    subprocess.Popen([_SSHD_EXECUTABLE_PATH, "-D"])
+    subprocess.Popen([sshd_executable, "-D"])
 
 
-def _setup_mpi_environment(current_host):  # type: (str) -> None
+def _setup_mpi_environment():  # type: () -> None
     """Setup MPI environment, i.e. executing change hostname script and starting ssh deamon.
-       Args:
-           current_host (str): Current host name.
     """
-    if not os.path.exists(MPI_FILES_DIR):
-        os.makedirs(MPI_FILES_DIR)
-    # _change_hostname(current_host=current_host)
-    _start_ssh_daemon()
+    if not os.path.exists(_MPI_FILES_DIR):
+        os.makedirs(_MPI_FILES_DIR)
+    _start_sshd_daemon()
 
 
 def _can_connect(host, port, ssh_socket):  # type: (str,int,socket.socket) -> bool
@@ -104,13 +137,10 @@ def _can_connect(host, port, ssh_socket):  # type: (str,int,socket.socket) -> bo
         return False
 
 
-def _create_mpi_script(args,
-                       train_script,
-                       code_dir,
-                       mpi_script_path,
+def _create_mpi_script(cmd,
                        mpi_is_running_flag_file,
                        mpi_is_finished_flag_file):
-    # type: (list, str, str, str, str, str) -> None
+    # type: (list, str, str) -> None
     """Creates a MPI script with user provided information.
         For distributed training: the 'master node' runs mpirun
         with this script, '/mpi_script.sh'. This script creates
@@ -123,12 +153,9 @@ def _create_mpi_script(args,
         args (list): Command line arguments to be passed into customer script.
         train_script (str): Training script to be executed via MPI.
         code_dir (str): Path to directory containing ``train_script``
-        mpi_script_path (str): Path where the MPI script is created.
         mpi_is_running_flag_file (str): Path to the file used to flag the MPI is running status.
         mpi_is_finished_flag_file (str): Path to the file used to flag the MPI is finished status.
     """
-
-    python_cmd = [sys.executable, '%s/%s' % (code_dir, train_script)] + args
 
     _mpi_script_template = """#!/usr/bin/env bash
     touch %s
@@ -138,19 +165,20 @@ def _create_mpi_script(args,
     exit ${EXIT_CODE}
     """
 
-    content = _mpi_script_template % (mpi_is_running_flag_file, ' '.join(python_cmd),
+    content = _mpi_script_template % (mpi_is_running_flag_file, ' '.join(cmd),
                                       mpi_is_finished_flag_file)
 
-    with open(mpi_script_path, 'w') as w:
+    with open(_MPI_SCRIPT, 'w') as w:
         w.write(content)
 
-    st = os.stat(mpi_script_path)
-    os.chmod(mpi_script_path, st.st_mode | stat.S_IEXEC)
+    st = os.stat(_MPI_SCRIPT)
+    os.chmod(_MPI_SCRIPT, st.st_mode | stat.S_IEXEC)
 
-    logger.info('MPI script created at: %s', mpi_script_path)
+    logger.info('MPI script created at: %s', _MPI_SCRIPT)
 
 
-def is_master(hosts, current_host):  # type: (list, str) -> bool
+def is_master(hosts,
+              current_host):  # type: (list, str) -> bool
     """Checks if the current host is master or worker.
     """
     _is_master = current_host == sorted(list(hosts))[0]
@@ -180,37 +208,28 @@ def _run_mpi_on_all_nodes(hosts,
                           process_per_host,
                           custom_mpi_options,
                           network_interface_name,
-                          wait,
                           capture_error):
-    # type: (List[str], Mapping[str, str], int, str, str, bool,bool) -> None
+    # type: (List[str], Dict[str, str], int, str, str, bool) -> None
     """Run MPI command to execute MPI_SCRIPT on all hosts.
     """
-    mpi_command = _build_mpi_command(hosts,
-                                     env_vars,
-                                     process_per_host,
-                                     custom_mpi_options,
-                                     network_interface_name)
+    mpi_command = _mpi_command(hosts,
+                               env_vars,
+                               process_per_host,
+                               custom_mpi_options,
+                               network_interface_name)
 
     _logging.log_script_invocation(mpi_command, env_vars, logger)
 
     with open(_MPI_SCRIPT) as f:
         logger.info('Running user script:\n\n%s', f.read())
 
-    logger.info('Executing mpi command with wait: %s capture_error: %s', wait, capture_error)
-
-    if wait:
-        return _process.check_error(mpi_command,
-                                    _errors.ExecuteUserScriptError,
-                                    capture_error=capture_error)
-
-    else:
-        return _process.create(mpi_command,
-                               _errors.ExecuteUserScriptError,
-                               capture_error=capture_error)
+    _process.check_error(mpi_command,
+                         _errors.ExecuteUserScriptError,
+                         capture_error=capture_error)
 
 
 def _parse_custom_mpi_options(custom_mpi_options):
-    # type: (str) -> Tuple[Namespace, List[str]]
+    # type: (str) -> Tuple[argparse.Namespace, List[str]]
     """Parse custom MPI options provided by user. Known options default value will be overridden
     and unknown options would be identified separately."""
 
@@ -220,12 +239,12 @@ def _parse_custom_mpi_options(custom_mpi_options):
     return parser.parse_known_args(custom_mpi_options.split())
 
 
-def _build_mpi_command(hosts,
-                       env_vars,
-                       process_per_host,
-                       custom_mpi_options,
-                       network_interface_name):
-    # type: (List[str], Mapping[str, str], int, str, str)-> List[str]
+def _mpi_command(hosts,
+                 env_vars,
+                 process_per_host,
+                 custom_mpi_options,
+                 network_interface_name):
+    # type: (List[str], Dict[str, str], int, str, str)-> List[str]
     """Build MPI command with all required MPI flags for sagemaker infrastructure, environment
     variables, provided hyperparameters and custom mpi options.
     """
@@ -262,7 +281,7 @@ def _build_mpi_command(hosts,
                '-x', 'NCCL_DEBUG=%s' % overridden_known_options.NCCL_DEBUG,
                '-x', 'LD_LIBRARY_PATH',
                '-x', 'PATH',
-               '-x', 'LD_PRELOAD=%s' % _CHANGE_HOSTNAME_LIBRARY,
+               '-x', 'LD_PRELOAD=%s' % inspect.getfile(libchangehostname),
 
                ]
 
@@ -272,114 +291,26 @@ def _build_mpi_command(hosts,
         if credential in os.environ:
             command.extend(['-x', credential])
 
-    for name, value in env_vars.items():
-        if name != 'SM_CURRENT_HOST':
-            command.extend(['-x', '%s=%s' % (name, value)])
+    for name in env_vars:
+        command.extend(['-x', name])
 
     command.append(_MPI_SCRIPT)
 
     return command
 
 
-def run(hosts,
-        env_vars,
-        process_per_host,
-        custom_mpi_options,
-        network_interface_name,
-        wait,
-        capture_error):
-    # type: (List[str], Mapping[str, str], int, List[str], str, bool, bool) -> None
-    """Executes the master's node operation
-        Args:
-            custom_mpi_options ():
-            process_per_host ():
-            env_vars ():
-            hosts ():
-            network_interface_name ():
-            wait (bool): If True, holds the process executing the user entry-point.
-                         If False, returns the process that is executing it.
-            capture_error (bool): Default false. If True, the running process captures the
-                stderr, and appends it to the returned Exception message in case of errors.
-    """
-    _wait_for_worker_nodes_to_start_sshd(hosts)
-    import pdb; pdb.set_trace()
-    _run_mpi_on_all_nodes(hosts,
-                          env_vars,
-                          process_per_host,
-                          custom_mpi_options,
-                          network_interface_name,
-                          wait,
-                          capture_error)
-
-
 @retrying.retry(stop_max_delay=30000 * 1000,
                 wait_fixed=1000,
                 retry_on_result=lambda result: result is False)
-def _wait_for_mpi_to_start_running():  # type: () -> bool
+def _wait_for_mpi_to_start_running(current_host):  # type: (str) -> bool
     """Wait and retry loop until the MPI training starts on this worker.
     """
+    logger.debug('Worker node %s is waiting for MPI to start training process', current_host)
     return os.path.isfile(_MPI_IS_RUNNING)
 
 
 @retrying.retry(wait_fixed=5000,
                 retry_on_result=lambda result: result is False)
-def _wait_until_mpi_stops_running():  # type: () -> bool
-    """Wait and retry loop until the MPI training is finished on this worker.
-    """
-    while True:
-        time.sleep(1)
-
-    return False
-    # return os.path.isfile(_MPI_IS_FINISHED)
-
-
-def worker_run(current_host):  # type: (str) -> None
-    logger.info("Worker node %s is waiting for MPI to start training process" % current_host)
-    # _wait_for_mpi_to_start_running()
-
-    logger.info("MPI started training process on worker node %s".format(current_host))
-
-    _wait_until_mpi_stops_running()
-    logger.info("Training process started by MPI on worker node %s stopped".format(current_host))
-
-
-def mpi_run(train_script,
-            code_dir,
-            args,
-            env_vars,
-            wait,
-            capture_error):  # type: (str, str, list, dict, bool, bool) -> None
-    """It runs the mpi command to launch user provided training script.
-        Args:
-            train_script (str): Train script to executed by the ``MPILauncher``
-            code_dir (str): Path to directory containing ``train_script``
-            args (list):  A list of program arguments.
-            env_vars (dict): A map containing the environment variables to be written.
-            wait (bool): If True, holds the process executing the user entry-point.
-                         If False, returns the process that is executing it.
-            capture_error (bool): Default false. If True, the running process captures the
-                stderr, and appends it to the returned Exception message in case of errors.
-        """
-    env = sagemaker_containers.training_env()
-
-    num_of_processes_per_host = env.additional_framework_parameters.get(
-        _params.SAGEMAKER_MPI_NUM_PROCESSES_PER_HOST, 1)
-    custom_mpi_options = env.additional_framework_parameters.get(
-        _params.SAGEMAKER_MPI_CUSTOM_MPI_OPTIONS, "")
-
-    msg = 'MPI requested for train_script: %s code_dir: ' \
-          '%s process per hosts: %s and custom_mpi_options: %s'
-    logger.info(msg, train_script, code_dir, num_of_processes_per_host, custom_mpi_options)
-
-    _setup_mpi_environment(env.current_host)
-
-    _create_mpi_script(args, train_script, code_dir, _MPI_SCRIPT, _MPI_IS_RUNNING, _MPI_IS_FINISHED)
-
-    if is_master(env.hosts, env.current_host):
-        logger.info("Inside Master")
-        run(env.hosts, env.to_env_vars(), num_of_processes_per_host,
-            custom_mpi_options, env.network_interface_name,
-            wait, capture_error)
-    else:
-        logger.info("Inside Worker")
-        worker_run(env.current_host)
+def _wait_until_mpi_stops_running(current_host):  # type: () -> bool
+    logger.debug('Worker node %s is waiting for MPI to finish training process', current_host)
+    return os.path.isfile(_MPI_IS_FINISHED)

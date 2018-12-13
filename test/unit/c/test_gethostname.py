@@ -16,23 +16,23 @@ import sys
 import pytest
 from mock import patch
 
-import gethostname
+import libchangehostname
 from sagemaker_containers import _errors, _process
 
 
-def test_gethostname_with_env_set_in_another_process():
+def test_libchangehostname_with_env_set_in_another_process():
     with patch.dict(os.environ, {'SM_CURRENT_HOST': 'algo-5'}):
-        py_cmd = "import gethostname\nassert gethostname.call(30) == 'algo-5'"
+        py_cmd = "import libchangehostname\nassert libchangehostname.call(30) == 'algo-5'"
         _process.check_error([sys.executable, '-c', py_cmd], _errors.ExecuteUserScriptError)
 
 
-def test_gethostname_with_env_set():
+def test_libchangehostname_with_env_set():
     with patch.dict(os.environ, {'SM_CURRENT_HOST': 'algo-3'}):
-        assert gethostname.call(30) == 'algo-3'
+        assert libchangehostname.call(30) == 'algo-3'
 
 
-def test_gethostname_with_env_not_set():
-    py_cmd = "import gethostname\nassert gethostname.call(30) == 'algo-9'"
+def test_libchangehostname_with_env_not_set():
+    py_cmd = "import libchangehostname\nassert libchangehostname.call(30) == 'algo-9'"
 
     with pytest.raises(_errors.ExecuteUserScriptError):
         _process.check_error([sys.executable, '-c', py_cmd], _errors.ExecuteUserScriptError)

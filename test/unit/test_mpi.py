@@ -34,21 +34,21 @@ def test_change_hostname(os_system):
     _mpi._change_hostname(host)
     os_system.assert_called_with(
         "{} {} {}".format(pkg_resources.resource_filename(sagemaker_containers.__name__, '/bin/change-hostname.sh'),
-                          host, _mpi.MPI_FILES_DIR))
+                          host, _mpi._MPI_FILES_DIR))
 
 
 @patch("subprocess.Popen")
 def test_start_ssh_daemon(subprocess_popen):
-    """Unit tests the ``_start_ssh_daemon`` method to verify it is executing the ssh deamon or not"""
+    """Unit tests the ``_start_sshd_daemon`` method to verify it is executing the ssh deamon or not"""
 
-    _mpi._start_ssh_daemon()
+    _mpi._start_sshd_daemon()
     subprocess_popen.assert_called_with(["/usr/sbin/sshd", "-D"])
 
 
 @patch('os.path.exists')
 @patch('os.makedirs')
 @patch('sagemaker_containers._mpi._change_hostname')
-@patch('sagemaker_containers._mpi._start_ssh_daemon')
+@patch('sagemaker_containers._mpi._start_sshd_daemon')
 def test_setup_mpi_environment(start_ssh_daemon, change_hostname, mock_os_mkdirs, mock_os_path_exist):
     """Unit tests the ``_setup_mpi_environment`` method to verify all steps are performed for mpi setup"""
 
@@ -57,8 +57,8 @@ def test_setup_mpi_environment(start_ssh_daemon, change_hostname, mock_os_mkdirs
 
     _mpi._setup_mpi_environment(mock_env.current_host)
 
-    mock_os_path_exist.assert_called_with(_mpi.MPI_FILES_DIR)
-    mock_os_mkdirs.assert_called_with(_mpi.MPI_FILES_DIR)
+    mock_os_path_exist.assert_called_with(_mpi._MPI_FILES_DIR)
+    mock_os_mkdirs.assert_called_with(_mpi._MPI_FILES_DIR)
     change_hostname.assert_called_with(current_host=mock_env.current_host)
     start_ssh_daemon.assert_called()
 
@@ -138,7 +138,7 @@ def test_parse_custom_mpi_options():
 
 
 @patch(builtins_open, mock_open())
-@patch('sagemaker_containers._mpi.MPIMaster._build_mpi_command')
+@patch('sagemaker_containers._mpi.MPIMaster._mpi_command')
 @patch('sagemaker_containers._process.check_error')
 @patch('sagemaker_containers._process.create')
 @patch('sagemaker_containers._logging.log_script_invocation')
@@ -247,7 +247,7 @@ def test_mpi_run_for_master(mock_master, _create_mpi_script, _setup_mpi_environm
 
     mock_env_generator.return_value = mock_env
 
-    _mpi.mpi_run(train_script, code_dir, args, env_vars, wait, capture_error)
+    _mpi.run(train_script, code_dir, args, env_vars, wait, capture_error)
 
     assert _setup_mpi_environment.call_count == 1
     _create_mpi_script.assert_called_with(args, train_script, code_dir, _mpi._MPI_SCRIPT,
@@ -283,7 +283,7 @@ def test_mpi_run_for_worker(mock_is_master, mock_worker, mock_master, _create_mp
 
     mock_env_generator.return_value = mock_env
 
-    _mpi.mpi_run(train_script, code_dir, args, env_vars, wait, capture_error)
+    _mpi.run(train_script, code_dir, args, env_vars, wait, capture_error)
 
     assert _setup_mpi_environment.call_count == 1
     _create_mpi_script.assert_called_with(args, train_script, code_dir, _mpi._MPI_SCRIPT,

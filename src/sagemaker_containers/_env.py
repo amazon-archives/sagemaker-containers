@@ -26,6 +26,7 @@ import time
 import boto3
 
 from sagemaker_containers import _content_types, _logging, _mapping, _params
+from typing import Dict
 
 logger = _logging.get_logger()
 
@@ -581,6 +582,25 @@ class TrainingEnv(_Env):
         self._input_config_dir = input_config_dir
         self._output_dir = output_dir
         self._job_name = os.environ.get(_params.TRAINING_JOB_ENV.upper(), None)
+
+        self._distributions = {}
+
+        if sagemaker_hyperparameters.get(_params.MPI_ENABLED):
+            self._distributions['mpi'] = {
+                'enabled': True,
+                'processes_per_host': sagemaker_hyperparameters.get(_params.MPI_PROCESSES_PER_HOST,
+                                                                    1),
+                'custom_mpi_options': sagemaker_hyperparameters.get(_params.MPI_CUSTOM_OPTIONS, '')
+            }
+
+        if sagemaker_hyperparameters.get(_params.PARAMETER_SERVER_ENABLED):
+            self._distributions['parameter_server'] = {
+                'enabled': True,
+            }
+
+    @property
+    def distributions(self):  # type: () -> Dict[str, Dict[str,str]]
+        return self._distributions
 
     @property
     def job_name(self):  # type: () -> str

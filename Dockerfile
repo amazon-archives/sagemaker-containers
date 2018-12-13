@@ -60,9 +60,13 @@ FROM mvsusp/openmpi
 #RUN wget https://bootstrap.pypa.io/get-pip.py && \
 #	python get-pip.py --disable-pip-version-check --no-cache-dir "pip==18.1"
 
+RUN cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking > /etc/ssh/ssh_config.new && \
+    echo "    StrictHostKeyChecking no" >> /etc/ssh/ssh_config.new && \
+    mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config
+
 COPY dist/sagemaker_containers-2.3.5.tar.gz sagemaker_containers-2.3.5.tar.gz
 
-RUN pip install sagemaker_containers-2.3.5.tar.gz
+RUN pip install sagemaker_containers-2.3.5.tar.gz mpi4py==3.0.0
 
 
 

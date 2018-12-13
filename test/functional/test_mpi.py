@@ -10,28 +10,35 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import json
 import logging
 import os
+import tarfile
+
+import pytest
+from sagemaker.tensorflow import TensorFlow
 
 logging.basicConfig(level=logging.INFO)
-
-from sagemaker.tensorflow import TensorFlow
 
 dir_path = os.path.realpath(__file__)
 
 
-def test_mpi():
-    resourcers = os.path.realpath(
-        os.path.join(dir_path, '..', '..', 'resources', 'openmpi', 'launcher.sh'))
-    est = TensorFlow(entry_point=resourcers,
-                     image_name='openmpi',
-                     role='SageMakerRole',
-                     train_instance_count=2,
-                     framework_version='1.11',
-                     py_version='py3',
-                     train_instance_type='local',
-                     hyperparameters={'sagemaker_mpi_enabled': True,
-                                      'sagemaker_network_interface_name': 'eth0'},
-                     distributions={'mpi': {'enabled': True}})
+@pytest.mark.parametrize('py_version', ['py2', 'py3'])
+def test_mpi(py_version, tmpdir):
+    source_dir = os.path.realpath(os.path.join(dir_path, '..', '..', 'resources', 'openmpi'))
 
-    est.fit()
+    estimator = TensorFlow(entry_point='launcher.sh',
+                           image_name='openmpi',
+                           role='SageMakerRole',
+                           train_instance_count=2,
+                           framework_version='1.11',
+                           py_version=py_version,
+                           source_dir=source_dir,
+                           train_instance_type='local',
+                           hyperparameters={
+                               'sagemaker_mpi_enabled': True,
+                               'sagemaker_mpi_custom_mpi_options': '-verbose',
+                               'sagemaker_network_interface_name': 'eth0'
+                           })
+
+    estimator.fit()
