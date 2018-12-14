@@ -16,7 +16,7 @@ import os
 import sys
 from typing import Dict, List  # noqa ignore=F401 imported but unused
 
-from sagemaker_containers import _entry_point_type, _env, _files, _modules, _runner
+from sagemaker_containers import _entry_point_type, _env, _errors, _files, _logging, _modules, _process
 
 
 def run(uri,
