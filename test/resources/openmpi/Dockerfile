@@ -10,70 +10,16 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-FROM ubuntu:16.04
+FROM mvsusp/openmpi
 
-# Install basic dependencies and locales
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      wget ca-certificates openssh-server build-essential && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-#
-#RUN cd /tmp && \
-#  wget -q https://www.open-mpi.org/software/ompi/v${OPENMPI_VERSION%\.*}/downloads/openmpi-$OPENMPI_VERSION.tar.bz2 && \
-#  tar -xjf openmpi-$OPENMPI_VERSION.tar.bz2 && \
-#  cd /tmp/openmpi-$OPENMPI_VERSION && \
-#  ./configure --prefix=/usr --with-cuda && make -j2 && make install && rm -r /tmp/openmpi-$OPENMPI_VERSION* && \
-#  ompi_info --parsable --all | grep -q "mpi_built_with_cuda_support:value:true"
+RUN cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking > /etc/ssh/ssh_config.new && \
+    echo "    StrictHostKeyChecking no" >> /etc/ssh/ssh_config.new && \
+    mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config
+RUN pip install mpi4py==3.0.0
 
-#
-## SSH. Partially taken from https://docs.docker.com/engine/examples/running_ssh_service/
-#RUN apt-get update && apt-get install -y --no-install-recommends openssh-server \
-#    wget \
-#    build-essential && \
-#    mkdir -p /var/run/sshd && \
-#    rm -rf /var/lib/apt/lists/*
-#
- # Install Open MPI
-RUN mkdir /tmp/openmpi && \
-    cd /tmp/openmpi && \
-    wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz && \
-    tar zxf openmpi-3.0.0.tar.gz && \
-    cd openmpi-3.0.0 && \
-    ./configure --enable-orterun-prefix-by-default && \
-    make -j $(nproc) all && \
-    make install && \
-    ldconfig && \
-    rm -rf /tmp/openmpi
+COPY dist/sagemaker_containers-2.3.5.tar.gz sagemaker_containers-2.3.5.tar.gz
 
- # Create a wrapper for OpenMPI to allow running as root by default
-RUN mv /usr/local/bin/mpirun /usr/local/bin/mpirun.real && \
-    echo '#!/bin/bash' > /usr/local/bin/mpirun && \
-    echo 'mpirun.real --allow-run-as-root "$@"' >> /usr/local/bin/mpirun && \
-    chmod a+x /usr/local/bin/mpirun
+RUN pip install sagemaker_containers-2.3.5.tar.gz
 
-RUN echo "hwloc_base_binding_policy = none" >> /usr/local/etc/openmpi-mca-params.conf && \
-    echo "rmaps_base_mapping_policy = slot" >> /usr/local/etc/openmpi-mca-params.conf
 
-ENV LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH
 
-ENV PATH /usr/local/openmpi/bin/:$PATH
-
-# SSH login fix. Otherwise user is kicked off after login
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-
- # Create SSH key.
-RUN mkdir -p /root/.ssh/ && \
-    ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
-    cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys && \
-    printf "Host *\n  StrictHostKeyChecking no\n" >> /root/.ssh/config
-
-# Install basic dependencies and locales
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-	python get-pip.py --disable-pip-version-check --no-cache-dir "pip==18.1"
-
-RUN pip install sagemaker-containers
