@@ -16,14 +16,14 @@ from glob import glob
 import os
 import sys
 
-from setuptools import Extension, find_packages, setup
+import setuptools
 
 
 def read(file_name):
     return open(os.path.join(os.path.dirname(__file__), file_name)).read()
 
 
-packages = find_packages(where='src', exclude=('test',))
+packages = setuptools.find_packages(where='src', exclude=('test',))
 packages.append('sagemaker_containers.etc')
 
 required_packages = [
@@ -35,11 +35,12 @@ required_packages = [
 if sys.version_info < (3, 4):
     required_packages.append('enum34 >= 1.1.6')
 
-gethostname = Extension('libchangehostname',
-                        sources=['src/sagemaker_containers/c/libchangehostname.c'],
-                        extra_compile_args=['-Wall', '-shared', '-export-dynamic', '-ldl'])
+gethostname = setuptools.Extension('libchangehostname',
+                                   sources=['src/sagemaker_containers/c/libchangehostname.c'],
+                                   extra_compile_args=['-Wall', '-shared', '-export-dynamic',
+                                                       '-ldl'])
 
-setup(
+setuptools.setup(
     name='sagemaker_containers',
     version='2.3.5',
     description='Open source library for creating containers to run on Amazon SageMaker.',
