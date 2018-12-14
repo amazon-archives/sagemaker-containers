@@ -18,7 +18,6 @@ import tarfile
 import time
 
 import boto3
-import netifaces
 import pytest
 import sagemaker
 import six
@@ -28,8 +27,7 @@ import werkzeug.test as werkzeug_test
 
 DEFAULT_REGION = 'us-west-2'
 
-from sagemaker_containers import _env, _files, _params, \
-    _worker  # noqa ignore=E402 module level import not at top of file
+from sagemaker_containers import _env, _files, _params, _worker  # noqa ignore=E402 module level import not at top of file
 
 DEFAULT_CONFIG = dict(ContentType="application/x-numpy", TrainingInputMode="File",
                       S3DistributionType="FullyReplicated", RecordWrapperType="None")
@@ -132,12 +130,6 @@ def environ(path='/', base_url=None, query_string=None, method='GET',
         input_stream=input_stream, content_length=content_length, headers=headers,
         data=data, charset=charset, mimetype=mimetype)
     return environ_builder.get_environ()
-
-
-def get_eth_network_interface():  # type: () -> str
-    """Get the eth network interface locally available on your machine"""
-    interface_list = netifaces.interfaces()
-    return list(filter(lambda x: 'e' in x, interface_list))[0]
 
 
 class UserModule(object):

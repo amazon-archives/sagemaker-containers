@@ -28,7 +28,7 @@ packages.append('sagemaker_containers.etc')
 
 required_packages = [
     'numpy', 'boto3', 'six', 'pip', 'flask', 'gunicorn', 'typing',
-    'gevent', 'inotify_simple', 'werkzeug', 'retrying', 'paramiko'
+    'gevent', 'inotify_simple', 'werkzeug', 'paramiko'
 ]
 
 # enum is introduced in Python 3.4. Installing enum back port
@@ -70,7 +70,7 @@ setup(
     install_requires=required_packages,
 
     extras_require={
-        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker==1.16.2', 'netifaces']
+        'test': ['tox', 'flake8', 'pytest', 'pytest-cov', 'mock', 'sagemaker==1.16.2']
     },
 
     entry_points={

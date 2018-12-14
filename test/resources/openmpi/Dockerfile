@@ -17,7 +17,7 @@ RUN cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking > /etc/ssh/ssh_confi
     mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config
 RUN pip install mpi4py==3.0.0
 
-COPY dist/sagemaker_containers-2.3.5.tar.gz sagemaker_containers-2.3.5.tar.gz
+COPY sagemaker_containers-2.3.5.tar.gz sagemaker_containers-2.3.5.tar.gz
 
 RUN pip install sagemaker_containers-2.3.5.tar.gz
 

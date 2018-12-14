@@ -68,7 +68,7 @@ class Runner(object):
         self._args = args
         self._env_vars = env_vars
 
-    def _cmd(self):
+    def _create_command(self):
         entrypoint_type = _entry_point_type.get(_env.code_dir, self._user_entry_point)
 
         if entrypoint_type is _entry_point_type.PYTHON_PACKAGE:
@@ -88,7 +88,7 @@ class Runner(object):
     def run(self, wait=True, capture_error=False):
         self._setup()
 
-        cmd = self._cmd()
+        cmd = self._create_command()
 
         _logging.log_script_invocation(cmd, self._env_vars)
 

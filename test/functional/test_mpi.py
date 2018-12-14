@@ -12,20 +12,24 @@
 # language governing permissions and limitations under the License.
 import logging
 import os
+import shutil
+import subprocess
 
 import pytest
 from sagemaker.tensorflow import TensorFlow
 
 logging.basicConfig(level=logging.INFO)
 
+dir_path = os.path.realpath(__file__)
+root_dir = os.path.realpath(os.path.join(dir_path, '..', '..', '..'))
+source_dir = os.path.realpath(os.path.join(dir_path, '..', '..', 'resources', 'openmpi'))
+
 
 @pytest.mark.parametrize('py_version', ['py2', 'py3'])
 def test_mpi(py_version, tmpdir):
-    dir_path = os.path.realpath(__file__)
-    source_dir = os.path.realpath(os.path.join(dir_path, '..', '..', 'resources', 'openmpi'))
 
     estimator = TensorFlow(entry_point='launcher.sh',
-                           image_name='openmpi',
+                           image_name=build_mpi_image(tmpdir),
                            role='SageMakerRole',
                            train_instance_count=2,
                            framework_version='1.11',
@@ -39,3 +43,19 @@ def test_mpi(py_version, tmpdir):
                            })
 
     estimator.fit()
+
+
+def build_mpi_image(tmpdir):
+    tmp = str(tmpdir)
+
+    subprocess.check_call(['python', 'setup.py', 'sdist'], cwd=root_dir)
+
+    for file in os.listdir(os.path.join(root_dir, 'dist')):
+        shutil.copy2(os.path.join(root_dir, 'dist', file), tmp)
+
+    shutil.copy2(os.path.join(source_dir, 'Dockerfile'), tmp)
+
+    imagename = 'openmpi'
+    subprocess.check_call(['docker', 'build', '-t', imagename, '.'], cwd=tmp)
+
+    return imagename

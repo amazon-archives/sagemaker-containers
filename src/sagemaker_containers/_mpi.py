@@ -78,7 +78,7 @@ class MasterRunner(_process.Runner):
                     time.sleep(self._interval)
                 logger.info('Worker %s available for communication', host)
 
-    def _cmd(self):  # type: () -> List[str, Any]
+    def _create_command(self):  # type: () -> List[str, Any]
         num_hosts = len(self._hosts)
         num_processes = self._process_per_host * num_hosts
 
@@ -126,7 +126,7 @@ class MasterRunner(_process.Runner):
         for name in self._env_vars:
             command.extend(['-x', name])
 
-        command.extend(super(MasterRunner, self)._cmd())
+        command.extend(super(MasterRunner, self)._create_command())
 
         return command
 
