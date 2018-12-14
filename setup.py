@@ -16,7 +16,7 @@ from glob import glob
 import os
 import sys
 
-from setuptools import find_packages, setup, Extension
+from setuptools import Extension, find_packages, setup
 
 
 def read(file_name):

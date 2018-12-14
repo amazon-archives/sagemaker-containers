@@ -12,21 +12,21 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-import enum
 import os
 import sys
-from typing import Dict, List
+from typing import Dict, List  # noqa ignore=F401 imported but unused
 
-from sagemaker_containers import _env, _errors, _files, _logging, _modules, _process
+from sagemaker_containers import _entry_point_type, _env, _files, _modules, _runner
 
 
 def run(uri,
         user_entry_point,
         args,
         env_vars=None,
+        wait=True,
         capture_error=False,
-        runner=None):
-    # type: (str, str, List[str], Dict[str, str], bool, Runner) -> None
+        runner=_runner.ProcessRunnerType):
+    # type: (str, str, List[str], Dict[str, str], bool, bool, _runner.RunnerType) -> None
     """Download, prepare and executes a compressed tar file from S3 or provided directory as an user
     entrypoint. Runs the user entry point, passing env_vars as environment variables and args as command
     arguments.
@@ -70,51 +70,13 @@ def run(uri,
     env_vars = env_vars or {}
     env_vars = env_vars.copy()
 
-    runner = runner or Runner(user_entry_point, args, env_vars)
-
     _files.download_and_extract(uri, user_entry_point, _env.code_dir)
 
     install(user_entry_point, _env.code_dir, capture_error)
 
     _env.write_env_vars(env_vars)
 
-    runner.run(capture_error)
-
-
-class Runner(object):
-
-    def __init__(self, user_entry_point, args, env_vars):
-        # type: (str, List[str], Dict[str, str]) -> None
-        self._user_entry_point = user_entry_point
-        self._args = args
-        self._env_vars = env_vars
-
-    def _cmd(self):
-        entrypoint_type = entry_point_type(_env.code_dir, self._user_entry_point)
-
-        if entrypoint_type is EntryPointType.PYTHON_PACKAGE:
-            return [_process.python_executable(), '-m', self._user_entry_point.replace('.py', '')] + self._args
-        elif entrypoint_type is EntryPointType.PYTHON_PROGRAM:
-            return [_process.python_executable(), self._user_entry_point] + self._args
-        else:
-            return ['/bin/sh', '-c', './%s %s' % (self._user_entry_point, ' '.join(self._args))]
-
-    def _setup(self):
-        pass
-
-    def _tear_down(self):
-        pass
-
-    def run(self, capture_error=False):
-        self._setup()
-
-        cmd = self._cmd()
-
-        _logging.log_script_invocation(cmd, self._env_vars)
-
-        _process.check_error(cmd, _errors.ExecuteUserScriptError, capture_error)
-
-        self._tear_down()
+    _runner.get(runner).run(wait, capture_error)
 
 
 def install(name, dst, capture_error=False):
@@ -131,45 +93,8 @@ def install(name, dst, capture_error=False):
     if dst not in sys.path:
         sys.path.insert(0, dst)
 
-    entrypoint_type = entry_point_type(dst, name)
-    if entrypoint_type is EntryPointType.PYTHON_PACKAGE:
+    entrypoint_type = _entry_point_type.get(dst, name)
+    if entrypoint_type is _entry_point_type.PYTHON_PACKAGE:
         _modules.install(dst, capture_error)
-    if entrypoint_type is EntryPointType.COMMAND:
+    if entrypoint_type is _entry_point_type.COMMAND:
         os.chmod(os.path.join(dst, name), 511)
-#
-#
-# def _cmd(user_entry_point, args=None):
-#     # type: (str, List[str]) -> List[str]
-#     args = args or []
-#
-#     entrypoint_type = entry_point_type(_env.code_dir, user_entry_point)
-#
-#     if entrypoint_type is EntryPointType.PYTHON_PACKAGE:
-#         return [_process.python_executable(), '-m', user_entry_point.replace('.py', '')] + args
-#     elif entrypoint_type is EntryPointType.PYTHON_PROGRAM:
-#         return [_process.python_executable(), user_entry_point] + args
-#     else:
-#         return ['/bin/sh', '-c', './%s %s' % (user_entry_point, ' '.join(args))]
-
-
-class EntryPointType(enum.Enum):
-    PYTHON_PACKAGE = 'PYTHON_PACKAGE'
-    PYTHON_PROGRAM = 'PYTHON_PROGRAM'
-    COMMAND = 'COMMAND'
-
-
-def entry_point_type(path, name):  # type: (str, str) -> EntryPointType
-    """
-    Args:
-        path (string): Directory where the entry point is located
-        name (string): Name of the entry point file
-
-    Returns:
-        (EntryPointType): The type of the entry point
-    """
-    if 'setup.py' in os.listdir(path):
-        return EntryPointType.PYTHON_PACKAGE
-    elif name.endswith('.py'):
-        return EntryPointType.PYTHON_PROGRAM
-    else:
-        return EntryPointType.COMMAND

@@ -10,21 +10,18 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import json
 import logging
 import os
-import tarfile
 
 import pytest
 from sagemaker.tensorflow import TensorFlow
 
 logging.basicConfig(level=logging.INFO)
 
-dir_path = os.path.realpath(__file__)
-
 
 @pytest.mark.parametrize('py_version', ['py2', 'py3'])
 def test_mpi(py_version, tmpdir):
+    dir_path = os.path.realpath(__file__)
     source_dir = os.path.realpath(os.path.join(dir_path, '..', '..', 'resources', 'openmpi'))
 
     estimator = TensorFlow(entry_point='launcher.sh',

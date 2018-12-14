@@ -12,12 +12,31 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-from sagemaker_containers import _mpi, _params, entry_point
+import enum
+
+import sagemaker_containers
+from sagemaker_containers import _mpi, _params, _process
 
 
-def create(env):
-    mpi_enabled = env.additional_framework_parameters.get(_params.MPI_ENABLED)
-    if mpi_enabled and env.is_master:
+class RunnerType(enum.Enum):
+    MPI = 'MPI'
+    Process = 'Process'
+
+
+ProcessRunnerType = RunnerType.Process
+MPIRunnerType = RunnerType.MPI
+
+
+def get(identifier):  # type: (RunnerType) -> _process.Runner
+    if isinstance(identifier, _process.Runner):
+        return identifier
+    else:
+        return _get_by_runner_type(identifier)
+
+
+def _get_by_runner_type(identifier):
+    env = sagemaker_containers.training_env()
+    if identifier is RunnerType.MPI and env.is_master:
         processes_per_host = env.additional_framework_parameters.get(_params.MPI_PROCESSES_PER_HOST,
                                                                      1)
         custom_mpi_options = env.additional_framework_parameters.get(_params.MPI_CUSTOM_OPTIONS, '')
@@ -30,12 +49,14 @@ def create(env):
                                  processes_per_host,
                                  custom_mpi_options,
                                  env.network_interface_name)
-    elif mpi_enabled:
+    elif identifier is RunnerType.MPI:
         return _mpi.WorkerRunner(env.user_entry_point,
                                  env.to_cmd_args(),
                                  env.to_env_vars(),
                                  env.master_hostname)
+    elif identifier is RunnerType.Process:
+        return _process.Runner(env.user_entry_point,
+                               env.to_cmd_args(),
+                               env.to_env_vars())
     else:
-        return entry_point.Runner(env.user_entry_point,
-                                  env.to_cmd_args(),
-                                  env.to_env_vars())
+        raise ValueError('Invalid identifier %s' % identifier)

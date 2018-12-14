@@ -15,28 +15,31 @@ import inspect
 import os
 import subprocess
 import time
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple  # noqa ignore=F401 imported but unused
+
+import paramiko
 
 import libchangehostname
-import paramiko
-from sagemaker_containers import entry_point, _logging, _timeout
+from sagemaker_containers import _logging, _process, _timeout
 
 logger = _logging.get_logger()
 
 
-class WorkerRunner(entry_point.Runner):
+class WorkerRunner(_process.Runner):
 
     def __init__(self, user_entry_point, args, env_vars, master_hostname):
         super(WorkerRunner, self).__init__(user_entry_point, args, env_vars)
         self._master_hostname = str(master_hostname)
 
-    def run(self, capture_error=False):  # type: (bool) -> None
-        self._wait_master_to_start()
+    def run(self, wait=True, capture_error=False):  # type: (bool, bool) -> None
+        logger.info('Starting MPI run as worker node')
+        if wait:
+            self._wait_master_to_start()
 
         _start_sshd_daemon()
 
-        logger.info('Starting MPI run as worker node')
-        self._wait_master_to_finish()
+        if wait:
+            self._wait_master_to_finish()
 
     def _wait_master_to_start(self):  # type: () -> None
         while not _can_connect(self._master_hostname):
@@ -47,7 +50,7 @@ class WorkerRunner(entry_point.Runner):
             time.sleep(1)
 
 
-class MasterRunner(entry_point.Runner):
+class MasterRunner(_process.Runner):
 
     def __init__(self, user_entry_point, args, env_vars, master_hostname, hosts, process_per_host,
                  custom_mpi_options, network_interface_name, interval=1,

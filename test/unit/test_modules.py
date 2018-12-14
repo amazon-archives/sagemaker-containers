@@ -155,7 +155,7 @@ def test_run(log_script_invocation,  check_error, executable):
 
 
 @patch('sagemaker_containers._process.python_executable')
-@patch('sagemaker_containers._process.create')
+@patch('sagemaker_containers._process.get')
 @patch('sagemaker_containers._logging.log_script_invocation')
 def test_run_no_wait(log_script_invocation,  create, executable):
     _modules.run('pytest', ['--version'], {'PYPATH': '/opt/ml/code'}, wait=False, capture_error=True)

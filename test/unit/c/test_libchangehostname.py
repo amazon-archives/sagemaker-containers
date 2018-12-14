@@ -13,8 +13,8 @@
 import os
 import sys
 
-import pytest
 from mock import patch
+import pytest
 
 import libchangehostname
 from sagemaker_containers import _errors, _process
