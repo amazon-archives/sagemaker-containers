@@ -15,11 +15,10 @@ from __future__ import absolute_import
 import os
 import subprocess
 import sys
+from typing import List, Mapping
 
 import six
-
 from sagemaker_containers import _env
-from typing import Mapping, List
 
 
 def create(cmd, error_class, cwd=None, capture_error=False, **kwargs):

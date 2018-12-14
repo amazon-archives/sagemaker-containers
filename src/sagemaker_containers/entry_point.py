@@ -15,13 +15,18 @@ from __future__ import absolute_import
 import enum
 import os
 import sys
-
-from sagemaker_containers import _env, _errors, _files, _logging, _modules, _mpi, _process
 from typing import Dict, List
 
+from sagemaker_containers import _env, _errors, _files, _logging, _modules, _process
 
-def run(uri, user_entry_point, args, env_vars=None, capture_error=False, distributions=None):
-    # type: (str, str, list, dict, bool, Dict[str, Dict[str, str]]) -> None
+
+def run(uri,
+        user_entry_point,
+        args,
+        env_vars=None,
+        capture_error=False,
+        runner=None):
+    # type: (str, str, List[str], Dict[str, str], bool, Runner) -> None
     """Download, prepare and executes a compressed tar file from S3 or provided directory as an user
     entrypoint. Runs the user entry point, passing env_vars as environment variables and args as command
     arguments.
@@ -60,18 +65,12 @@ def run(uri, user_entry_point, args, env_vars=None, capture_error=False, distrib
         uri (str): the location of the module.
         capture_error (bool): Default false. If True, the running process captures the
             stderr, and appends it to the returned Exception message in case of errors.
-        distributions (): A dictionary with information on how to run distributed training
-            (default: None). Currently supported only MPI distribution. To enable MPI
-            distribution use the following setup:
-
-           >>> mpi_distribution = {'mpi':{'enabled': bool,
-           >>>                            'processes_per_host': int,
-           >>>                            'custom_mpi_options': List[str]
 
      """
     env_vars = env_vars or {}
     env_vars = env_vars.copy()
-    distributions = distributions or {}
+
+    runner = runner or Runner(user_entry_point, args, env_vars)
 
     _files.download_and_extract(uri, user_entry_point, _env.code_dir)
 
@@ -79,7 +78,43 @@ def run(uri, user_entry_point, args, env_vars=None, capture_error=False, distrib
 
     _env.write_env_vars(env_vars)
 
-    _call(user_entry_point, args, env_vars, capture_error, distributions)
+    runner.run(capture_error)
+
+
+class Runner(object):
+
+    def __init__(self, user_entry_point, args, env_vars):
+        # type: (str, List[str], Dict[str, str]) -> None
+        self._user_entry_point = user_entry_point
+        self._args = args
+        self._env_vars = env_vars
+
+    def _cmd(self):
+        entrypoint_type = entry_point_type(_env.code_dir, self._user_entry_point)
+
+        if entrypoint_type is EntryPointType.PYTHON_PACKAGE:
+            return [_process.python_executable(), '-m', self._user_entry_point.replace('.py', '')] + self._args
+        elif entrypoint_type is EntryPointType.PYTHON_PROGRAM:
+            return [_process.python_executable(), self._user_entry_point] + self._args
+        else:
+            return ['/bin/sh', '-c', './%s %s' % (self._user_entry_point, ' '.join(self._args))]
+
+    def _setup(self):
+        pass
+
+    def _tear_down(self):
+        pass
+
+    def run(self, capture_error=False):
+        self._setup()
+
+        cmd = self._cmd()
+
+        _logging.log_script_invocation(cmd, self._env_vars)
+
+        _process.check_error(cmd, _errors.ExecuteUserScriptError, capture_error)
+
+        self._tear_down()
 
 
 def install(name, dst, capture_error=False):
@@ -101,34 +136,20 @@ def install(name, dst, capture_error=False):
         _modules.install(dst, capture_error)
     if entrypoint_type is EntryPointType.COMMAND:
         os.chmod(os.path.join(dst, name), 511)
-
-
-def _call(user_entry_point,
-          args=None,
-          env_vars=None,
-          capture_error=False,
-          distributions=None):
-    # type: (str, List[str], Dict[str, str], bool, Dict[str, Dict[str, str]]) -> None
-    args = args or []
-    env_vars = env_vars or {}
-    distributions = distributions or {}
-
-    entrypoint_type = entry_point_type(_env.code_dir, user_entry_point)
-
-    if entrypoint_type is EntryPointType.PYTHON_PACKAGE:
-        cmd = [_process.python_executable(), '-m', user_entry_point.replace('.py', '')] + args
-    elif entrypoint_type is EntryPointType.PYTHON_PROGRAM:
-        cmd = [_process.python_executable(), user_entry_point] + args
-    else:
-        cmd = ['/bin/sh', '-c', './%s %s' % (user_entry_point, ' '.join(args))]
-
-    _logging.log_script_invocation(cmd, env_vars)
-
-    mpi_distribution = distributions.get('mpi', {})
-    if mpi_distribution.get('enabled'):
-        _mpi.run(cmd, mpi_distribution, env_vars, capture_error)
-    else:
-        _process.check_error(cmd, _errors.ExecuteUserScriptError, capture_error)
+#
+#
+# def _cmd(user_entry_point, args=None):
+#     # type: (str, List[str]) -> List[str]
+#     args = args or []
+#
+#     entrypoint_type = entry_point_type(_env.code_dir, user_entry_point)
+#
+#     if entrypoint_type is EntryPointType.PYTHON_PACKAGE:
+#         return [_process.python_executable(), '-m', user_entry_point.replace('.py', '')] + args
+#     elif entrypoint_type is EntryPointType.PYTHON_PROGRAM:
+#         return [_process.python_executable(), user_entry_point] + args
+#     else:
+#         return ['/bin/sh', '-c', './%s %s' % (user_entry_point, ' '.join(args))]
 
 
 class EntryPointType(enum.Enum):

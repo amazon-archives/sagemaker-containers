@@ -15,7 +15,7 @@ import os
 import traceback
 
 import sagemaker_containers
-from sagemaker_containers import _intermediate_output, _params
+from sagemaker_containers import _intermediate_output, _params, _runner_factory
 from sagemaker_containers.beta.framework import entry_point, errors, files, logging
 
 logger = logging.get_logger()
@@ -67,11 +67,10 @@ def train():
         else:
             logging.configure_logger(env.log_level)
 
-            distributions = {'mpi': {'processes_per_host': 10, 'custom_mpi_options': '--verbose -X banan'}}
+            runner = _runner_factory.create(env)
 
             entry_point.run(env.module_dir, env.user_entry_point, env.to_cmd_args(),
-                            env.to_env_vars(),
-                            distributions=env.distributions)
+                            env.to_env_vars(), runner=runner)
 
         logger.info('Reporting training SUCCESS')
 
