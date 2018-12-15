@@ -20,6 +20,3 @@ RUN pip install mpi4py==3.0.0
 COPY sagemaker_containers-2.3.5.tar.gz sagemaker_containers-2.3.5.tar.gz
 
 RUN pip install sagemaker_containers-2.3.5.tar.gz
-
-
-
