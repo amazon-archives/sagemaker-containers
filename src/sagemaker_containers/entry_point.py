@@ -16,7 +16,7 @@ import os
 import sys
 from typing import Dict, List  # noqa ignore=F401 imported but unused
 
-from sagemaker_containers import _entry_point_type, _env, _errors, _files, _logging, _modules, _process
+from sagemaker_containers import _entry_point_type, _env, _files, _modules, _runner
 
 
 def run(uri,
@@ -76,7 +76,7 @@ def run(uri,
 
     _env.write_env_vars(env_vars)
 
-    _runner.get(runner).run(wait, capture_error)
+    return _runner.get(runner).run(wait, capture_error)
 
 
 def install(name, dst, capture_error=False):

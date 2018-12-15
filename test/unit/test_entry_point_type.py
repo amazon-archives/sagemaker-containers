@@ -12,8 +12,9 @@
 # language governing permissions and limitations under the License.
 from __future__ import absolute_import
 
-import pytest
 from mock import patch
+import pytest
+
 from sagemaker_containers import _entry_point_type
 
 

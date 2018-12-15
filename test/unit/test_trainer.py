@@ -15,7 +15,7 @@ import os
 
 from mock import MagicMock, Mock, patch
 
-from sagemaker_containers import _errors, _trainer
+from sagemaker_containers import _errors, _runner, _trainer
 
 
 class TrainingEnv(Mock):
@@ -112,7 +112,7 @@ def test_train_script(_exit, training_env, run):
 
     env = training_env()
     run.assert_called_with(env.module_dir, env.user_entry_point, env.to_cmd_args(),
-                           env.to_env_vars())
+                           env.to_env_vars(), runner=_runner.RunnerType.MPI)
 
     _exit.assert_called_with(_trainer.SUCCESS_CODE)
 

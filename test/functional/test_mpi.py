@@ -25,7 +25,9 @@ root_dir = os.path.realpath(os.path.join(dir_path, '..', '..', '..'))
 source_dir = os.path.realpath(os.path.join(dir_path, '..', '..', 'resources', 'openmpi'))
 
 
-@pytest.mark.parametrize('py_version', ['py2', 'py3'])
+@pytest.mark.skip(reason="waiting for local mode fix on  "
+                         "https://github.com/aws/sagemaker-python-sdk/pull/559")
+@pytest.mark.parametrize('py_version', ['py3'])
 def test_mpi(py_version, tmpdir):
 
     estimator = TensorFlow(entry_point='launcher.sh',

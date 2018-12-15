@@ -92,8 +92,6 @@ class Runner(object):
 
         _logging.log_script_invocation(cmd, self._env_vars)
 
-        check_error(cmd, _errors.ExecuteUserScriptError, capture_error)
-
         if wait:
             process = check_error(cmd, _errors.ExecuteUserScriptError, capture_error=capture_error)
         else:

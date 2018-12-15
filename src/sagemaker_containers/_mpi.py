@@ -157,7 +157,7 @@ def _start_sshd_daemon():  # type: () -> None
     if not os.path.exists(sshd_executable):
         raise RuntimeError(_SSH_DAEMON_NOT_FOUND_ERROR_MESSAGE)
 
-    subprocess.Popen([sshd_executable, "-D"])
+    subprocess.Popen([sshd_executable, '-D'])
 
 
 def _can_connect(host, port=22):  # type: (str, int) -> bool
@@ -173,11 +173,11 @@ def _can_connect(host, port=22):  # type: (str, int) -> bool
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(host, port=port)
         client.close()
-        logger.debug("Can connect to host %s", host)
+        logger.debug('Can connect to host %s', host)
         return True
     except Exception as e:
         print(e)
-        logger.debug("Can't connect to host %s", host)
+        logger.debug('Can\'t connect to host %s', host)
         return False
 
 
