@@ -28,6 +28,7 @@ from sagemaker_containers import _modules as modules
 from sagemaker_containers import entry_point
 from sagemaker_containers import _params as params
 from sagemaker_containers import  _process as process
+from sagemaker_containers import _runner as runner
 from sagemaker_containers import _server as server
 from sagemaker_containers import _trainer as trainer
 from sagemaker_containers import _transformer as transformer
