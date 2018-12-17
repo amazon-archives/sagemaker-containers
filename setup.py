@@ -28,7 +28,7 @@ packages.append('sagemaker_containers.etc')
 
 required_packages = [
     'numpy', 'boto3', 'six', 'pip', 'flask', 'gunicorn', 'typing',
-    'gevent', 'inotify_simple', 'werkzeug', 'paramiko'
+    'gevent', 'inotify_simple', 'werkzeug', 'paramiko==2.4.2', 'psutil==5.4.8'
 ]
 
 # enum is introduced in Python 3.4. Installing enum back port

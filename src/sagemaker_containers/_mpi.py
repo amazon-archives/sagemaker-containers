@@ -21,6 +21,7 @@ from typing import Any, List, Tuple  # noqa ignore=F401 imported but unused
 import paramiko
 
 import libchangehostname
+import psutil
 from sagemaker_containers import _logging, _process, _timeout
 
 logger = _logging.get_logger()
@@ -41,22 +42,27 @@ class WorkerRunner(_process.Runner):
         _start_sshd_daemon()
 
         if wait:
-            self._wait_master_to_finish()
+            _wait_orted_process_to_finish()
 
     def _wait_master_to_start(self):  # type: () -> None
         while not _can_connect(self._master_hostname):
             time.sleep(1)
 
-    def _wait_master_to_finish(self):  # type: () -> None
-        while _can_connect(self._master_hostname):
-            time.sleep(30)
+
+def _wait_orted_process_to_finish():  # type: () -> None
+    orted = _orted_process()
+    psutil.wait_procs(orted)
+
+
+def _orted_process():
+    return [p for p in psutil.process_iter(attrs=['name']) if p.info['name'] == 'orted']
 
 
 class MasterRunner(_process.Runner):
 
     def __init__(self, user_entry_point, args, env_vars, master_hostname, hosts, process_per_host,
                  custom_mpi_options, network_interface_name, interval=1,
-                 timeout_in_seconds=60*60):
+                 timeout_in_seconds=60 * 60):
 
         super(MasterRunner, self).__init__(user_entry_point, args, env_vars)
 
@@ -174,10 +180,7 @@ def _can_connect(host, port=22):  # type: (str, int) -> bool
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(host,
-                       port=port,
-                       timeout=10,
-                       auth_timeout=10,
-                       banner_timeout=10)
+                       port=port)
         client.close()
         logger.debug('Can connect to host %s', host)
         return True
