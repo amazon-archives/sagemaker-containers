@@ -55,7 +55,13 @@ def _wait_orted_process_to_finish():  # type: () -> None
 
 
 def _orted_process():
-    return [p for p in psutil.process_iter(attrs=['name']) if p.info['name'] == 'orted']
+    """Waits maximum of 5 minutes for orted process to start"""
+    for i in range(5 * 60):
+        procs = [p for p in psutil.process_iter(attrs=['name']) if p.info['name'] == 'orted']
+
+        if procs:
+            return procs
+        time.sleep(1)
 
 
 class MasterRunner(_process.Runner):
