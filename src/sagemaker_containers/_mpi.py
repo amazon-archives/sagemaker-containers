@@ -62,6 +62,8 @@ def _orted_process():
         if procs:
             return procs
         time.sleep(1)
+    # after orted process finishes, waits a few seconds to not interrupt mpi teardown.
+    time.sleep(30)
 
 
 class MasterRunner(_process.Runner):
