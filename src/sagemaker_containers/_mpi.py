@@ -43,10 +43,15 @@ class WorkerRunner(_process.Runner):
 
         if wait:
             _wait_orted_process_to_finish()
+            self._wait_master_to_finish()
 
     def _wait_master_to_start(self):  # type: () -> None
         while not _can_connect(self._master_hostname):
             time.sleep(1)
+
+    def _wait_master_to_finish(self):  # type: () -> None
+        while _can_connect(self._master_hostname):
+            time.sleep(30)
 
 
 def _wait_orted_process_to_finish():  # type: () -> None
@@ -62,8 +67,6 @@ def _orted_process():
         if procs:
             return procs
         time.sleep(1)
-    # after orted process finishes, waits a few seconds to not interrupt mpi teardown.
-    time.sleep(30)
 
 
 class MasterRunner(_process.Runner):
