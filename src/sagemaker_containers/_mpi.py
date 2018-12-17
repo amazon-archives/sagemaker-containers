@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 import argparse
 import inspect
+import logging
 import os
 import subprocess
 import time
@@ -23,6 +24,7 @@ import libchangehostname
 from sagemaker_containers import _logging, _process, _timeout
 
 logger = _logging.get_logger()
+logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 
 class WorkerRunner(_process.Runner):
@@ -47,14 +49,14 @@ class WorkerRunner(_process.Runner):
 
     def _wait_master_to_finish(self):  # type: () -> None
         while _can_connect(self._master_hostname):
-            time.sleep(1)
+            time.sleep(30)
 
 
 class MasterRunner(_process.Runner):
 
     def __init__(self, user_entry_point, args, env_vars, master_hostname, hosts, process_per_host,
                  custom_mpi_options, network_interface_name, interval=1,
-                 timeout_in_seconds=60*10):
+                 timeout_in_seconds=60*60):
 
         super(MasterRunner, self).__init__(user_entry_point, args, env_vars)
 
@@ -171,7 +173,11 @@ def _can_connect(host, port=22):  # type: (str, int) -> bool
         client = paramiko.SSHClient()
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(host, port=port)
+        client.connect(host,
+                       port=port,
+                       timeout=10,
+                       auth_timeout=10,
+                       banner_timeout=10)
         client.close()
         logger.debug('Can connect to host %s', host)
         return True
