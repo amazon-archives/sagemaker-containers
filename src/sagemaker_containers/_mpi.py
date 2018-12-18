@@ -25,7 +25,7 @@ import psutil
 from sagemaker_containers import _logging, _process, _timeout
 
 logger = _logging.get_logger()
-logging.getLogger("paramiko").setLevel(logging.WARNING)
+logging.getLogger("paramiko").setLevel(logging.INFO)
 
 
 class WorkerRunner(_process.Runner):
