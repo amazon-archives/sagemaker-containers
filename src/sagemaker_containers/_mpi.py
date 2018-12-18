@@ -19,9 +19,9 @@ import time
 from typing import Any, List, Tuple  # noqa ignore=F401 imported but unused
 
 import paramiko
+import psutil
 
 import libchangehostname
-import psutil
 from sagemaker_containers import _logging, _process, _timeout
 
 logger = _logging.get_logger()
@@ -135,8 +135,12 @@ class MasterRunner(_process.Runner):
                    '-mca', 'btl_tcp_if_include', self._network_interface_name,
                    '-mca', 'oob_tcp_if_include', self._network_interface_name,
                    '-mca', 'plm_rsh_no_tree_spawn', '1',
+                   '-bind-to', 'socket', '-map-by', 'slot',
+                   '-mca', 'pml', 'ob1', '-mca', 'btl', '^openib',
                    '-mca', 'orte_abort_on_non_zero_status', '1',
+                   '-mca', 'btl_tcp_if_exclude', 'lo,docker0',
 
+                   '-x', 'NCCL_MIN_NRINGS=4',
                    '-x', 'NCCL_SOCKET_IFNAME=%s' % self._network_interface_name,
                    '-x', 'NCCL_DEBUG=%s' % overridden_known_options.NCCL_DEBUG,
                    '-x', 'LD_LIBRARY_PATH',

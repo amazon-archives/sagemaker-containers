@@ -197,7 +197,7 @@ def test_training_env(training_env):
     assert training_env.user_entry_point == 'main.py'
     assert training_env.module_dir == 'imagenet'
     assert training_env.log_level == logging.WARNING
-    assert training_env.network_interface_name == 'ethwe'
+    assert training_env.network_interface_name == 'eth0'
     assert training_env.job_name == 'training-job-42'
     assert training_env.additional_framework_parameters == {'sagemaker_parameter_server_num': 2}
 

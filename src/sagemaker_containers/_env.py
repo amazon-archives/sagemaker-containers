@@ -557,11 +557,6 @@ class TrainingEnv(_Env):
 
         self._network_interface_name = resource_config.get('network_interface_name', 'eth0')
 
-        logger.info('RESOURCECONFIG================================================')
-        logger.info(resource_config)
-        logger.info('RESOURCECONFIG================================================')
-
-
         self._hyperparameters = split_result.excluded
         self._additional_framework_parameters = additional_framework_parameters
         self._resource_config = resource_config

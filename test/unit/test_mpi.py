@@ -39,9 +39,15 @@ class MockSSHClient(MagicMock):
 
 
 @patch('paramiko.SSHClient', new_callable=MockSSHClient)
+@patch('psutil.wait_procs')
+@patch('psutil.process_iter')
 @patch('paramiko.AutoAddPolicy')
 @patch('subprocess.Popen')
-def test_mpi_worker_run(popen, policy, ssh_client):
+def test_mpi_worker_run(popen, policy, process_iter, wait_procs, ssh_client):
+
+    process = MagicMock(info={'name': 'orted'})
+    process_iter.side_effect = lambda attrs: [process]
+
     worker = _mpi.WorkerRunner(user_entry_point='train.sh',
                                args=['-v', '--lr', '35'],
                                env_vars={'LD_CONFIG_PATH': '/etc/ld'},
@@ -53,6 +59,7 @@ def test_mpi_worker_run(popen, policy, ssh_client):
     ssh_client().set_missing_host_key_policy.assert_called_with(policy())
     ssh_client().connect.assert_called_with('algo-1', port=22)
     ssh_client().close.assert_called()
+    wait_procs.assert_called_with([process])
 
     popen.assert_called_with(['/usr/sbin/sshd', '-D'])
 
@@ -96,25 +103,24 @@ def test_mpi_master_run(training_env, popen, policy, ssh_client):
     popen.assert_called_with([
         'mpirun',
         '--host', 'algo-1:2,algo-2:2',
-        '-np', '4',
-        '--allow-run-as-root',
+        '-np', '4', '--allow-run-as-root',
         '--display-map',
         '--tag-output',
         '-mca', 'btl_tcp_if_include', 'ethw3',
         '-mca', 'oob_tcp_if_include', 'ethw3',
         '-mca', 'plm_rsh_no_tree_spawn', '1',
+        '-bind-to', 'socket', '-map-by', 'slot',
+        '-mca', 'pml', 'ob1',
+        '-mca', 'btl', '^openib',
         '-mca', 'orte_abort_on_non_zero_status', '1',
+        '-mca', 'btl_tcp_if_exclude', 'lo,docker0',
+        '-x', 'NCCL_MIN_NRINGS=4',
         '-x', 'NCCL_SOCKET_IFNAME=ethw3',
         '-x', 'NCCL_DEBUG=INFO',
         '-x', 'LD_LIBRARY_PATH',
-        '-x',
-        'PATH',
+        '-x', 'PATH',
         '-x', 'LD_PRELOAD=%s' % inspect.getfile(libchangehostname),
-        '-v',
-        '--lr', '35',
-        '-x', 'LD_CONFIG_PATH',
-        '/bin/sh', '-c',
-        './train.sh -v --lr 35'],
+        '-v', '--lr', '35', '-x', 'LD_CONFIG_PATH', '/bin/sh', '-c', './train.sh -v --lr 35'],
         cwd=_env.code_dir,
         env=os.environ, stderr=None)
 

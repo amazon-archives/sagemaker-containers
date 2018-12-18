@@ -16,15 +16,14 @@ import errno
 import importlib
 import os
 import shlex
-import socket
 import subprocess
 
-from mock import patch
 import numpy as np
 import pytest
 
 import sagemaker_containers
-from sagemaker_containers.beta.framework import entry_point, env, errors, functions, modules, trainer
+from sagemaker_containers.beta.framework import (entry_point, env, errors,
+                                                 functions, modules, trainer)
 import test
 from test import fake_ml_framework
 
