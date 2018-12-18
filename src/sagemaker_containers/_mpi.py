@@ -25,7 +25,6 @@ import psutil
 from sagemaker_containers import _logging, _process, _timeout
 
 logger = _logging.get_logger()
-logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 
 class WorkerRunner(_process.Runner):
@@ -43,7 +42,7 @@ class WorkerRunner(_process.Runner):
 
         if wait:
             _wait_orted_process_to_finish()
-            self._wait_master_to_finish()
+            time.sleep(30)
 
     def _wait_master_to_start(self):  # type: () -> None
         while not _can_connect(self._master_hostname):
