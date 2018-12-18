@@ -555,8 +555,12 @@ class TrainingEnv(_Env):
 
         self._hosts = hosts
 
-        self._network_interface_name = sagemaker_hyperparameters.get(
-            _params.SAGEMAKER_NETWORK_INTERFACE_NAME, 'ethwe')
+        self._network_interface_name = resource_config.get('network_interface_name', 'eth0')
+
+        logger.info('RESOURCECONFIG================================================')
+        logger.info(resource_config)
+        logger.info('RESOURCECONFIG================================================')
+
 
         self._hyperparameters = split_result.excluded
         self._additional_framework_parameters = additional_framework_parameters
