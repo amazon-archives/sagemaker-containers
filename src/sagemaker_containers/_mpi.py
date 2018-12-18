@@ -35,15 +35,19 @@ class WorkerRunner(_process.Runner):
         self._master_hostname = str(master_hostname)
 
     def run(self, wait=True, capture_error=False):  # type: (bool, bool) -> None
-        logger.info('Starting MPI run as worker node')
+        logger.info('Starting MPI run as worker node.')
         if wait:
+            logger.info('Waiting for MPI Master to create SSH daemon.')
             self._wait_master_to_start()
+        logger.info('MPI Master online, creating SSH daemon.')
 
         _start_sshd_daemon()
 
         if wait:
+            logger.info('Waiting for MPI process to finish.')
             _wait_orted_process_to_finish()
             time.sleep(30)
+        logger.info('MPI process finished.')
 
     def _wait_master_to_start(self):  # type: () -> None
         while not _can_connect(self._master_hostname):
@@ -86,10 +90,15 @@ class MasterRunner(_process.Runner):
         self.timeout_in_seconds = timeout_in_seconds
 
     def _setup(self):  # type: () -> None
+        logger.info('Starting MPI run as worker node.')
+        logger.info('Creating SSH daemon.')
         _start_sshd_daemon()
+
         self._wait_for_workers()
 
     def _wait_for_workers(self):  # type: () -> None
+        logger.info('Waiting for MPI workers to establish their SSH connections')
+
         workers = [host for host in self._hosts if host != self._master_hostname]
         with _timeout.timeout(seconds=self.timeout_in_seconds):
             for host in workers:
