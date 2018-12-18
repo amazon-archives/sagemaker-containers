@@ -202,10 +202,12 @@ def _can_connect(host, port=22):  # type: (str, int) -> bool
         client.connect(host,
                        port=port)
         client.close()
-        logger.debug('Can connect to host %s', host)
+        logger.info('Can connect to host %s', host)
         return True
-    except Exception:
-        logger.debug('Can\'t connect to host %s', host)
+    except Exception as e:
+        logger.info('Cannot connect to host %s', host)
+
+        logger.info('Connection failed with exception: \n %s', str(e))
         return False
 
 
