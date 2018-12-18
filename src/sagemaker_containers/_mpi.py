@@ -138,7 +138,6 @@ class MasterRunner(_process.Runner):
                    '-bind-to', 'socket', '-map-by', 'slot',
                    '-mca', 'pml', 'ob1', '-mca', 'btl', '^openib',
                    '-mca', 'orte_abort_on_non_zero_status', '1',
-                   '-mca', 'btl_tcp_if_exclude', 'lo,docker0',
 
                    '-x', 'NCCL_MIN_NRINGS=4',
                    '-x', 'NCCL_SOCKET_IFNAME=%s' % self._network_interface_name,

@@ -113,7 +113,6 @@ def test_mpi_master_run(training_env, popen, policy, ssh_client):
         '-mca', 'pml', 'ob1',
         '-mca', 'btl', '^openib',
         '-mca', 'orte_abort_on_non_zero_status', '1',
-        '-mca', 'btl_tcp_if_exclude', 'lo,docker0',
         '-x', 'NCCL_MIN_NRINGS=4',
         '-x', 'NCCL_SOCKET_IFNAME=ethw3',
         '-x', 'NCCL_DEBUG=INFO',
