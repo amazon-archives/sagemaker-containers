@@ -64,7 +64,7 @@ def test_check_error(popen):
 @patch('sagemaker_containers._logging.log_script_invocation')
 def test_run_bash(log, popen, entry_point_type_script):
     with pytest.raises(_errors.ExecuteUserScriptError):
-        _process.Runner('launcher.sh', ['--lr', '13'], {}).run()
+        _process.ProcessRunner('launcher.sh', ['--lr', '13'], {}).run()
 
     cmd = ['/bin/sh', '-c', './launcher.sh --lr 13']
     popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ, stderr=None)
@@ -77,7 +77,7 @@ def test_run_python(log, popen, entry_point_type_script):
     popen().communicate.return_value = (None, 0)
 
     with pytest.raises(_errors.ExecuteUserScriptError):
-        _process.Runner('launcher.py', ['--lr', '13'], {}).run(capture_error=True)
+        _process.ProcessRunner('launcher.py', ['--lr', '13'], {}).run(capture_error=True)
 
     cmd = [sys.executable, 'launcher.py', '--lr', '13']
     popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ,
@@ -89,7 +89,7 @@ def test_run_python(log, popen, entry_point_type_script):
 @patch('sagemaker_containers._logging.log_script_invocation')
 def test_run_module(log, popen, entry_point_type_module):
     with pytest.raises(_errors.ExecuteUserScriptError):
-        _process.Runner('module.py', ['--lr', '13'], {}).run()
+        _process.ProcessRunner('module.py', ['--lr', '13'], {}).run()
 
     cmd = [sys.executable, '-m', 'module', '--lr', '13']
     popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ,
@@ -100,7 +100,7 @@ def test_run_module(log, popen, entry_point_type_module):
 @patch('sagemaker_containers.training_env', lambda: {})
 def test_run_error():
     with pytest.raises(_errors.ExecuteUserScriptError) as e:
-        _process.Runner('wrong module', [], {}).run()
+        _process.ProcessRunner('wrong module', [], {}).run()
 
     message = str(e.value)
     assert 'ExecuteUserScriptError:' in message

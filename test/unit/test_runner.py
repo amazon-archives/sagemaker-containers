@@ -18,7 +18,7 @@ import pytest
 from sagemaker_containers import _mpi, _process, _runner
 
 
-@pytest.mark.parametrize('runner_class', [_process.Runner, _mpi.MasterRunner, _mpi.WorkerRunner])
+@pytest.mark.parametrize('runner_class', [_process.ProcessRunner, _mpi.MasterRunner, _mpi.WorkerRunner])
 def test_get_runner_returns_runnner_itself(runner_class):
     runner = MagicMock(spec=runner_class)
 
@@ -29,7 +29,7 @@ def test_get_runner_returns_runnner_itself(runner_class):
 def test_get_runner_by_process_returns_runnner(training_env):
     runner = _runner.get(_runner.ProcessRunnerType)
 
-    assert isinstance(runner, _process.Runner)
+    assert isinstance(runner, _process.ProcessRunner)
     training_env().to_cmd_args.assert_called()
     training_env().to_env_vars.assert_called()
 

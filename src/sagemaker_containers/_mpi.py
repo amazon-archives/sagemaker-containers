@@ -28,13 +28,21 @@ logger = _logging.get_logger()
 logging.getLogger("paramiko").setLevel(logging.INFO)
 
 
-class WorkerRunner(_process.Runner):
+class WorkerRunner(_process.ProcessRunner):
+    """Runner responsible prepare MPI training and wait for MPI master execution
+    """
 
     def __init__(self, user_entry_point, args, env_vars, master_hostname):
         super(WorkerRunner, self).__init__(user_entry_point, args, env_vars)
         self._master_hostname = str(master_hostname)
 
     def run(self, wait=True, capture_error=False):  # type: (bool, bool) -> None
+        """The WorkerRunner proceeds as following:
+
+        - wait for the MPI Master to create its SSH daemon
+        - start its SSH daemon
+        - monitor the MPI orted process and wait it to finish the MPI execution
+        """
         logger.info('Starting MPI run as worker node.')
         if wait:
             logger.info('Waiting for MPI Master to create SSH daemon.')
@@ -73,7 +81,9 @@ def _orted_process():
         time.sleep(1)
 
 
-class MasterRunner(_process.Runner):
+class MasterRunner(_process.ProcessRunner):
+    """Responsible to prepare MPI distributed training and syncronize work with the Workers.
+    """
 
     def __init__(self, user_entry_point, args, env_vars, master_hostname, hosts, process_per_host,
                  custom_mpi_options, network_interface_name, interval=1,
@@ -124,6 +134,7 @@ class MasterRunner(_process.Runner):
 
         logger.info("Network interface name: %s" % self._network_interface_name)
 
+        # TODO(mvs): explain MPI setttings
         command = ['mpirun',
                    '--host', ','.join(host_list),
                    '-np', str(num_processes),

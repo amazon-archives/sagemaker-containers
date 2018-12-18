@@ -60,7 +60,9 @@ def python_executable():
     return sys.executable
 
 
-class Runner(object):
+class ProcessRunner(object):
+    """Responsible to execute the user entrypoint whithin a process.
+    """
 
     def __init__(self, user_entry_point, args, env_vars):
         # type: (str, List[str], Dict[str, str]) -> None

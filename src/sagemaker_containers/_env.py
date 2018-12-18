@@ -583,7 +583,7 @@ class TrainingEnv(_Env):
         self._output_dir = output_dir
         self._job_name = os.environ.get(_params.TRAINING_JOB_ENV.upper(), None)
 
-        self._master_hostname = sorted(list(hosts))[0]
+        self._master_hostname = list(hosts)[0]
         self._is_master = current_host == self._master_hostname
 
     @property

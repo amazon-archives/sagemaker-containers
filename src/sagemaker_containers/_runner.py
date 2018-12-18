@@ -28,7 +28,7 @@ MPIRunnerType = RunnerType.MPI
 
 
 def get(identifier):  # type: (RunnerType) -> _process.Runner
-    if isinstance(identifier, _process.Runner):
+    if isinstance(identifier, _process.ProcessRunner):
         return identifier
     else:
         return _get_by_runner_type(identifier)
@@ -55,8 +55,8 @@ def _get_by_runner_type(identifier):
                                  env.to_env_vars(),
                                  env.master_hostname)
     elif identifier is RunnerType.Process:
-        return _process.Runner(env.user_entry_point,
-                               env.to_cmd_args(),
-                               env.to_env_vars())
+        return _process.ProcessRunner(env.user_entry_point,
+                                      env.to_cmd_args(),
+                                      env.to_env_vars())
     else:
         raise ValueError('Invalid identifier %s' % identifier)

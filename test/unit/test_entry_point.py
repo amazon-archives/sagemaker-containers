@@ -85,7 +85,7 @@ def test_install_no_python_executable(has_requirements, entry_point_type_module)
 @patch('sagemaker_containers._files.download_and_extract')
 @patch('os.chmod')
 def test_run_module_wait(chmod, download_and_extract):
-    runner = MagicMock(spec=_process.Runner)
+    runner = MagicMock(spec=_process.ProcessRunner)
     entry_point.run(uri='s3://url', user_entry_point='launcher.sh', args=['42'],
                     capture_error=True, runner=runner)
 
@@ -97,7 +97,7 @@ def test_run_module_wait(chmod, download_and_extract):
 @patch('sagemaker_containers._files.download_and_extract')
 @patch('os.chmod')
 def test_run_module_no_wait(chmod, download_and_extract):
-    runner = MagicMock(spec=_process.Runner)
+    runner = MagicMock(spec=_process.ProcessRunner)
 
     module_name = 'default_user_module_name'
     entry_point.run(uri='s3://url', user_entry_point=module_name, args=['42'], wait=False, runner=runner)
