@@ -13,9 +13,8 @@
 from __future__ import absolute_import
 
 import inspect
-import os
 
-from mock import MagicMock, patch
+from mock import MagicMock, patch, ANY
 
 import libchangehostname
 from sagemaker_containers import _env, _mpi
@@ -121,6 +120,6 @@ def test_mpi_master_run(training_env, popen, policy, ssh_client):
         '-x', 'LD_PRELOAD=%s' % inspect.getfile(libchangehostname),
         '-v', '--lr', '35', '-x', 'LD_CONFIG_PATH', '/bin/sh', '-c', './train.sh -v --lr 35'],
         cwd=_env.code_dir,
-        env=os.environ, stderr=None)
+        env=ANY, stderr=None)
 
     assert process == popen()
