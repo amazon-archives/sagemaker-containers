@@ -16,7 +16,7 @@ import shutil
 import subprocess
 
 import pytest
-from sagemaker.tensorflow import TensorFlow
+from sagemaker.estimator import Framework
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,24 +25,27 @@ root_dir = os.path.realpath(os.path.join(dir_path, '..', '..', '..'))
 source_dir = os.path.realpath(os.path.join(dir_path, '..', '..', 'resources', 'openmpi'))
 
 
+class CustomEstimator(Framework):
+
+    def create_model(self, **kwargs):
+        raise NotImplementedError('This methos is not supported.')
+
+
 @pytest.mark.skip(reason="waiting for local mode fix on  "
                          "https://github.com/aws/sagemaker-python-sdk/pull/559")
-@pytest.mark.parametrize('py_version', ['py3'])
-def test_mpi(py_version, tmpdir):
+def test_mpi(tmpdir):
 
-    estimator = TensorFlow(entry_point='launcher.sh',
-                           image_name=build_mpi_image(tmpdir),
-                           role='SageMakerRole',
-                           train_instance_count=2,
-                           framework_version='1.11',
-                           py_version=py_version,
-                           source_dir=source_dir,
-                           train_instance_type='local',
-                           hyperparameters={
-                               'sagemaker_mpi_enabled': True,
-                               'sagemaker_mpi_custom_mpi_options': '-verbose',
-                               'sagemaker_network_interface_name': 'eth0'
-                           })
+    estimator = CustomEstimator(entry_point='launcher.sh',
+                                image_name=build_mpi_image(tmpdir),
+                                role='SageMakerRole',
+                                train_instance_count=2,
+                                source_dir=source_dir,
+                                train_instance_type='local',
+                                hyperparameters={
+                                    'sagemaker_mpi_enabled': True,
+                                    'sagemaker_mpi_custom_mpi_options': '-verbose',
+                                    'sagemaker_network_interface_name': 'eth0'
+                                })
 
     estimator.fit()
 
