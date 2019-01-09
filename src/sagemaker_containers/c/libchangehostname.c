@@ -47,7 +47,8 @@ int libchangehostname(char *name, size_t len)
     int r = jsmn_parse(&parser, json_string, strlen(json_string), token, sizeof(token) / sizeof(token[0]));
 
     /* Loop over all keys of the root object */
-    for (int i = 1; i < r; i++)
+    int i = 1;
+    for (; i < r; i++)
     {
         if (jsoneq(json_string, &token[i], "current_host") == 0)
         {
