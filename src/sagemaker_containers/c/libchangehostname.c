@@ -41,7 +41,6 @@ int libchangehostname(char *name, size_t len)
     json_string[length] = '\0';
 
     fclose(file);
-    free (json_string);
 
     jsmn_parser parser;
     jsmntok_t token[1024];
@@ -74,10 +73,12 @@ int libchangehostname(char *name, size_t len)
 
             name[len] = "\0";
 
+            free (json_string);
             return 0;
         }
     }
 
+    free (json_string);
     return 1;
 }
 
