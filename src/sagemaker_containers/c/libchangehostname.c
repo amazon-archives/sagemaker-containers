@@ -45,10 +45,6 @@ int libchangehostname(char *name, size_t len)
     jsmn_parser parser;
     jsmntok_t token[1024];
 
-    printf("===============================");
-    printf("JSON content \n [%s]", json_string);
-    printf("===============================");
-
 
     jsmn_init(&parser);
     r = jsmn_parse(&parser, json_string, strlen(json_string), token, sizeof(token) / sizeof(token[0]));
@@ -71,10 +67,6 @@ int libchangehostname(char *name, size_t len)
     {
         if (jsoneq(json_string, &token[i], "current_host") == 0)
         {
-			/* We may use strndup() to fetch string value */
-			printf("- current_host: %.*s\n", token[i+1].end - token[i+1].start,
-					json_string + token[i+1].start);
-
             const char *val = strndup(json_string + token[i + 1].start, token[i + 1].end - token[i + 1].start);
 
             strncpy(name, val, len);
