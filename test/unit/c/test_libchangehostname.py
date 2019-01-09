@@ -37,6 +37,7 @@ def opt_ml_input_config():
     finally:
         shutil.rmtree(OPT_ML)
 
+
 @pytest.mark.parametrize('content,value', [
     [{'channel': 'training', 'current_host': 'algo-5', 'File': 'pipe'}, 'algo-5'],
     [{'current_host': 'algo-1-thse'}, 'algo-1-thse']])
