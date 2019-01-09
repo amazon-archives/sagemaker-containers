@@ -18,7 +18,7 @@
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
 {
-    if (tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
+    if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
         strncmp(json + tok->start, s, tok->end - tok->start) == 0)
     {
         return 0;
@@ -36,7 +36,7 @@ int libchangehostname(char *name, size_t len)
     long length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char * json_string = malloc(length);
+    char *json_string = malloc(length);
     fread(json_string, 1, length, file);
     json_string[length] = '\0';
 
