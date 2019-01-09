@@ -14,83 +14,62 @@
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include "include/jsmn.h"
 #include "jsmn.h"
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
-		return 0;
-	}
-	return -1;
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s)
+{
+    if (tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
+        strncmp(json + tok->start, s, tok->end - tok->start) == 0)
+    {
+        return 0;
+    }
+    return -1;
 }
 
 int libchangehostname(char *name, size_t len)
 {
-  char *buffer = 0;
-  long length;
-  	int i;
-	int r;
+    FILE *file = fopen("/opt/ml/input/config/resourceconfig.json", "r");
 
+    fseek(file, 0, SEEK_END);
 
-  FILE *f = fopen("/opt/ml/input/config/resourceconfig.json", "r");
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-  if (f) {
-   fseek (f, 0, SEEK_END);
-   length = ftell (f);
-   fseek (f, 0, SEEK_SET);
-   buffer = malloc (length);
-   if (buffer) {
-    fread (buffer, 1, length, f);
-   }
-   fclose (f);
-  }
+    char * json_string = malloc(length);
+    fread(json_string, 1, length, file);
 
-  if (buffer) {
-      // start to process your data / extract strings here...
-    printf("===============================");
-    printf("JSON content \n %s", buffer);
-    printf("===============================");
+    fclose(file);
 
-  	jsmn_parser p;
-	jsmntok_t t[1024]; /* We expect no more than 128 tokens */
+    jsmn_parser parser;
+    jsmntok_t token[1024];
 
-	jsmn_init(&p);
-	r = jsmn_parse(&p, buffer, strlen(buffer), t, sizeof(t)/sizeof(t[0]));
-	if (r < 0) {
-		printf("Failed to parse JSON: %d\n", r);
-		return 1;
-	}
+    jsmn_init(&parser);
+    int r = jsmn_parse(&parser, json_string, strlen(json_string), token, sizeof(token) / sizeof(token[0]));
 
-	/* Assume the top-level element is an object */
-	if (r < 1 || t[0].type != JSMN_OBJECT) {
-		printf("Object expected\n");
-		return 1;
-	}
+    /* Loop over all keys of the root object */
+    for (int i = 1; i < r; i++)
+    {
+        if (jsoneq(json_string, &token[i], "current_host") == 0)
+        {
 
+            const char *val = strndup(json_string + token[i + 1].start, token[i + 1].end - token[i + 1].start);
 
-		/* Loop over all keys of the root object */
-	for (i = 1; i < r; i++) {
-		if (jsoneq(buffer, &t[i], "current_host") == 0) {
-			/* We may use strndup() to fetch string value */
-			printf("- current_host: %.*s\n", t[i+1].end - t[i+1].start,
-					buffer + t[i+1].start);
+            strncpy(name, val, len);
 
-            len = t[i+1].end - t[i+1].start;
-            name = strndup(buffer, len);
             return 0;
-		}
-	}
-  }
-  return 1;
+        }
+    }
+
+    return 1;
 }
 
-
-static PyObject* libchangehostname_call(PyObject* self, PyObject* args) {
+static PyObject *libchangehostname_call(PyObject *self, PyObject *args)
+{
     long unsigned command;
     char name[40];
 
-    if (!PyArg_ParseTuple(args, "k", &command)) {
+    if (!PyArg_ParseTuple(args, "k", &command))
+    {
         return NULL;
     }
 
@@ -105,7 +84,7 @@ static PyMethodDef LibchangehostnameMethods[] = {
         libchangehostname_call,
         METH_VARARGS,
     },
-    {NULL, NULL, 0, NULL},  // sentinel
+    {NULL, NULL, 0, NULL}, // sentinel
 };
 
 #if PY_MAJOR_VERSION >= 3
@@ -117,12 +96,14 @@ static PyModuleDef libchangehostnamemodule = {
     LibchangehostnameMethods,
 };
 
-PyMODINIT_FUNC PyInit_libchangehostname() {
+PyMODINIT_FUNC PyInit_libchangehostname()
+{
     return PyModule_Create(&libchangehostnamemodule);
 }
 #else
-PyMODINIT_FUNC initlibchangehostname() {
-    PyObject* module;
+PyMODINIT_FUNC initlibchangehostname()
+{
+    PyObject *module;
 
     module = Py_InitModule3(
         "libchangehostname", LibchangehostnameMethods, "Returns the value of $SM_CURRENT_HOST");

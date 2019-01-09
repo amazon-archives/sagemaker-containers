@@ -12,27 +12,42 @@
 # language governing permissions and limitations under the License.
 # import json
 # import os
+import json
+import os
+import shutil
 import sys
 
 import pytest
 
+import libchangehostname
 from sagemaker_containers import _errors, _process
 
-#
-# def test_libchangehostname_with_env_set():
-#     # if os.path.exists("/opt/ml/input/config/"):
-#     #     os.removedirs("/opt/ml/input/config/")
-#
-#     # os.makedirs("/opt/ml/input/config")
-#
-#     with open("/opt/ml/input/config/resourceconfig.json", 'w') as f:
-#         json.dump({'current_host': 'algo-5'}, f)
-#
-#     py_cmd = "import libchangehostname\nassert libchangehostname.call(30) == 'algo-5'"
-#     _process.check_error([sys.executable, '-c', py_cmd], _errors.ExecuteUserScriptError)
+OPT_ML = "/opt/ml"
+INPUT_CONFIG = "/opt/ml/input/config/"
 
 
-def test_libchangehostname_with_env_not_set():
+@pytest.fixture()
+def opt_ml_input_config():
+    if os.path.exists(OPT_ML):
+        shutil.rmtree(OPT_ML)
+
+    try:
+        os.makedirs(INPUT_CONFIG)
+
+        yield INPUT_CONFIG
+
+    finally:
+        shutil.rmtree(OPT_ML)
+
+
+def test_libchangehostname_with_env_set(opt_ml_input_config):
+    with open("/opt/ml/input/config/resourceconfig.json", 'w') as f:
+        json.dump({'current_host': 'algo-5'}, f)
+
+    assert libchangehostname.call(30) == 'algo-5'
+
+
+def test_libchangehostname_with_env_not_set(opt_ml_input_config):
     py_cmd = "import libchangehostname\nassert libchangehostname.call(30) == 'algo-9'"
 
     with pytest.raises(_errors.ExecuteUserScriptError):
