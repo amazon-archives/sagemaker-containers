@@ -37,12 +37,14 @@ def opt_ml_input_config():
     finally:
         shutil.rmtree(OPT_ML)
 
-
-def test_libchangehostname_with_env_set(opt_ml_input_config):
+@pytest.mark.parametrize('content,value', [
+    [{'channel': 'training', 'current_host': 'algo-5', 'File': 'pipe'}, 'algo-5'],
+    [{'current_host': 'algo-1-thse'}, 'algo-1-thse']])
+def test_libchangehostname_resource_config_set(content, value, opt_ml_input_config):
     with open("/opt/ml/input/config/resourceconfig.json", 'w') as f:
-        json.dump({'current_host': 'algo-5'}, f)
+        json.dump(content, f)
 
-    assert libchangehostname.call(30) == 'algo-5'
+    assert libchangehostname.call(30) == value
 
 
 def test_libchangehostname_with_env_not_set(opt_ml_input_config):
