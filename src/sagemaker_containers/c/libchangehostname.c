@@ -12,15 +12,77 @@
 // language governing permissions and limitations under the License.
 
 #include <Python.h>
+#include <stdio.h>
 #include <stdlib.h>
+//#include "include/jsmn.h"
+#include "jsmn.h"
 
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+		return 0;
+	}
+	return -1;
+}
 
 int libchangehostname(char *name, size_t len)
 {
-  const char *val = getenv("SM_CURRENT_HOST");
+  char *buffer = 0;
+  long length;
+  	int i;
+	int r;
 
-  strncpy(name, val, len);
-  return 0;
+
+  FILE *f = fopen("/opt/ml/input/config/resourceconfig.json", "r");
+
+  if (f) {
+   fseek (f, 0, SEEK_END);
+   length = ftell (f);
+   fseek (f, 0, SEEK_SET);
+   buffer = malloc (length);
+   if (buffer) {
+    fread (buffer, 1, length, f);
+   }
+   fclose (f);
+  }
+
+  if (buffer) {
+      // start to process your data / extract strings here...
+    printf("===============================");
+    printf("JSON content \n %s", buffer);
+    printf("===============================");
+
+  	jsmn_parser p;
+	jsmntok_t t[1024]; /* We expect no more than 128 tokens */
+
+	jsmn_init(&p);
+	r = jsmn_parse(&p, buffer, strlen(buffer), t, sizeof(t)/sizeof(t[0]));
+	if (r < 0) {
+		printf("Failed to parse JSON: %d\n", r);
+		return 1;
+	}
+
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) {
+		printf("Object expected\n");
+		return 1;
+	}
+
+
+		/* Loop over all keys of the root object */
+	for (i = 1; i < r; i++) {
+		if (jsoneq(buffer, &t[i], "current_host") == 0) {
+			/* We may use strndup() to fetch string value */
+			printf("- current_host: %.*s\n", t[i+1].end - t[i+1].start,
+					buffer + t[i+1].start);
+
+            len = t[i+1].end - t[i+1].start;
+            name = strndup(buffer, len);
+            return 0;
+		}
+	}
+  }
+  return 1;
 }
 
 
