@@ -38,6 +38,7 @@ int libchangehostname(char *name, size_t len)
 
     char * json_string = malloc(length);
     fread(json_string, 1, length, file);
+    json_string[length] = '\0';
 
     fclose(file);
 
@@ -45,7 +46,7 @@ int libchangehostname(char *name, size_t len)
     jsmntok_t token[1024];
 
     printf("===============================");
-    printf("JSON content \n %s", json_string);
+    printf("JSON content \n [%s]", json_string);
     printf("===============================");
 
 
@@ -77,6 +78,8 @@ int libchangehostname(char *name, size_t len)
             const char *val = strndup(json_string + token[i + 1].start, token[i + 1].end - token[i + 1].start);
 
             strncpy(name, val, len);
+
+            name[len] = "\0";
 
             return 0;
         }
