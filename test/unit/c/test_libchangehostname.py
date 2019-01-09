@@ -44,7 +44,7 @@ def test_libchangehostname_with_env_set(opt_ml_input_config):
     with open("/opt/ml/input/config/resourceconfig.json", 'w') as f:
         json.dump({'current_host': 'algo-5'}, f)
 
-    assert libchangehostname.call(30).decode('utf-8') == 'algo-5'
+    assert libchangehostname.call(30) == 'algo-5'
 
 
 def test_libchangehostname_with_env_not_set(opt_ml_input_config):
