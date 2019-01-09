@@ -36,7 +36,7 @@ int libchangehostname(char *name, size_t len)
     long length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char *json_string = malloc(length +1);
+    char *json_string = malloc(length + 1);
     fread(json_string, 1, length, file);
     json_string[length] = '\0';
 
@@ -73,12 +73,12 @@ int libchangehostname(char *name, size_t len)
 
             name[len] = "\0";
 
-            free (json_string);
+            free(json_string);
             return 0;
         }
     }
 
-    free (json_string);
+    free(json_string);
     return 1;
 }
 
