@@ -36,11 +36,12 @@ int libchangehostname(char *name, size_t len)
     long length = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    char *json_string = malloc(length);
+    char *json_string = malloc(length +1);
     fread(json_string, 1, length, file);
     json_string[length] = '\0';
 
     fclose(file);
+    free (json_string);
 
     jsmn_parser parser;
     jsmntok_t token[1024];
@@ -62,8 +63,8 @@ int libchangehostname(char *name, size_t len)
 	}
 
     /* Loop over all keys of the root object */
-    int i = 1;
-    for (; i < r; i++)
+    int i;
+    for (i = 1; i < r; i++)
     {
         if (jsoneq(json_string, &token[i], "current_host") == 0)
         {
