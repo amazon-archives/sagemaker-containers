@@ -110,7 +110,7 @@ static PyMethodDef GetHostnameMethods[] = {
 static PyModuleDef gethostnamemodule = {
     PyModuleDef_HEAD_INIT,
     "gethostname",
-    "Returns the current host defined on resourceconfig.json",
+    "Returns the current host defined in resourceconfig.json",
     -1,
     GetHostnameMethods,
 };
