@@ -71,7 +71,7 @@ int gethostname(char *name, size_t len)
 
             strncpy(name, val, len);
 
-            name[len] = "\0";
+            name[len] = '\0';
 
             free(json_string);
             return 0;
