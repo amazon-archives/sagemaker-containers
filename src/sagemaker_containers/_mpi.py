@@ -21,7 +21,7 @@ from typing import Any, List, Tuple  # noqa ignore=F401 imported but unused
 import paramiko
 import psutil
 
-import libchangehostname
+import gethostname
 from sagemaker_containers import _logging, _process, _timeout
 
 logger = _logging.get_logger()
