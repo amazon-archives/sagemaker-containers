@@ -156,7 +156,7 @@ class MasterRunner(_process.ProcessRunner):
                    '-x', 'NCCL_DEBUG=%s' % overridden_known_options.NCCL_DEBUG,
                    '-x', 'LD_LIBRARY_PATH',
                    '-x', 'PATH',
-                   '-x', 'LD_PRELOAD=%s' % inspect.getfile(libchangehostname),
+                   '-x', 'LD_PRELOAD=%s' % inspect.getfile(gethostname),
 
                    ]
 
