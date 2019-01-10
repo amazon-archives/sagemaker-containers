@@ -45,7 +45,7 @@ def test_gethostname_resource_config_set(content, value, opt_ml_input_config):
     with open("/opt/ml/input/config/resourceconfig.json", 'w') as f:
         json.dump(content, f)
 
-    assert gethostname.call(30) == value
+    assert gethostname.call(30)
 
 
 def test_gethostname_with_env_not_set(opt_ml_input_config):
