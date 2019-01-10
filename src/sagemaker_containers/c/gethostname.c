@@ -125,6 +125,6 @@ PyMODINIT_FUNC initgethostname()
     PyObject *module;
 
     module = Py_InitModule3(
-        "gethostname", GetHostnameMethods, "Returns the current host defined on resourceconfig.json");
+        "gethostname", GetHostnameMethods, "Returns the current host defined in resourceconfig.json");
 }
 #endif

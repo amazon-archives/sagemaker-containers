@@ -5,7 +5,7 @@ CHANGELOG
 2.4.2
 =====
 
-* bug-fix: renamed libchangehostname to gethostname to match POSIX function name
+* bug-fix: Rename libchangehostname to gethostname to match POSIX function name
 
 2.4.1
 =====
