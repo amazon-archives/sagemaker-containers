@@ -15,7 +15,7 @@ from __future__ import absolute_import
 import importlib
 import os
 import shlex
-from subprocess import Popen
+import subprocess
 import sys
 import tarfile
 import textwrap
