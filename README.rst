@@ -294,8 +294,8 @@ container as a JSON encoded list. Usage example:
    # using it as variable
    channel_names = json.loads(os.environ['SM_CHANNELS']))
 
-SM_CHANNEL_``{channel_name}``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SM_CHANNEL\_ ``{channel_name}``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
@@ -335,8 +335,8 @@ hyperparameters. Example usage:
    hyperparameters = json.loads(os.environ['SM_HPS']))
    # {"batch-size": 256, "learning-rate": 0.0001, "communicator": "pure_nccl"}
 
-SM_HP_``{hyperparameter_name}``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SM_HP\_ ``{hyperparameter_name}``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
