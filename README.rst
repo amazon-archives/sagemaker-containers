@@ -236,7 +236,7 @@ cloudwatch logs. From the example above:
 IMPORTANT ENVIRONMENT VARIABLES
 -------------------------------
 
-These environment variables are those that you’re likely to use when
+These environment variables are those that you're likely to use when
 writing a user script. A full list of environment variables is given
 below.
 
