@@ -294,8 +294,8 @@ container as a JSON encoded list. Usage example:
    # using it as variable
    channel_names = json.loads(os.environ['SM_CHANNELS']))
 
-SM_CHANNEL\_\ ``{channel_name}``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SM_CHANNEL_``{channel_name}``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
@@ -335,8 +335,8 @@ hyperparameters. Example usage:
    hyperparameters = json.loads(os.environ['SM_HPS']))
    # {"batch-size": 256, "learning-rate": 0.0001, "communicator": "pure_nccl"}
 
-SM_HP\_\ ``{hyperparameter_name}``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SM_HP_``{hyperparameter_name}``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
@@ -478,8 +478,8 @@ SM_INPUT_DIR
 
    SM_INPUT_DIR=/opt/ml/input/
 
-The path of the input directory, e.g. \ ``/opt/ml/input/`` The
-input_dir, e.g. \ ``/opt/ml/input/``, is the directory where SageMaker
+The path of the input directory, e.g. ``/opt/ml/input/`` The
+input_dir, e.g. ``/opt/ml/input/``, is the directory where SageMaker
 saves input data and configuration files before and during training.
 
 SM_INPUT_CONFIG_DIR
@@ -489,9 +489,9 @@ SM_INPUT_CONFIG_DIR
 
    SM_INPUT_DIR=/opt/ml/input/config
 
-The path of the input directory, e.g. \ ``/opt/ml/input/config/``. The
+The path of the input directory, e.g. ``/opt/ml/input/config/``. The
 directory where standard SageMaker configuration files are located,
-e.g. \ ``/opt/ml/input/config/``.
+e.g. ``/opt/ml/input/config/``.
 
 SageMaker training creates the following files in this folder when
 training starts: - ``hyperparameters.json``: Amazon SageMaker makes the
@@ -513,7 +513,7 @@ SM_OUTPUT_DATA_DIR
    SM_OUTPUT_DATA_DIR=/opt/ml/output/data/algo-1
 
 The dir to write non-model training artifacts (e.g. evaluation results)
-which will be retained by SageMaker, e.g. \ ``/opt/ml/output/data``.
+which will be retained by SageMaker, e.g. ``/opt/ml/output/data``.
 
 As your algorithm runs in a container, it generates output including the
 status of the training job and model and output artifacts. Your
