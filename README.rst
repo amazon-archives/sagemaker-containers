@@ -35,13 +35,17 @@ Creating the training job
 
 A SageMaker training job created using the `SageMaker Python
 SDK <https://github.com/aws/sagemaker-python-sdk#sagemaker-python-sdk-overview>`__
-```Chainer`` <https://github.com/aws/sagemaker-python-sdk#chainer-sagemaker-estimators>`__,
-```TensorFlow`` <https://github.com/aws/sagemaker-python-sdk#tensorflow-sagemaker-estimators>`__
-and
-```MXNet`` <https://github.com/aws/sagemaker-python-sdk#mxnet-sagemaker-estimators>`__
+|Chainer|_, |TensorFlow|_, and |MXNet|_
 takes an user script containing the model to be trained, the
 Hyperparameters required by the script, and information about the input
 data. For example:
+
+.. |Chainer| replace:: ``Chainer``
+.. _Chainer: https://github.com/aws/sagemaker-python-sdk#chainer-sagemaker-estimators
+.. |TensorFlow| replace:: ``TensorFlow``
+.. _TensorFlow: https://github.com/aws/sagemaker-python-sdk#tensorflow-sagemaker-estimators
+.. |MXNet| replace:: ``MXNet``
+.. _MXNet: https://github.com/aws/sagemaker-python-sdk#mxnet-sagemaker-estimators
 
 .. code:: python
 
@@ -234,7 +238,10 @@ IMPORTANT ENVIRONMENT VARIABLES
 
 These environment variables are those that you’re likely to use when
 writing a user script. A full list of environment variables is given
-below. ### SM_MODEL_DIR
+below.
+
+SM_MODEL_DIR
+~~~~~~~~~~~~
 
 .. code:: json
 
@@ -270,9 +277,9 @@ SM_CHANNELS
 Contains the list of input data channels in the container.
 
 When you run training, you can partition your training data into
-different logical “channels”. Depending on your problem, some common
-channel ideas are: “training”, “testing”, “evaluation” or
-“images’and”labels".
+different logical "channels". Depending on your problem, some common
+channel ideas are: "training", "testing", "evaluation" or
+"images" and "labels".
 
 ``SM_CHANNELS`` includes the name of the available channels in the
 container as a JSON encoded list. Usage example:
@@ -608,6 +615,8 @@ SM_TRAINING_ENV
    }'
 
 Provides the entire training information as a JSON encoded dictionary.
-## License
+
+License
+-------
 
 This library is licensed under the Apache 2.0 License.
