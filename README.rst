@@ -512,7 +512,7 @@ SM_OUTPUT_DATA_DIR
 
    SM_OUTPUT_DATA_DIR=/opt/ml/output/data/algo-1
 
-The dir to write non-model training artifacts (e.g. evaluation results)
+The dir to write non-model training artifacts (e.g. evaluation results)
 which will be retained by SageMaker, e.g. ``/opt/ml/output/data``.
 
 As your algorithm runs in a container, it generates output including the
