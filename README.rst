@@ -365,7 +365,7 @@ example:
    current_host = os.environ['SM_CURRENT_HOST']
 
 SM_HOSTS
-^^^^^^^^
+~~~~~~~~
 
 .. code:: json
 
@@ -384,7 +384,7 @@ JSON encoded list containing all the hosts . Usage example:
    hosts = json.loads(os.environ['SM_HOSTS'])
 
 SM_NUM_GPUS
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 .. code:: json
 
@@ -404,7 +404,7 @@ Environment Variables full specification:
 -----------------------------------------
 
 SM_NUM_CPUS
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 .. code:: json
 
@@ -421,7 +421,7 @@ The number of cpus available in the current container. Usage example:
    num_cpus = int(os.environ['SM_NUM_CPUS'])
 
 SM_LOG_LEVEL
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 .. code:: json
 
