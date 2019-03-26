@@ -1,9 +1,11 @@
 .. _header-n795:
 
-SageMaker Containers Training Workflows
-=======================================
+Training in Detail
+==================
 
-.. _header-n797:
+.. contents::
+
+.. _header-n860:
 
 Training a BYOC container
 -------------------------
