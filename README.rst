@@ -15,7 +15,9 @@ Container <https://github.com/aws/sagemaker-tensorflow-container/tree/script-mod
 `Chainer <https://github.com/aws/sagemaker-chainer-container>`__, and
 `SciKit <https://github.com/aws/sagemaker-scikit-learn-container>`__.
 
-.. _header-n961:
+.. contents::
+
+.. _header-n1174:
 
 Getting Started
 ===============
@@ -222,7 +224,7 @@ below.
 
 .. _header-n999:
 
-SM\ *MODEL*\ DIR
+SM_MODEL_DIR
 ~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -280,7 +282,7 @@ container as a JSON encoded list. Usage example:
 
 .. _header-n1010:
 
-SM\ *CHANNEL* ``{channel_name}``
+SM_CHANNEL_{channel_name}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -325,7 +327,7 @@ hyperparameters. Example usage:
 
 .. _header-n1020:
 
-SM\ *HP* ``{hyperparameter_name}``
+SM_HP_{hyperparameter_name}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -345,7 +347,7 @@ Usage examples:
 
 .. _header-n1026:
 
-SM\ *CURRENT*\ HOST
+SM_CURRENT_HOST
 ~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -386,7 +388,7 @@ JSON encoded list containing all the hosts . Usage example:
 
 .. _header-n1038:
 
-SM\ *NUM*\ GPUS
+SM_NUM_GPUS
 ~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -410,7 +412,7 @@ Environment Variables full specification:
 
 .. _header-n1043:
 
-SM\ *NUM*\ CPUS
+SM_NUM_CPUS
 ~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -429,7 +431,7 @@ The number of cpus available in the current container. Usage example:
 
 .. _header-n1047:
 
-SM\ *LOG*\ LEVEL
+SM_LOG_LEVEL
 ~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -448,7 +450,7 @@ The current log level in the container. Usage example:
 
 .. _header-n1053:
 
-SM\ *NETWORK*\ INTERFACE_NAME
+SM_NETWORK_INTERFACE_NAME
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -468,7 +470,7 @@ example:
 
 .. _header-n1057:
 
-SM\ *USER*\ ARGS
+SM_USER_ARGS
 ~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -479,7 +481,7 @@ JSON encoded list with the script arguments provided for training.
 
 .. _header-n1060:
 
-SM\ *INPUT*\ DIR
+SM_INPUT_DIR
 ~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -492,7 +494,7 @@ data and configuration files before and during training.
 
 .. _header-n1063:
 
-SM\ *INPUT*\ CONFIG_DIR
+SM_INPUT_CONFIG_DIR
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -517,7 +519,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
 
 .. _header-n1068:
 
-SM\ *OUTPUT*\ DATA_DIR
+SM_OUTPUT_DATA_DIR
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -533,7 +535,7 @@ algorithm should write this information to the this directory.
 
 .. _header-n1072:
 
-SM\ *RESOURCE*\ CONFIG
+SM_RESOURCE_CONFIG
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -555,7 +557,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
 
 .. _header-n1081:
 
-SM\ *INPUT*\ DATA_CONFIG
+SM_INPUT_DATA_CONFIG
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
@@ -581,7 +583,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
 
 .. _header-n1085:
 
-SM\ *TRAINING*\ ENV
+SM_TRAINING_ENV
 ~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
