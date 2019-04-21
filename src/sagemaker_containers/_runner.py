@@ -13,6 +13,7 @@
 from __future__ import absolute_import
 
 import enum
+from typing import Dict, List  # noqa ignore=F401 imported but unused
 
 import sagemaker_containers
 from sagemaker_containers import _mpi, _params, _process
