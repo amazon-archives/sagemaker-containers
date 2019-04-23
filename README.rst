@@ -3,17 +3,15 @@
 SageMaker Containers
 ====================
 
-SageMaker Containers gives you tools to create SageMaker-compatible
-containers, and has additional tools for letting you create Frameworks
-(SageMaker-compatible containers that can run arbitrary Python scripts).
+SageMaker Containers gives you tools to create SageMaker-compatible Docker Containers, and has additional tools for letting you create Frameworks
+(SageMaker-compatible Docker Containers that can run arbitrary Python or shell scripts).
 
 Currently, this library is used by the following containers: `TensorFlow
-Script Mode
-Container <https://github.com/aws/sagemaker-tensorflow-container/tree/script-mode>`__,
+Script Mode <https://github.com/aws/sagemaker-tensorflow-container/tree/script-mode>`__,
 `MXNet <https://github.com/aws/sagemaker-mxnet-container>`__,
 `PyTorch <https://github.com/aws/sagemaker-pytorch-container>`__,
 `Chainer <https://github.com/aws/sagemaker-chainer-container>`__, and
-`SciKit <https://github.com/aws/sagemaker-scikit-learn-container>`__.
+`SciKit-learn <https://github.com/aws/sagemaker-scikit-learn-container>`__.
 
 .. contents::
 
@@ -28,7 +26,7 @@ Creating a container using SageMaker Containers
 -----------------------------------------------
 
 Let's suppose we need to train the following training script, named
-**train.py** using TF 2.0 in SageMaker:
+train.py using TF 2.0 in SageMaker:
 
 .. code:: python
 
@@ -59,7 +57,7 @@ Let's suppose we need to train the following training script, named
 The Dockerfile
 ~~~~~~~~~~~~~~
 
-We can create a Dockerfile with our dependencies and defining the
+We then create a Dockerfile with our dependencies and defining the
 program that will be executed in SageMaker:
 
 .. code:: docker
@@ -74,12 +72,14 @@ program that will be executed in SageMaker:
    # Defines train.py as script entrypoint
    ENV SAGEMAKER_PROGRAM train.py
 
+More documentation on how to build a Docker container can be find `here <https://docs.docker.com/get-started/part2/#define-a-container-with-dockerfile>`__
+
 .. _header-n968:
 
 Building the container
 ~~~~~~~~~~~~~~~~~~~~~~
 
-We can build the container like any docker container:
+We then build the Docker image using ```docker build```:
 
 .. code:: shell
 
@@ -106,7 +106,7 @@ to test the container locally:
    estimator.fit()
 
 To see a complete example on how to create a container using SageMaker
-Container, including pushing it to ECR, see `Building your own
+Container, including pushing it to ECR, see the example notebook `Building your own
 container <https://github.com/awslabs/amazon-sagemaker-examples/blob/master/advanced_functionality/tensorflow_bring_your_own/tensorflow_bring_your_own.ipynb>`__.
 
 .. _header-n975:
@@ -114,12 +114,10 @@ container <https://github.com/awslabs/amazon-sagemaker-examples/blob/master/adva
 How a script is executed inside the container
 ---------------------------------------------
 
-The environment variable **SAGEMAKER_PROGRAM** determines the entrypoint
-name that will be executed during training. This script must be located
-under the folder **/opt/ml/model**. The following scripts are supported:
+The training script must be located under the folder ```/opt/ml/model``` and its relative path is defined in the environment variable ```SAGEMAKER_PROGRAM```. The following scripts are supported:
 
 -  **Python scripts**: uses the Python interpreter for any script with
-   **.py** suffix
+   .py suffix
 
 -  **Shell scripts**: uses the Shell interpreter to execute any other
    script
@@ -127,7 +125,9 @@ under the folder **/opt/ml/model**. The following scripts are supported:
 When training starts, the interpreter executes the entrypoint, from the
 example above:
 
-``python train.py``
+.. code:: python
+
+   python train.py
 
 .. _header-n984:
 
@@ -158,7 +158,8 @@ The entry point is responsible for parsing these script arguments. For
 example, in a Python script:
 
 .. code:: python
-
+   import argparse
+   
    if __name__ == '__main__':
      parser = argparse.ArgumentParser()
 
@@ -225,19 +226,20 @@ below.
 .. _header-n999:
 
 SM_MODEL_DIR
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 .. code:: shell
 
    SM_MODEL_DIR=/opt/ml/model
 
 When the training job finishes, the container will be **deleted**
-including its file system except for **/opt/ml/model** and
+including its file system with **exception** of **/opt/ml/model** and
 **/opt/ml/output** folders. Use **/opt/ml/model** to save the model
 checkpoints. These checkpoints will be uploaded to the default S3
 bucket. Usage example:
 
 .. code:: python
+   import os
 
    # using it in argparse
    parser.add_argument('model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
@@ -271,11 +273,11 @@ channel ideas are: "training", "testing", "evaluation" or "images" and
 container as a JSON encoded list. Usage example:
 
 .. code:: python
-
+   import os
    import json
 
    # using it in argparse
-   parser.add_argument('channel_names', type=int, default=json.loads(os.environ['SM_CHANNELS'])))
+   parser.add_argument('channel_names', default=json.loads(os.environ['SM_CHANNELS'])))
 
    # using it as variable
    channel_names = json.loads(os.environ['SM_CHANNELS']))
@@ -283,7 +285,7 @@ container as a JSON encoded list. Usage example:
 .. _header-n1010:
 
 SM_CHANNEL_{channel_name}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -294,7 +296,7 @@ Contains the directory where the channel named ``channel_name`` is
 located in the container. Usage examples:
 
 .. code:: python
-
+   import os
    import json
 
    parser.add_argument('--train', type=str, default=os.environ['SM_CHANNEL_TRAINING'])
@@ -319,7 +321,7 @@ Contains a JSON encoded dictionary with the user provided
 hyperparameters. Example usage:
 
 .. code:: python
-
+   import os
    import json
 
    hyperparameters = json.loads(os.environ['SM_HPS']))
@@ -328,7 +330,7 @@ hyperparameters. Example usage:
 .. _header-n1020:
 
 SM_HP_{hyperparameter_name}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -348,7 +350,7 @@ Usage examples:
 .. _header-n1026:
 
 SM_CURRENT_HOST
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -358,6 +360,7 @@ The name of the current container on the container network. Usage
 example:
 
 .. code:: python
+   import os
 
    # using it in argparse
    parser.add_argument('current_host', type=str, default=os.environ['SM_CURRENT_HOST'])
@@ -377,7 +380,7 @@ SM_HOSTS
 JSON encoded list containing all the hosts . Usage example:
 
 .. code:: python
-
+   import os
    import json
 
    # using it in argparse
@@ -389,7 +392,7 @@ JSON encoded list containing all the hosts . Usage example:
 .. _header-n1038:
 
 SM_NUM_GPUS
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~
 
 .. code:: shell
 
@@ -398,7 +401,8 @@ SM_NUM_GPUS
 The number of gpus available in the current container. Usage example:
 
 .. code:: python
-
+   import os
+   
    # using it in argparse
    parser.add_argument('num_gpus', type=int, default=os.environ['SM_NUM_GPUS'])
 
@@ -407,13 +411,13 @@ The number of gpus available in the current container. Usage example:
 
 .. _header-n1042:
 
-Environment Variables full specification:
------------------------------------------
+List of provided environment variables by SageMaker Containers
+--------------------------------------------------------------
 
 .. _header-n1043:
 
 SM_NUM_CPUS
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~
 
 .. code:: shell
 
@@ -432,7 +436,7 @@ The number of cpus available in the current container. Usage example:
 .. _header-n1047:
 
 SM_LOG_LEVEL
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -441,7 +445,7 @@ SM_LOG_LEVEL
 The current log level in the container. Usage example:
 
 .. code:: python
-
+   import os
    import logging
 
    logger = logging.getLogger(__name__)
@@ -451,7 +455,7 @@ The current log level in the container. Usage example:
 .. _header-n1053:
 
 SM_NETWORK_INTERFACE_NAME
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -471,7 +475,7 @@ example:
 .. _header-n1057:
 
 SM_USER_ARGS
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -482,7 +486,7 @@ JSON encoded list with the script arguments provided for training.
 .. _header-n1060:
 
 SM_INPUT_DIR
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -495,7 +499,7 @@ data and configuration files before and during training.
 .. _header-n1063:
 
 SM_INPUT_CONFIG_DIR
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -506,12 +510,16 @@ directory where standard SageMaker configuration files are located, e.g.
 ``/opt/ml/input/config/``.
 
 SageMaker training creates the following files in this folder when
-training starts: - ``hyperparameters.json``: Amazon SageMaker makes the
-hyperparameters in a CreateTrainingJob request available in this file. -
-``inputdataconfig.json``: You specify data channel information in the
+training starts: 
+
+- ``hyperparameters.json``: Amazon SageMaker makes the
+hyperparameters in a CreateTrainingJob request available in this file. 
+
+- ``inputdataconfig.json``: You specify data channel information in the
 InputDataConfig parameter in a CreateTrainingJob request. Amazon
-SageMaker makes this information available in this file. -
-``resourceconfig.json``: name of the current host and all host
+SageMaker makes this information available in this file. 
+
+- ``resourceconfig.json``: name of the current host and all host
 containers in the training.
 
 More information about this files can be find here:
@@ -520,7 +528,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
 .. _header-n1068:
 
 SM_OUTPUT_DATA_DIR
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -536,7 +544,7 @@ algorithm should write this information to the this directory.
 .. _header-n1072:
 
 SM_RESOURCE_CONFIG
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -558,7 +566,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
 .. _header-n1081:
 
 SM_INPUT_DATA_CONFIG
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
 
@@ -584,7 +592,7 @@ https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.ht
 .. _header-n1085:
 
 SM_TRAINING_ENV
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 .. code:: shell
 
