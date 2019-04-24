@@ -2,13 +2,14 @@
 
 Training in Detail
 ==================
+This document details how to use SageMaker Containers for training. 
 
 .. contents::
 
 .. _header-n860:
 
-Training a BYOC container
--------------------------
+Training a BYOC container using SageMaker Containers
+----------------------------------------------------
 
 In the BYOC scenario, **SAGEMAKER_PROGRAM**, containing the name of the
 entrypoint script located under **/opt/ml/code** folder is the only
@@ -23,8 +24,8 @@ SageMaker invokes the CLI binary
 `train <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/cli/train.py#L17>`__
 when training starts. This binary invokes
 `trainer.train() <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/_trainer.py#L41>`__,
-the function responsible to create the **training environment**,
-**execute the entrypoint** and report results.
+the function responsible for creating the training environment,
+executing the entrypoint, and reporting results.
 
 **Training environment** creation is encapsulated by
 `training_env() <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/__init__.py#L16>`__
@@ -35,8 +36,7 @@ environment relevant to training jobs, including hyperparameters, system
 characteristics, filesystem locations, environment variables and
 configuration settings. It is a read-only snapshot of the container
 environment during training and it doesn't contain any form of state.
-Both framework containers and user scripts can use this class. Example
-on how a script can use training environment:
+Example on how a script can use TrainingEnv:
 
 .. code:: python
 
@@ -119,8 +119,8 @@ Training a Framework container
 `MXNet <https://github.com/aws/sagemaker-mxnet-container>`__,
 `PyTorch <https://github.com/aws/sagemaker-pytorch-container>`__,
 `Chainer <https://github.com/aws/sagemaker-chainer-container>`__, and
-`SciKit <https://github.com/aws/sagemaker-scikit-learn-container>`__ are
-**Framework Containers**. The biggest difference between a **Framework
+`SciKit-Learn <https://github.com/aws/sagemaker-scikit-learn-container>`__ are
+**Framework Containers**. One difference between a **Framework
 Container** and a **BYOC** is while the latter includes the entry point
 under **/opt/ml/code**, the former doesn't include the user entry point
 and needs to download it from S3. The workflow is as follow:
@@ -139,12 +139,12 @@ Integration between SageMaker Python SDK and SageMaker Containers
 
 When the SageMaker Python SDK is used to create a training job with a
 framework containers, it passes special hyperparameters to the training
-job, which are parsed by SageMaker Container and the Framework
-Containers. For example:
+job, which are parsed by SageMaker Container and the framework
+containers. For example:
 
 .. code:: python
 
-   import TensorFlow from SageMaker.tensorflow
+   from sagemaker.tensorflow import TensorFlow
 
    model_dir = 's3://SAGEMAKER-BUCKET/hvd-job-377/model'
 
@@ -154,7 +154,7 @@ Containers. For example:
        'custom_mpi_options': '-x HOROVOD_HIERARCHICAL_ALLREDUCE=1', 
        'processes_per_host': 8}}
 
-   estimator = Tensorflow(entry_point='train_horovod_imagenet.sh',
+   estimator = TensorFlow(entry_point='train_horovod_imagenet.sh',
                           model_dir=model_dir,
                           hyperparameters={'lr': 0.3},
                           distributions=mpi_distribution,
@@ -188,18 +188,18 @@ hyperparameters and invoke the training job as follow:
    boto3.client('sagemaker').create_training_job(HyperParameters=job_hyperparameters, ...)
 
 As you can see in the example, in addition to user provided
-hyperparameters, the python SDK includes hyperparameters that will be
+hyperparameters, the SageMaker Python SDK includes hyperparameters that will be
 used by SageMaker Containers and or the Framework Container. The most
-important sagemaker hyperparameters for training are:
+important SageMaker hyperparameters for training are:
 
--  **sagemaker_program**: name of the user provided entry point, it is
-   **mandatory** unless environment variable **SAGEMAKER_PROGRAM** is
+-  `sagemaker_program`: name of the user provided entry point, it is
+   **mandatory** unless environment variable `SAGEMAKER_PROGRAM` is
    provided.
 
--  **sagemaker\ submit\ directory**: local or S3 URI location of the
+-  `sagemaker\_submit\_directory`: local or S3 URI location of the
    source.tar.gz file containing the entry point code. It is
    **mandatory** unless the code is already located under the
-   **/opt/ml/code** folder.
+   `/opt/ml/code` folder.
 
 The complete list of hyperparameters is available
 `here <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/_params.py>`__.
@@ -229,10 +229,10 @@ Creating the Dockerfile
    # set sagemaker_mxnet_container.training.main as framework entrypoint
    ENV SAGEMAKER_TRAINING_MODULE sagemaker_mxnet_container.training:train
 
-In the example above, mxnet and python libraries are already installed
+In the example above, MXNet and Python libraries are already installed
 in the base container. The framework container only needs to install
 SageMaker Containers and the SageMaker MXNet container package. The
-environment variable **SAGEMAKER\ TRAINING\ MODULE** determines that the
+environment variable `SAGEMAKER\_TRAINING\_MODULE` determines that the
 function ``train`` under the module ``training`` of the container
 package is going to be invoked when the container starts.
 
@@ -279,7 +279,7 @@ for distributed training.
                               env.to_cmd_args(),
                               env.to_env_vars()) 
 
-The implementation of **run\ mxnet_process** can be found
+The implementation of `run\_mxnet_process` can be found
 `here <https://github.com/aws/sagemaker-mxnet-container/blob/64c5c8ed68e34fae50b6ac9521a0a28156fa8cff/src/sagemaker_mxnet_container/training.py#L45>`__.
 The example above starts the mxnet **scheduler** in the first instance
 and starts the mxnet **server** in all instances.
