@@ -25,8 +25,9 @@ def run(uri,
         env_vars=None,
         wait=True,
         capture_error=False,
-        runner=_runner.ProcessRunnerType):
-    # type: (str, str, List[str], Dict[str, str], bool, bool, _runner.RunnerType) -> None
+        runner=_runner.ProcessRunnerType,
+        extra_opts=None):
+    # type: (str, str, List[str], Dict[str, str], bool, bool, _runner.RunnerType, Dict[str, str]) -> None
     """Download, prepare and executes a compressed tar file from S3 or provided directory as an user
     entrypoint. Runs the user entry point, passing env_vars as environment variables and args as command
     arguments.
@@ -76,7 +77,7 @@ def run(uri,
 
     _env.write_env_vars(env_vars)
 
-    return _runner.get(runner, user_entry_point, args, env_vars).run(wait, capture_error)
+    return _runner.get(runner, user_entry_point, args, env_vars, extra_opts).run(wait, capture_error)
 
 
 def install(name, dst, capture_error=False):
