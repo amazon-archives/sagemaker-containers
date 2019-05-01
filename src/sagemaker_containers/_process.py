@@ -75,13 +75,13 @@ class ProcessRunner(object):
 
         if entrypoint_type is _entry_point_type.PYTHON_PACKAGE:
             entry_module = self._user_entry_point.replace('.py', '')
-            return self._python_executable() + ['-m', entry_module] + self._args
+            return self._python_command() + ['-m', entry_module] + self._args
         elif entrypoint_type is _entry_point_type.PYTHON_PROGRAM:
-            return self._python_executable() + [self._user_entry_point] + self._args
+            return self._python_command() + [self._user_entry_point] + self._args
         else:
             return ['/bin/sh', '-c', './%s %s' % (self._user_entry_point, ' '.join(self._args))]
 
-    def _python_executable(self):
+    def _python_command(self):
         return [python_executable()]
 
     def _setup(self):

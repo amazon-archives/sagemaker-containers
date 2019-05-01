@@ -174,10 +174,10 @@ class MasterRunner(_process.ProcessRunner):
 
         return command
 
-    def _python_executable(self):
+    def _python_command(self):
         # Use mpi4py to force processes to abort if an uncaught exception occurs.
         # https://docs.chainer.org/en/stable/chainermn/tutorial/tips_faqs.html#mpi-process-hangs-after-an-unhandled-python-exception
-        return super(MasterRunner, self)._python_executable() + ['-m', 'mpi4py']
+        return super(MasterRunner, self)._python_command() + ['-m', 'mpi4py']
 
 
 _SSH_DAEMON_NOT_FOUND_ERROR_MESSAGE = """
