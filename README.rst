@@ -25,6 +25,8 @@ Getting Started
 Creating a container using SageMaker Containers
 -----------------------------------------------
 
+Here we'll demonstrate how to create a Docker image using SageMaker Containers in order to show the simplicity of using this library.
+
 Let's suppose we need to train the following training script, named
 train.py using TF 2.0 in SageMaker:
 
@@ -57,7 +59,7 @@ train.py using TF 2.0 in SageMaker:
 The Dockerfile
 ~~~~~~~~~~~~~~
 
-We then create a Dockerfile with our dependencies and defining the
+We then create a Dockerfile with our dependencies and define the
 program that will be executed in SageMaker:
 
 .. code:: docker
@@ -72,7 +74,7 @@ program that will be executed in SageMaker:
    # Defines train.py as script entrypoint
    ENV SAGEMAKER_PROGRAM train.py
 
-More documentation on how to build a Docker container can be find `here <https://docs.docker.com/get-started/part2/#define-a-container-with-dockerfile>`__
+More documentation on how to build a Docker container can be found `here <https://docs.docker.com/get-started/part2/#define-a-container-with-dockerfile>`__
 
 .. _header-n968:
 
@@ -106,8 +108,7 @@ to test the container locally:
    estimator.fit()
 
 To see a complete example on how to create a container using SageMaker
-Container, including pushing it to ECR, see the example notebook `Building your own
-container <https://github.com/awslabs/amazon-sagemaker-examples/blob/master/advanced_functionality/tensorflow_bring_your_own/tensorflow_bring_your_own.ipynb>`__.
+Container, including pushing it to ECR, see the example notebook `tensorflow_bring_your_own.ipynb  <https://github.com/awslabs/amazon-sagemaker-examples/blob/master/advanced_functionality/tensorflow_bring_your_own/tensorflow_bring_your_own.ipynb>`__.
 
 .. _header-n975:
 
@@ -136,17 +137,11 @@ Mapping hyperparameters to script arguments
 
 Any hyperparameters provided by the training job will be passed by the
 interpreter to the entry point as script arguments. For example the
-training job:
+training job hyperparameters:
 
 .. code:: python
 
-   from sagemaker.chainer import Chainer
-
-   estimator = Chainer(entry_point='user_script.sh',
-                       hyperparameters={'batch-size':256,
-                                        'learning-rate':0.0001,
-                                        'communicator':'pure_nccl'},
-                       ...)
+   {"HyperParameters": {"batch-size": 256, "learning-rate": 0.0001, "communicator": "pure_nccl"}}
 
 Will be executed as:
 
@@ -179,7 +174,7 @@ Reading additional information from the container
 Very often, an entrypoint needs additional information from the
 container that is not available in ``hyperparameters``. SageMaker
 Containers writes this information as **environment variables** that are
-available inside the script. For example, the training job bellow
+available inside the script. For example, the training job below
 includes the channels **training** and **testing**:
 
 .. code:: python
@@ -191,7 +186,7 @@ includes the channels **training** and **testing**:
    estimator.fit({'training': 's3://bucket/path/to/training/data', 
                   'testing': 's3://bucket/path/to/testing/data'})
 
-The environment variable **SM\ CHANNEL\ {channel_name}** provides the
+The environment variable **SM\_CHANNEL\_{channel_name}** provides the
 path were the channel is located:
 
 .. code:: python
