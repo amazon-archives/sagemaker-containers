@@ -228,7 +228,7 @@ SM_MODEL_DIR
    SM_MODEL_DIR=/opt/ml/model
 
 When the training job finishes, the container will be **deleted**
-including its file system with **exception** of **/opt/ml/model** and
+including its file system with **exception** of the **/opt/ml/model** and
 **/opt/ml/output** folders. Use **/opt/ml/model** to save the model
 checkpoints. These checkpoints will be uploaded to the default S3
 bucket. Usage example:
