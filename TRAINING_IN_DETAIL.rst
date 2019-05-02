@@ -1,17 +1,19 @@
 .. _header-n795:
 
-Training in Detail
-==================
-This document details how to use SageMaker Containers for training. 
+Using SageMaker Containers for SageMaker Training
+=================================================
+
+This document discusses in detail how to use SageMaker Containers for training. 
 
 .. contents::
 
 .. _header-n860:
 
-Training a BYOC container using SageMaker Containers
-----------------------------------------------------
 
-In the BYOC scenario, **SAGEMAKER_PROGRAM**, containing the name of the
+Building and training your own algorithm container using SageMaker Containers
+-----------------------------------------------------------------------------
+
+SageMaker Containers makes easier the process to Build your own container (BYOC). In this scenario, **SAGEMAKER_PROGRAM**, containing the name of the
 entrypoint script located under **/opt/ml/code** folder is the only
 environment variable required. Alternatively, a hyperparameter named
 **sagemaker_program** can be used. The workflow to train a BYOC
@@ -61,9 +63,7 @@ Example on how a script can use TrainingEnv:
    #save the model in the end of training
    model.save(os.path.join(model_dir, 'saved_model'))
 
-**Entrypoint execution** is encapsulted by `entrypoint.run(entrypoint,
-env_vars,
-args) <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/entry_point.py#L22>`__,
+**Entrypoint execution** is encapsulted by `entry_point.run(uri, user_entry_point, args, env_vars=None) <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/entry_point.py#L22>`__,
 it prepares and executes the user entry point, passing **env_vars** as
 environment variables and **args** as command arguments. If the entry
 point is:
@@ -79,7 +79,7 @@ Usage example:
 .. code:: python
 
    import sagemaker_containers
-   from sagemaker_containers.beta.framework import entry_point, mapping
+   from sagemaker_containers.beta.framework import entry_point
 
    env = sagemaker_containers.training_env()
    # {'channel-input-dirs': {'training': '/opt/ml/input/training'}, 'model_dir': '/opt/ml/model', ...}
@@ -89,7 +89,7 @@ Usage example:
    # {'batch-size': 128, 'model_dir': '/opt/ml/model'}
 
    # reading hyperparameters as script arguments
-   args = mapping.to_cmd_args(hyperparameters)
+   args = env.to_cmd_args(hyperparameters)
    # ['--batch-size', '128', '--model_dir', '/opt/ml/model']
 
    # reading the training environment as env vars
@@ -123,7 +123,7 @@ Training a Framework container
 **Framework Containers**. One difference between a **Framework
 Container** and a **BYOC** is while the latter includes the entry point
 under **/opt/ml/code**, the former doesn't include the user entry point
-and needs to download it from S3. The workflow is as follow:
+and needs to download it from S3. The workflow is as follows:
 
 .. figure:: framework-containers-workflow.png
    :alt:
@@ -134,8 +134,8 @@ container*.
 
 .. _header-n819:
 
-Integration between SageMaker Python SDK and SageMaker Containers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Integration between the SageMaker Python SDK and SageMaker Containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When the SageMaker Python SDK is used to create a training job with a
 framework containers, it passes special hyperparameters to the training
@@ -187,12 +187,12 @@ hyperparameters and invoke the training job as follow:
 
    boto3.client('sagemaker').create_training_job(HyperParameters=job_hyperparameters, ...)
 
-As you can see in the example, in addition to user provided
+As you can see in the example, in addition to user-provided
 hyperparameters, the SageMaker Python SDK includes hyperparameters that will be
-used by SageMaker Containers and or the Framework Container. The most
+used by SageMaker Containers and or the framework container. The most
 important SageMaker hyperparameters for training are:
 
--  `sagemaker_program`: name of the user provided entry point, it is
+-  `sagemaker_program`: name of the user-provided entry point, it is
    **mandatory** unless environment variable `SAGEMAKER_PROGRAM` is
    provided.
 
@@ -206,11 +206,11 @@ The complete list of hyperparameters is available
 
 .. _header-n831:
 
-How to create a Framework Container for training
+How to create a framework container for training
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A framework container is composed by a collection of Docker files and
-framework specific logic. Let's see the MXNet container as an example:
+A framework container is composed by a Dockerfile and
+framework-specific logic. Let's see the MXNet container as an example:
 
 .. _header-n833:
 
