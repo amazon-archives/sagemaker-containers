@@ -3,15 +3,15 @@
 SageMaker Containers
 ====================
 
-SageMaker Containers gives you tools to create SageMaker-compatible Docker Containers, and has additional tools for letting you create Frameworks
-(SageMaker-compatible Docker Containers that can run arbitrary Python or shell scripts).
+SageMaker Containers gives you tools to create SageMaker-compatible Docker containers, and has additional tools for letting you create Frameworks
+(SageMaker-compatible Docker containers that can run arbitrary Python or shell scripts).
 
 Currently, this library is used by the following containers: `TensorFlow
 Script Mode <https://github.com/aws/sagemaker-tensorflow-container/tree/script-mode>`__,
 `MXNet <https://github.com/aws/sagemaker-mxnet-container>`__,
 `PyTorch <https://github.com/aws/sagemaker-pytorch-container>`__,
 `Chainer <https://github.com/aws/sagemaker-chainer-container>`__, and
-`SciKit-learn <https://github.com/aws/sagemaker-scikit-learn-container>`__.
+`Scikit-learn <https://github.com/aws/sagemaker-scikit-learn-container>`__.
 
 .. contents::
 
@@ -27,8 +27,7 @@ Creating a container using SageMaker Containers
 
 Here we'll demonstrate how to create a Docker image using SageMaker Containers in order to show the simplicity of using this library.
 
-Let's suppose we need to train the following training script, named
-train.py using TF 2.0 in SageMaker:
+Let's suppose we need to train a model with the following training script train.py using TF 2.0 in SageMaker:
 
 .. code:: python
 
@@ -71,7 +70,7 @@ program that will be executed in SageMaker:
    # Copies the training code inside the container
    COPY train.py /opt/ml/code/train.py
 
-   # Defines train.py as script entrypoint
+   # Defines train.py as script entry point
    ENV SAGEMAKER_PROGRAM train.py
 
 More documentation on how to build a Docker container can be found `here <https://docs.docker.com/get-started/part2/#define-a-container-with-dockerfile>`__
@@ -81,7 +80,7 @@ More documentation on how to build a Docker container can be found `here <https:
 Building the container
 ~~~~~~~~~~~~~~~~~~~~~~
 
-We then build the Docker image using ```docker build```:
+We then build the Docker image using ``docker build``:
 
 .. code:: shell
 
@@ -107,7 +106,7 @@ to test the container locally:
 
    estimator.fit()
 
-To see a complete example on how to create a container using SageMaker
+After using Local Mode, we can push the image to ECR and run a SageMaker training job. To see a complete example on how to create a container using SageMaker
 Container, including pushing it to ECR, see the example notebook `tensorflow_bring_your_own.ipynb  <https://github.com/awslabs/amazon-sagemaker-examples/blob/master/advanced_functionality/tensorflow_bring_your_own/tensorflow_bring_your_own.ipynb>`__.
 
 .. _header-n975:
@@ -115,7 +114,7 @@ Container, including pushing it to ECR, see the example notebook `tensorflow_bri
 How a script is executed inside the container
 ---------------------------------------------
 
-The training script must be located under the folder ```/opt/ml/model``` and its relative path is defined in the environment variable ```SAGEMAKER_PROGRAM```. The following scripts are supported:
+The training script must be located under the folder ``/opt/ml/model`` and its relative path is defined in the environment variable ``SAGEMAKER_PROGRAM``. The following scripts are supported:
 
 -  **Python scripts**: uses the Python interpreter for any script with
    .py suffix
@@ -123,7 +122,7 @@ The training script must be located under the folder ```/opt/ml/model``` and its
 -  **Shell scripts**: uses the Shell interpreter to execute any other
    script
 
-When training starts, the interpreter executes the entrypoint, from the
+When training starts, the interpreter executes the entry point, from the
 example above:
 
 .. code:: python
@@ -171,7 +170,7 @@ example, in a Python script:
 Reading additional information from the container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Very often, an entrypoint needs additional information from the
+Very often, an entry point needs additional information from the
 container that is not available in ``hyperparameters``. SageMaker
 Containers writes this information as **environment variables** that are
 available inside the script. For example, the training job below
@@ -186,7 +185,7 @@ includes the channels **training** and **testing**:
    estimator.fit({'training': 's3://bucket/path/to/training/data', 
                   'testing': 's3://bucket/path/to/testing/data'})
 
-The environment variable **SM\_CHANNEL\_{channel_name}** provides the
+The environment variable ``SM\_CHANNEL\_{channel_name}`` provides the
 path were the channel is located:
 
 .. code:: python
@@ -228,8 +227,8 @@ SM_MODEL_DIR
    SM_MODEL_DIR=/opt/ml/model
 
 When the training job finishes, the container will be **deleted**
-including its file system with **exception** of the **/opt/ml/model** and
-**/opt/ml/output** folders. Use **/opt/ml/model** to save the model
+including its file system with **exception** of the ``/opt/ml/model`` and
+``/opt/ml/output`` folders. Use ``/opt/ml/model`` to save the model
 checkpoints. These checkpoints will be uploaded to the default S3
 bucket. Usage example:
 
@@ -507,14 +506,14 @@ directory where standard SageMaker configuration files are located, e.g.
 SageMaker training creates the following files in this folder when
 training starts: 
 
-- ``hyperparameters.json``: Amazon SageMaker makes the
+- `hyperparameters.json`: Amazon SageMaker makes the
 hyperparameters in a CreateTrainingJob request available in this file. 
 
-- ``inputdataconfig.json``: You specify data channel information in the
+- `inputdataconfig.json`: You specify data channel information in the
 InputDataConfig parameter in a CreateTrainingJob request. Amazon
 SageMaker makes this information available in this file. 
 
-- ``resourceconfig.json``: name of the current host and all host
+- `resourceconfig.json`: name of the current host and all host
 containers in the training.
 
 More information about this files can be find here:
@@ -640,4 +639,4 @@ SM_TRAINING_ENV
        }
    }'
 
-Provides the entire training information as a JSON encoded dictionary.
+Provides the entire training information as a JSON-encoded dictionary.

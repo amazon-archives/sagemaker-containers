@@ -13,27 +13,27 @@ This document discusses in detail how to use SageMaker Containers for training.
 Building and training your own algorithm container using SageMaker Containers
 -----------------------------------------------------------------------------
 
-SageMaker Containers makes easier the process to Build your own container (BYOC). In this scenario, **SAGEMAKER_PROGRAM**, containing the name of the
-entrypoint script located under **/opt/ml/code** folder is the only
+SageMaker Containers makes easier the process to Build your own container (BYOC). In this scenario, ``SAGEMAKER_PROGRAM``, containing the name of the
+entry point script located under ``/opt/ml/code`` folder is the only
 environment variable required. Alternatively, a hyperparameter named
-**sagemaker_program** can be used. The workflow to train a BYOC
-container is a follow:
+``sagemaker_program`` can be used. The workflow to train a BYOC
+container is a follows:
 
 .. figure:: byoc-workflow.png
-   :alt: 
+   :alt: byoc training workflow
 
 SageMaker invokes the CLI binary
 `train <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/cli/train.py#L17>`__
 when training starts. This binary invokes
 `trainer.train() <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/_trainer.py#L41>`__,
 the function responsible for creating the training environment,
-executing the entrypoint, and reporting results.
+executing the entry point, and reporting results.
 
 **Training environment** creation is encapsulated by
 `training_env() <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/__init__.py#L16>`__
 function call, this function returns an
 `TrainingEnv <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/_env.py#L413>`__
-object. The **TrainingEnv** provides access to aspects of the training
+object. The ``TrainingEnv`` provides access to aspects of the training
 environment relevant to training jobs, including hyperparameters, system
 characteristics, filesystem locations, environment variables and
 configuration settings. It is a read-only snapshot of the container
@@ -63,13 +63,13 @@ Example on how a script can use TrainingEnv:
    #save the model in the end of training
    model.save(os.path.join(model_dir, 'saved_model'))
 
-**Entrypoint execution** is encapsulted by `entry_point.run(uri, user_entry_point, args, env_vars=None) <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/entry_point.py#L22>`__,
-it prepares and executes the user entry point, passing **env_vars** as
-environment variables and **args** as command arguments. If the entry
+**Entrypoint execution** is encapsulted by `entry_point.run(uri, user_entry_point, args, env_vars) <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/entry_point.py#L22>`__,
+it prepares and executes the user entry point, passing ``env_vars`` as
+environment variables and ``args`` as command arguments. If the entry
 point is:
 
 -  **A Python script:** executes the script as
-   ``ENV_VARS python entrypoint_name ARGS``
+   ``ENV_VARS python entry point_name ARGS``
 
 -  **Any other script:** executes the command as
    ``ENV_VARS /bin/sh -c ./module_name ARGS``
@@ -98,16 +98,16 @@ Usage example:
    #  'SAGEMAKER_CHANNEL_TRAINING':'/opt/ml/input/training',
    #  'MODEL_DIR':'/opt/ml/model', ...}
 
-   # executes user entrypoint named entrypoint.py as follow:
+   # executes user entry point named entry point.py as follow:
    #
    # SAGEMAKER_CHANNELS=training SAGEMAKER_CHANNEL_TRAINING=/opt/ml/input/training \
    # SAGEMAKER_MODEL_DIR=/opt/ml/model python user_script.py --batch-size 128 --model_dir /opt/ml/model
-   entry_point.run('entrypoint.py', args, env_vars)
+   entry_point.run('entry point.py', args, env_vars)
 
-If the entrypoint execution fails, **trainer.train()** will write the
-error message to **/opt/ml/output/failure**.
+If the entry point execution fails, ``trainer.train()`` will write the
+error message to ``/opt/ml/output/failure``.
 
-The entrypoint touches the sucess file under **/opt/ml/success**
+The entry point touches the sucess file under ``/opt/ml/success``
 otherwise.
 
 .. _header-n814:
@@ -119,18 +119,18 @@ Training a Framework container
 `MXNet <https://github.com/aws/sagemaker-mxnet-container>`__,
 `PyTorch <https://github.com/aws/sagemaker-pytorch-container>`__,
 `Chainer <https://github.com/aws/sagemaker-chainer-container>`__, and
-`SciKit-Learn <https://github.com/aws/sagemaker-scikit-learn-container>`__ are
+`Scikit-Learn <https://github.com/aws/sagemaker-scikit-learn-container>`__ are
 **Framework Containers**. One difference between a **Framework
 Container** and a **BYOC** is while the latter includes the entry point
-under **/opt/ml/code**, the former doesn't include the user entry point
+under ``/opt/ml/code``, the former doesn't include the user entry point
 and needs to download it from S3. The workflow is as follows:
 
 .. figure:: framework-containers-workflow.png
-   :alt:
+   :alt: framework containers training workflow
 
-The subsections below will detail the *integration between SageMaker
-Python SDK and SageMaker Containers* and *how to create a framework
-container*.
+The subsections below will detail the integration between SageMaker
+Python SDK and SageMaker Containers and how to create a framework
+container.
 
 .. _header-n819:
 
@@ -192,14 +192,14 @@ hyperparameters, the SageMaker Python SDK includes hyperparameters that will be
 used by SageMaker Containers and or the framework container. The most
 important SageMaker hyperparameters for training are:
 
--  `sagemaker_program`: name of the user-provided entry point, it is
-   **mandatory** unless environment variable `SAGEMAKER_PROGRAM` is
+-  ``sagemaker_program``: name of the user-provided entry point, it is
+   **mandatory** unless environment variable ``SAGEMAKER_PROGRAM`` is
    provided.
 
--  `sagemaker\_submit\_directory`: local or S3 URI location of the
+-  ``sagemaker\_submit\_directory``: local or S3 URI location of the
    source.tar.gz file containing the entry point code. It is
    **mandatory** unless the code is already located under the
-   `/opt/ml/code` folder.
+   ``/opt/ml/code`` folder.
 
 The complete list of hyperparameters is available
 `here <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/_params.py>`__.
@@ -226,13 +226,13 @@ Creating the Dockerfile
    # install SageMaker Containers and SageMaker MXNet Container
    RUN pip install sagemaker-containers sagemaker_mxnet_container
 
-   # set sagemaker_mxnet_container.training.main as framework entrypoint
+   # set sagemaker_mxnet_container.training.main as framework entry point
    ENV SAGEMAKER_TRAINING_MODULE sagemaker_mxnet_container.training:train
 
 In the example above, MXNet and Python libraries are already installed
 in the base container. The framework container only needs to install
 SageMaker Containers and the SageMaker MXNet container package. The
-environment variable `SAGEMAKER\_TRAINING\_MODULE` determines that the
+environment variable ``SAGEMAKER\_TRAINING\_MODULE`` determines that the
 function ``train`` under the module ``training`` of the container
 package is going to be invoked when the container starts.
 
@@ -251,7 +251,7 @@ package is going to be invoked when the container starts.
 
    def train(env):
      env = framework.training_env()
-     framework.entrypoint.run(module_dir,
+     framework.entry point.run(module_dir,
                               user_entry_point,
                               env.to_cmd_args(),
                               env.to_env_vars())
@@ -274,12 +274,12 @@ for distributed training.
      # starts MXNet parameter server in all instances
      _run_mxnet_process('server', env.hosts, ps_port)
 
-     framework.entrypoint.run(module_dir,
+     framework.entry point.run(module_dir,
                               user_entry_point,
                               env.to_cmd_args(),
                               env.to_env_vars()) 
 
-The implementation of `run\_mxnet_process` can be found
+The implementation of ``run\_mxnet_process`` can be found
 `here <https://github.com/aws/sagemaker-mxnet-container/blob/64c5c8ed68e34fae50b6ac9521a0a28156fa8cff/src/sagemaker_mxnet_container/training.py#L45>`__.
 The example above starts the mxnet **scheduler** in the first instance
 and starts the mxnet **server** in all instances.
