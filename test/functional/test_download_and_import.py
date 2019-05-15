@@ -16,10 +16,10 @@ import importlib
 import shlex
 import subprocess
 import textwrap
+import os
 
 import pytest
 import six
-import os
 
 from sagemaker_containers.beta.framework import errors, modules
 import test
