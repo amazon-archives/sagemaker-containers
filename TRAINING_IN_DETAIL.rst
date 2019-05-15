@@ -196,7 +196,7 @@ important SageMaker hyperparameters for training are:
    **mandatory** unless environment variable ``SAGEMAKER_PROGRAM`` is
    provided.
 
--  ``sagemaker\_submit\_directory``: local or S3 URI location of the
+-  ``sagemaker_submit_directory``: local or S3 URI location of the
    source.tar.gz file containing the entry point code. It is
    **mandatory** unless the code is already located under the
    ``/opt/ml/code`` folder.
@@ -232,7 +232,7 @@ Creating the Dockerfile
 In the example above, MXNet and Python libraries are already installed
 in the base container. The framework container only needs to install
 SageMaker Containers and the SageMaker MXNet container package. The
-environment variable ``SAGEMAKER\_TRAINING\_MODULE`` determines that the
+environment variable ``SAGEMAKER_TRAINING_MODULE`` determines that the
 function ``train`` under the module ``training`` of the container
 package is going to be invoked when the container starts.
 
@@ -279,7 +279,7 @@ for distributed training.
                               env.to_cmd_args(),
                               env.to_env_vars()) 
 
-The implementation of ``run\_mxnet_process`` can be found
+The implementation of ``run_mxnet_process`` can be found
 `here <https://github.com/aws/sagemaker-mxnet-container/blob/64c5c8ed68e34fae50b6ac9521a0a28156fa8cff/src/sagemaker_mxnet_container/training.py#L45>`__.
 The example above starts the mxnet **scheduler** in the first instance
 and starts the mxnet **server** in all instances.

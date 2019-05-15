@@ -186,7 +186,7 @@ includes the channels **training** and **testing**:
    estimator.fit({'training': 's3://bucket/path/to/training/data', 
                   'testing': 's3://bucket/path/to/testing/data'})
 
-The environment variable ``SM\_CHANNEL\_{channel_name}`` provides the
+The environment variable ``SM_CHANNEL_{channel_name}`` provides the
 path were the channel is located:
 
 .. code:: python
@@ -515,11 +515,11 @@ directory where standard SageMaker configuration files are located, e.g.
 SageMaker training creates the following files in this folder when
 training starts: 
 
-- `hyperparameters.json`: Amazon SageMaker makes the hyperparameters in a CreateTrainingJob request available in this file. 
+- ``hyperparameters.json``: Amazon SageMaker makes the hyperparameters in a CreateTrainingJob request available in this file. 
 
-- `inputdataconfig.json`: You specify data channel information in the InputDataConfig parameter in a CreateTrainingJob request. Amazon SageMaker makes this information available in this file. 
+- ``inputdataconfig.json``: You specify data channel information in the InputDataConfig parameter in a CreateTrainingJob request. Amazon SageMaker makes this information available in this file. 
 
-- `resourceconfig.json`: name of the current host and all host containers in the training.
+- ``resourceconfig.json``: name of the current host and all host containers in the training.
 
 More information about this files can be find here:
 https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html
