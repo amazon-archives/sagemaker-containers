@@ -133,6 +133,7 @@ def test_download_and_extract_file(copy, s3_download):
     s3_download.assert_not_called()
     copy.assert_called_with(uri, _env.code_dir)
 
+
 @patch('sagemaker_containers._files.s3_download')
 @patch('os.path.isdir', lambda x: False)
 @patch('tarfile.TarFile.extractall')
