@@ -152,6 +152,7 @@ The entry point is responsible for parsing these script arguments. For
 example, in a Python script:
 
 .. code:: python
+
    import argparse
    
    if __name__ == '__main__':
@@ -233,6 +234,7 @@ checkpoints. These checkpoints will be uploaded to the default S3
 bucket. Usage example:
 
 .. code:: python
+
    import os
 
    # using it in argparse
@@ -267,6 +269,7 @@ channel ideas are: "training", "testing", "evaluation" or "images" and
 container as a JSON encoded list. Usage example:
 
 .. code:: python
+
    import os
    import json
 
@@ -290,6 +293,7 @@ Contains the directory where the channel named ``channel_name`` is
 located in the container. Usage examples:
 
 .. code:: python
+
    import os
    import json
 
@@ -315,6 +319,7 @@ Contains a JSON encoded dictionary with the user provided
 hyperparameters. Example usage:
 
 .. code:: python
+
    import os
    import json
 
@@ -354,6 +359,7 @@ The name of the current container on the container network. Usage
 example:
 
 .. code:: python
+
    import os
 
    # using it in argparse
@@ -374,6 +380,7 @@ SM_HOSTS
 JSON encoded list containing all the hosts . Usage example:
 
 .. code:: python
+
    import os
    import json
 
@@ -395,6 +402,7 @@ SM_NUM_GPUS
 The number of gpus available in the current container. Usage example:
 
 .. code:: python
+
    import os
    
    # using it in argparse
@@ -439,6 +447,7 @@ SM_LOG_LEVEL
 The current log level in the container. Usage example:
 
 .. code:: python
+
    import os
    import logging
 
@@ -506,15 +515,11 @@ directory where standard SageMaker configuration files are located, e.g.
 SageMaker training creates the following files in this folder when
 training starts: 
 
-- `hyperparameters.json`: Amazon SageMaker makes the
-hyperparameters in a CreateTrainingJob request available in this file. 
+- `hyperparameters.json`: Amazon SageMaker makes the hyperparameters in a CreateTrainingJob request available in this file. 
 
-- `inputdataconfig.json`: You specify data channel information in the
-InputDataConfig parameter in a CreateTrainingJob request. Amazon
-SageMaker makes this information available in this file. 
+- `inputdataconfig.json`: You specify data channel information in the InputDataConfig parameter in a CreateTrainingJob request. Amazon SageMaker makes this information available in this file. 
 
-- `resourceconfig.json`: name of the current host and all host
-containers in the training.
+- `resourceconfig.json`: name of the current host and all host containers in the training.
 
 More information about this files can be find here:
 https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html
