@@ -13,10 +13,10 @@
 from __future__ import absolute_import
 
 import importlib
+import os
 import shlex
 import subprocess
 import textwrap
-import os
 
 import pytest
 import six
