@@ -127,7 +127,7 @@ def test_download_and_extract_source_dir(move, rmtree, s3_download):
 @patch('os.path.isdir', lambda x: False)
 @patch('shutil.copy2')
 def test_download_and_extract_file(copy, s3_download):
-    uri = _env.channel_path('code')
+    uri = __file__
     _files.download_and_extract(uri, _env.code_dir)
 
     s3_download.assert_not_called()

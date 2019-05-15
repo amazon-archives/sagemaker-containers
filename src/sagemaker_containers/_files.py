@@ -132,7 +132,7 @@ def download_and_extract(uri, path):  # type: (str, str) -> None
                 if os.path.exists(path):
                     shutil.rmtree(path)
                 shutil.move(uri, path)
-            elif os.path.exists(uri) and tarfile.is_tarfile(uri):
+            elif tarfile.is_tarfile(uri):
                 with tarfile.open(name=uri, mode='r:gz') as t:
                     t.extractall(path=path)
             else:
