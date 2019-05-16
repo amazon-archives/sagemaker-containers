@@ -144,6 +144,6 @@ def test_download_and_extract_tar(extractall, s3_download):
     _files.download_and_extract(uri, _env.code_dir)
 
     s3_download.assert_not_called()
-    extractall.assert_called()
+    extractall.assert_called_with(path=_env.code_dir)
 
     os.remove(uri)
