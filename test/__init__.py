@@ -150,7 +150,7 @@ class UserModule(object):
     def url(self):  # type: () -> str
         return os.path.join('s3://', self.bucket, self.key)
 
-    def create_tar(self, dir=os.getcwd()):
+    def create_tar(self, dir=os.path.dirname(os.path.realpath(__file__))):
         tar_name = os.path.join(dir, 'sourcedir.tar.gz')
         with tarfile.open(tar_name, mode='w:gz') as tar:
             for _file in self._files:
@@ -164,6 +164,7 @@ class UserModule(object):
 
                     f.write(data)
                 tar.add(name=name, arcname=_file.name)
+                os.remove(name)
 
         return tar_name
 
