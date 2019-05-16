@@ -19,7 +19,7 @@ environment variable required. Alternatively, a hyperparameter named
 ``sagemaker_program`` can be used. The workflow to train a BYOC
 container is a follows:
 
-.. figure:: byoc-workflow.png
+.. figure:: https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgQllPQyB0cmFpbmluZyB3b3JrZmxvdwoKClNhZ2VNYWtlciBUABYIU2VydmljZS0-AA0FZXI6ADMGCgphY3RpdmF0ZQAlBmVyCgpub3RlIG92ADYIZXIKCi0gcmVhZCBlbnRyeSBwb2ludCBmcm9tIAplbnZpcm9ubWVudCB2YXIgClNBR0VNQUtFUl9QUk9HUkFNCgplbmQgbm90ZQoKCgB2BwCAfwdpbmdFbnYAgQMHaW5nX2VudigpAIEDEAAgBgCBBhEADwgAgRQHdXNlciBoeXBlcnBhcmFtZXRlcnMAgS8IaW5wdXQgZGF0YSBjb25maWd1cmF0aW9uAIFPCHJlc291cmNlAAgWUHl0aG9uIFNESyBzZXR0dGluZwBRCWhhcmR3YXJlIGluZm9ybQBQBgCBYBEAgWIGLQCCbBAAgWcLZGUAgU8lZXIKLSBjcmVhdGUgc2NyaXB0IGFyZ3MAgwYGaHBzCi0gd3JpdGUAhAsKZW52AIEXBSBhcwAHBXZhcnMAgwYLAIMHCUVudHJ5AINUBTogcnVuKACDZQUAg2QFLCBlbnZfdmFycywAaAUAgxQMACwKIACEKwsAQgoKCi0gcHJlcGFyZQCELg5vcgCFLwkKLSBleGVjdXQAFg0AhCoMAIR_ETogLSByZXBvcnQgc3VjY2VzcyBvciBmYWlsdXJlCgoKAIFDCgCCaAxydW4AglwNAIEbDAo&s=default
    :alt: byoc training workflow
 
 SageMaker invokes the CLI binary
@@ -46,10 +46,10 @@ Example on how a script can use TrainingEnv:
 
    env = sagemaker_containers.training_env()
 
-   # get the path of the channel 'training' from the inputdataconfig.json file
+   # get the path of the channel 'training' from the ``inputdataconfig.json`` file
    training_dir = env.channel_input_dirs['training']
 
-   # get a the hyperparameter 'training_data_file' from hyperparameters.json file
+   # get a the hyperparameter 'training_data_file' from ``hyperparameters.json`` file
    file_name = env.hyperparameters['training_data_file']
 
    # get the folder where the model should be saved
@@ -63,7 +63,7 @@ Example on how a script can use TrainingEnv:
    #save the model in the end of training
    model.save(os.path.join(model_dir, 'saved_model'))
 
-**Entrypoint execution** is encapsulted by `entry_point.run(uri, user_entry_point, args, env_vars) <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/entry_point.py#L22>`__,
+**Entry point execution** is encapsulted by `entry_point.run(uri, user_entry_point, args, env_vars) <https://github.com/aws/sagemaker-containers/blob/v2.4.4/src/sagemaker_containers/entry_point.py#L22>`__,
 it prepares and executes the user entry point, passing ``env_vars`` as
 environment variables and ``args`` as command arguments. If the entry
 point is:
@@ -125,10 +125,10 @@ Container** and a **BYOC** is while the latter includes the entry point
 under ``/opt/ml/code``, the former doesn't include the user entry point
 and needs to download it from S3. The workflow is as follows:
 
-.. figure:: framework-containers-workflow.png
+.. figure:: https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgRnJhbWV3b3JrIENvbnRhaW5lciB0cmFpbmluZyB3b3JrZmxvdwoKClNhZ2VNYWtlciBQeXRob24gU0RLLT4ADApUACwIU2VydmljZTogRXN0aW1hdG9yKGVudHJ5cG9pbnQsIGt3YXJncyoqKS5maXQoY2hhbm5lbHMpCgoKCmFjdGl2YXRlIABYFApub3RlIG92ZXIACRYKLSBjcmVhdGVzIGEgY3VzdG9tZXIgUzMgYnVja2V0IGlmIG5lY2Vzc2FyeQotIGNvbXByZXNzIACBFwUgAIEYBSBpbiBzb3VyY2UudGFyLmd6CgplbmQgAHQFAIFoGTM6IHVwbG9hZHMALg4gdG8AfQoAfgYKCgCBJSAAgTkLZGRpdGlvbmFsIGh5cGVycGFyYW1ldGVycwotIHN0YXJ0IHRoZQCDIApqb2IKAIEZFgCDEQgAgxEHLQCDKQwAg0EKOgoKCmRlAIJkHgCDeQwAg18QLT4Ag3wFZXI6AIQ4BgCDQwsAEgcKCgoKAB0HACYHaW5nRW52ACoHaW5nX2VudigpACoQACAGAIIvDAAKDS0gcmVhZACCFRAgcHJvdmlkZWQgYnkAhSoHAIJaBgAoBXVzZXIAgkQTAEQFaW5wdXQgZGF0YSBjb25maWd1cmF0aW9uAGEIcmUAhB0GAAgWcACGEwkgc2V0dHRpbmcAUQloYXJkd2FyZSBpbmZvcm0AUAYAhFkJAIIWCACCDwYtAIJGCgCDCw0AgXYcZXIAhXsJIHNjcmlwdCBhcmdzIGZyb20gaHBzCi0gd3JpdACEKgtlbnYAgQgFIGFzAAcFdmFycwCBBgsAgyUJRQCHNwk6IHJ1bgCHQw1lbnZfdmFycywAaAUpAIc7DAAtCiAKCgpTMy0APQ1Eb3duAIYkFACBKgUAhh4cAIEECgoKLSBwcmVwYXJlAIc7DWZvAIk6CgotIGV4ZWN1dAAWDQCCbAwAgjYROiAtIHJlcG9ydCBzdWNjZXNzIG9yIGZhaWx1cmUKCgoAggUKAIMPGACBFwwAgy4RZXIKCg&s=default
    :alt: framework containers training workflow
 
-The subsections below will detail the integration between SageMaker
+The subsections below will detail the integration between the SageMaker
 Python SDK and SageMaker Containers and how to create a framework
 container.
 

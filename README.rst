@@ -385,7 +385,7 @@ JSON encoded list containing all the hosts . Usage example:
    import json
 
    # using it in argparse
-   parser.add_argument('hosts', type=nargs, default=json.loads(os.environ['SM_HOSTS']))
+   parser.add_argument('hosts', type=str, default=json.loads(os.environ['SM_HOSTS']))
 
    # using it as variable
    hosts = json.loads(os.environ['SM_HOSTS'])
@@ -559,7 +559,7 @@ the following keys:
    sorted lexicographically. For example,
    ``['algo-1', 'algo-2', 'algo-3']`` for a three-node cluster.
 
-For more information about resourceconfig.json:
+For more information about ``resourceconfig.json``:
 https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html#your-algorithms-training-algo-running-container-dist-training
 
 .. _header-n1081:
@@ -585,7 +585,7 @@ SM_INPUT_DATA_CONFIG
 Input data configuration from
 ``/opt/ml/input/config/inputdataconfig.json``.
 
-For more information about inpudataconfig.json:
+For more information about ``inpudataconfig.json``:
 https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo.html#your-algorithms-training-algo-running-container-dist-training
 
 .. _header-n1085:
