@@ -13,13 +13,13 @@ This document discusses in detail how to use SageMaker Containers for training.
 Building and training your own algorithm container using SageMaker Containers
 -----------------------------------------------------------------------------
 
-SageMaker Containers makes easier the process to Build your own container (BYOC). In this scenario, ``SAGEMAKER_PROGRAM``, containing the name of the
+SageMaker Containers makes easier the process to bring your own container (BYOC). In this scenario, ``SAGEMAKER_PROGRAM``, containing the name of the
 entry point script located under ``/opt/ml/code`` folder is the only
 environment variable required. Alternatively, a hyperparameter named
 ``sagemaker_program`` can be used. The workflow to train a BYOC
 container is a follows:
 
-.. figure:: https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgQllPQyB0cmFpbmluZyB3b3JrZmxvdwoKClNhZ2VNYWtlciBUABYIU2VydmljZS0-AA0FZXI6ADMGCgphY3RpdmF0ZQAlBmVyCgpub3RlIG92ADYIZXIKCi0gcmVhZCBlbnRyeSBwb2ludCBmcm9tIAplbnZpcm9ubWVudCB2YXIgClNBR0VNQUtFUl9QUk9HUkFNCgplbmQgbm90ZQoKCgB2BwCAfwdpbmdFbnYAgQMHaW5nX2VudigpAIEDEAAgBgCBBhEADwgAgRQHdXNlciBoeXBlcnBhcmFtZXRlcnMAgS8IaW5wdXQgZGF0YSBjb25maWd1cmF0aW9uAIFPCHJlc291cmNlAAgWUHl0aG9uIFNESyBzZXR0dGluZwBRCWhhcmR3YXJlIGluZm9ybQBQBgCBYBEAgWIGLQCCbBAAgWcLZGUAgU8lZXIKLSBjcmVhdGUgc2NyaXB0IGFyZ3MAgwYGaHBzCi0gd3JpdGUAhAsKZW52AIEXBSBhcwAHBXZhcnMAgwYLAIMHCUVudHJ5AINUBTogcnVuKACDZQUAg2QFLCBlbnZfdmFycywAaAUAgxQMACwKIACEKwsAQgoKCi0gcHJlcGFyZQCELg5vcgCFLwkKLSBleGVjdXQAFg0AhCoMAIR_ETogLSByZXBvcnQgc3VjY2VzcyBvciBmYWlsdXJlCgoKAIFDCgCCaAxydW4AglwNAIEbDAo&s=default
+.. figure:: https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgQllPQyB0cmFpbmluZyB3b3JrZmxvdwoKClNhZ2VNYWtlciBUABYIU2VydmljZS0-AA0FZXI6ADMGCgphY3RpdmF0ZQAlBmVyCgpub3RlIG92ADYIZXIKCi0gcmVhZCBlbnRyeSBwb2ludCBmcm9tIAplbnZpcm9ubWVudCB2YXIgClNBR0VNQUtFUl9QUk9HUkFNCgplbmQgbm90ZQoKCgB2BwCAfwdpbmdFbnYAgQMHaW5nX2VudigpAIEDEAAgBgCBBhEADwgAgRQHdXNlciBoeXBlcnBhcmFtZXRlcnMAgS8IaW5wdXQgZGF0YSBjb25maWd1cmF0aW9uAIFPCHJlc291cmNlAAgWUHl0aG9uIFNESyBzZXR0dGluZwBRCWhhcmR3YXJlIGluZm9ybQBQBgCBYBEAgWIGLQCCbBAAgWcLZGUAgU8lZXIKLSBjcmVhdGUgc2NyaXB0IGFyZ3MAgwYGaHBzCi0gd3JpdGUAhAsKZW52AIEXBSBhcwAHBXZhcnMAgwYLAIMHCUUAg1UFUG9pbnQ6IHJ1bigAg2YFAINlBSwgZW52X3ZhcnMsAGkFAIMVDAAsCyAAhC0LAEMLCgotIHByZXBhcmUAhDEOb3IAhTIJCi0gZXhlY3V0ABYNAIQtDACFAhE6IC0gcmVwb3J0IHN1Y2Nlc3Mgb3IgZmFpbHVyZQoKCgCBRQsAgmwMcnVuAIJgDQCBHA0K&s=default
    :alt: byoc training workflow
 
 SageMaker invokes the CLI binary
@@ -98,11 +98,11 @@ Usage example:
    #  'SAGEMAKER_CHANNEL_TRAINING':'/opt/ml/input/training',
    #  'MODEL_DIR':'/opt/ml/model', ...}
 
-   # executes user entry point named entry point.py as follow:
+   # executes user entry point named user_script.py as follow:
    #
    # SAGEMAKER_CHANNELS=training SAGEMAKER_CHANNEL_TRAINING=/opt/ml/input/training \
    # SAGEMAKER_MODEL_DIR=/opt/ml/model python user_script.py --batch-size 128 --model_dir /opt/ml/model
-   entry_point.run('entry point.py', args, env_vars)
+   entry_point.run('user_script.py', args, env_vars)
 
 If the entry point execution fails, ``trainer.train()`` will write the
 error message to ``/opt/ml/output/failure``.
@@ -125,7 +125,7 @@ Container** and a **BYOC** is while the latter includes the entry point
 under ``/opt/ml/code``, the former doesn't include the user entry point
 and needs to download it from S3. The workflow is as follows:
 
-.. figure:: https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgRnJhbWV3b3JrIENvbnRhaW5lciB0cmFpbmluZyB3b3JrZmxvdwoKClNhZ2VNYWtlciBQeXRob24gU0RLLT4ADApUACwIU2VydmljZTogRXN0aW1hdG9yKGVudHJ5cG9pbnQsIGt3YXJncyoqKS5maXQoY2hhbm5lbHMpCgoKCmFjdGl2YXRlIABYFApub3RlIG92ZXIACRYKLSBjcmVhdGVzIGEgY3VzdG9tZXIgUzMgYnVja2V0IGlmIG5lY2Vzc2FyeQotIGNvbXByZXNzIACBFwUgAIEYBSBpbiBzb3VyY2UudGFyLmd6CgplbmQgAHQFAIFoGTM6IHVwbG9hZHMALg4gdG8AfQoAfgYKCgCBJSAAgTkLZGRpdGlvbmFsIGh5cGVycGFyYW1ldGVycwotIHN0YXJ0IHRoZQCDIApqb2IKAIEZFgCDEQgAgxEHLQCDKQwAg0EKOgoKCmRlAIJkHgCDeQwAg18QLT4Ag3wFZXI6AIQ4BgCDQwsAEgcKCgoKAB0HACYHaW5nRW52ACoHaW5nX2VudigpACoQACAGAIIvDAAKDS0gcmVhZACCFRAgcHJvdmlkZWQgYnkAhSoHAIJaBgAoBXVzZXIAgkQTAEQFaW5wdXQgZGF0YSBjb25maWd1cmF0aW9uAGEIcmUAhB0GAAgWcACGEwkgc2V0dHRpbmcAUQloYXJkd2FyZSBpbmZvcm0AUAYAhFkJAIIWCACCDwYtAIJGCgCDCw0AgXYcZXIAhXsJIHNjcmlwdCBhcmdzIGZyb20gaHBzCi0gd3JpdACEKgtlbnYAgQgFIGFzAAcFdmFycwCBBgsAgyUJRQCHNwk6IHJ1bgCHQw1lbnZfdmFycywAaAUpAIc7DAAtCiAKCgpTMy0APQ1Eb3duAIYkFACBKgUAhh4cAIEECgoKLSBwcmVwYXJlAIc7DWZvAIk6CgotIGV4ZWN1dAAWDQCCbAwAgjYROiAtIHJlcG9ydCBzdWNjZXNzIG9yIGZhaWx1cmUKCgoAggUKAIMPGACBFwwAgy4RZXIKCg&s=default
+.. figure:: https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgRnJhbWV3b3JrIENvbnRhaW5lciB0cmFpbmluZyB3b3JrZmxvdwoKClNhZ2VNYWtlciBQeXRob24gU0RLLT4ADApUACwIU2VydmljZTogRXN0aW1hdG9yKGVudHJ5cG9pbnQsIGt3YXJncyoqKS5maXQoY2hhbm5lbHMpCgoKCmFjdGl2YXRlIABYFApub3RlIG92ZXIACRYKLSBjcmVhdGVzIGEgY3VzdG9tZXIgUzMgYnVja2V0IGlmIG5lY2Vzc2FyeQotIGNvbXByZXNzIACBFwUgAIEYBSBpbiBzb3VyY2UudGFyLmd6CgplbmQgAHQFAIFoGTM6IHVwbG9hZHMALg4gdG8AfQoAfgYKCgCBJSAAgTkLZGRpdGlvbmFsIGh5cGVycGFyYW1ldGVycwotIHN0YXJ0IHRoZQCDIApqb2IKAIEZFgCDEQgAgxEHLQCDKQwAg0EKOgoKCmRlAIJkHgCDeQwAg18QLT4Ag3wFZXI6AIQ4BgCDQwsAEgcKCgoKAB0HACYHaW5nRW52ACoHaW5nX2VudigpACoQACAGAIIvDAAKDS0gcmVhZACCFRAgcHJvdmlkZWQgYnkAhSoHAIJaBgAoBXVzZXIAgkQTAEQFaW5wdXQgZGF0YSBjb25maWd1cmF0aW9uAGEIcmUAhB0GAAgWcACGEwkgc2V0dHRpbmcAUQloYXJkd2FyZSBpbmZvcm0AUAYAhFkJAIIWCACCDwYtAIJGCgCDCw0AgXYcZXIAhXsJIHNjcmlwdCBhcmdzIGZyb20gaHBzCi0gd3JpdACEKgtlbnYAgQgFIGFzAAcFdmFycwCBBgsAgyUJRQCGHwVQb2ludDogcnVuAIdEDWVudl92YXJzLABpBSkAhzwMAC0LIAoKClMzLQA-DkRvd24AhicUAIEtBQCGIRwAgQYLCgotIHByZXBhcmUAhz8NZm8AiT4KCi0gZXhlY3V0ABYNAIJwDACCOhE6IC0gcmVwb3J0IHN1Y2Nlc3Mgb3IgZmFpbHVyZQoKCgCCCAsAgxQYAIEYDQCDNBFlcgoK&s=default
    :alt: framework containers training workflow
 
 The subsections below will detail the integration between the SageMaker

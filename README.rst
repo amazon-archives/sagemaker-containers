@@ -27,7 +27,7 @@ Creating a container using SageMaker Containers
 
 Here we'll demonstrate how to create a Docker image using SageMaker Containers in order to show the simplicity of using this library.
 
-Let's suppose we need to train a model with the following training script train.py using TF 2.0 in SageMaker:
+Let's suppose we need to train a model with the following training script ``train.py`` using TF 2.0 in SageMaker:
 
 .. code:: python
 
