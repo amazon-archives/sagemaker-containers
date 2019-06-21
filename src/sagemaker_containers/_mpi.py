@@ -14,7 +14,6 @@ import argparse
 import inspect
 import logging
 import os
-import socket
 import subprocess
 import time
 from typing import Any, List, Tuple  # noqa ignore=F401 imported but unused
