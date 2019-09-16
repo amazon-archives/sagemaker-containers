@@ -4,6 +4,7 @@ phases:
   build:
     commands:
       # run linters
+      - TOX_PARALLEL_NO_SPINNER=1
       - tox -e flake8,black-check --parallel all
 
       # run README check
