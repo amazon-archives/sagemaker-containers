@@ -40,9 +40,9 @@ REQUIREMENTS_TXT_ASSERT_STR = """
  ___) | (_| | (_| |  __/ |  | | (_| |   <  __/ |...
 |____/ \__,_|\__, |\___|_|  |_|\__,_|_|\_\___|_|...
              |___/.................................
-""".replace(
+""".replace(  # noqa W605
     ".", " "
-).strip()  # noqa W605
+).strip()
 
 
 @pytest.fixture(name="user_module_name")

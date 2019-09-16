@@ -27,12 +27,12 @@ import werkzeug.test as werkzeug_test
 
 DEFAULT_REGION = "us-west-2"
 
-from sagemaker_containers import (
+from sagemaker_containers import (  # noqa ignore=E402 module level import not at top of file
     _env,
     _files,
     _params,
     _worker,
-)  # noqa ignore=E402 module level import not at top of file
+)
 
 DEFAULT_CONFIG = dict(
     ContentType="application/x-numpy",
