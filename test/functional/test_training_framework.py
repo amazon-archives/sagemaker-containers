@@ -572,8 +572,8 @@ def test_script_mode_client_import_error(training_fn, capture_error):
 
     # fmt: off
     if capture_error:
-        assert "Invalid requirement: \'invalid/module\'" in message
-        assert "It looks like a path. File \'invalid/module\' does not exist." in message
+        assert "Invalid requirement" in message
+        assert "It looks like a path" in message
     # fmt: on
 
 
