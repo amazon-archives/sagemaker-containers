@@ -506,7 +506,7 @@ def test_script_mode_local_directory(user_script, training_fn, capture_error, tm
 
 USER_MODE_SCRIPT_WITH_ERROR = """
 if __name__ == '__main__':
-    invalid/module
+    42/0
 """
 
 
@@ -545,9 +545,9 @@ def test_script_mode_client_error(training_fn, capture_error):
 def test_script_mode_client_import_error(training_fn, capture_error):
     channel = test.Channel.create(name="training")
 
-    requirements_file = test.File("requirements.txt", "invalid/module")
+    requirements_file = test.File("requirements.txt", "42/0")
 
-    user_script = test.File(name="user_script", data="invalid/module")
+    user_script = test.File(name="user_script", data="42/0")
     module = test.UserModule(user_script).add_file(setup_file).add_file(requirements_file).upload()
 
     hyperparameters = dict(sagemaker_program="user_script")
@@ -562,8 +562,8 @@ def test_script_mode_client_import_error(training_fn, capture_error):
 
     # fmt: off
     if capture_error:
-        assert "Invalid requirement: \'invalid/module\'" in message
-        assert "It looks like a path. File \'invalid/module\' does not exist." in message
+        assert "Invalid requirement: \'42/0\'" in message
+        assert "It looks like a path. File \'42/0\' does not exist." in message
     # fmt: on
 
 
