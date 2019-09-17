@@ -531,6 +531,10 @@ def test_script_mode_client_error(training_fn, capture_error):
 
     message = str(e.value)
 
+    print("Before message...")
+    print(message)
+    print("After message.")
+
     assert "ExecuteUserScriptError" in message
     if capture_error:
         assert "ZeroDivisionError" in message
@@ -560,6 +564,9 @@ def test_script_mode_client_import_error(training_fn, capture_error):
 
     message = str(e.value)
 
+    print("Before message...")
+    print(message)
+    print("After message.")
 
     assert "InstallModuleError:" in message
 
@@ -568,6 +575,7 @@ def test_script_mode_client_import_error(training_fn, capture_error):
         assert "Invalid requirement" in message
         assert "It looks like a path" in message
     # fmt: on
+
 
 def failure_message():
     with open(os.path.join(env.output_dir, "failure")) as f:
