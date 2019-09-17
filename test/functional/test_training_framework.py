@@ -530,6 +530,11 @@ def test_script_mode_client_error(training_fn, capture_error):
         training_fn(capture_error)
 
     message = str(e.value)
+
+    print("Before message...")
+    print(message)
+    print("After message.")
+
     assert "ExecuteUserScriptError" in message
     if capture_error:
         assert "ZeroDivisionError" in message
@@ -558,6 +563,11 @@ def test_script_mode_client_import_error(training_fn, capture_error):
         training_fn(capture_error)
 
     message = str(e.value)
+
+    print("Before message...")
+    print(message)
+    print("After message.")
+
     assert "InstallModuleError:" in message
 
     # fmt: off
