@@ -84,7 +84,14 @@ setuptools.setup(
     ],
     install_requires=required_packages,
     extras_require={
-        "test": ["tox==3.13.1", "pytest==4.4.1", "pytest-cov", "mock", "sagemaker>=1.16.2"]
+        "test": [
+            "tox==3.13.1",
+            "pytest==4.4.1",
+            "pytest-cov",
+            "mock",
+            "sagemaker>=1.16.2",
+            "black==19.3b0 ; python_version >= '3.6'",
+        ]
     },
     entry_points={
         "console_scripts": [
