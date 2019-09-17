@@ -566,6 +566,7 @@ def test_script_mode_client_import_error(training_fn, capture_error):
         assert "It looks like a path. File \'42/0\' does not exist." in message
     # fmt: on
 
+
 def failure_message():
     with open(os.path.join(env.output_dir, "failure")) as f:
         return f.read()
