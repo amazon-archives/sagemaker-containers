@@ -86,7 +86,7 @@ def _watch(inotify, watchers, watch_flags, s3_uploader):
     stop_file_exists = False
 
     # after we see stop file do one additional pass to make sure we didn't miss anything
-    while not last_pass_done:
+    while not last_pass_done:  # pylint: disable=too-many-nested-blocks
         # wait for any events in the directory for 1 sec and then re-check exit conditions
         for event in inotify.read(timeout=1000):
             for flag in inotify_simple.flags.from_mask(event.mask):

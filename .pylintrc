@@ -104,7 +104,6 @@ disable=
     unused-variable, # TODO: Remove unused variables
     too-many-function-args, # TODO: Refactor functions with too many arguments
     unused-import, # TODO: Remove unused imports
-    too-many-nested-blocks, # TODO: Refactor deeply nested code
 
 [REPORTS]
 # Set the output format. Available formats are text, parseable, colorized, msvs
