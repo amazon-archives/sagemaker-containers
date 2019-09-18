@@ -105,7 +105,6 @@ disable=
     too-many-function-args, # TODO: Refactor functions with too many arguments
     unused-import, # TODO: Remove unused imports
     too-many-nested-blocks, # TODO: Refactor deeply nested code
-    unused-argument, # TODO: Remove unused arguments
 
 [REPORTS]
 # Set the output format. Available formats are text, parseable, colorized, msvs

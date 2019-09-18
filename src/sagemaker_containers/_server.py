@@ -50,7 +50,7 @@ def _create_nginx_config(serving_env):
 
 
 def _add_sigterm_handler(nginx, gunicorn):
-    def _terminate(signo, frame):
+    def _terminate(signo, frame): # pylint: disable=unused-argument
         if nginx:
             try:
                 os.kill(nginx.pid, signal.SIGQUIT)

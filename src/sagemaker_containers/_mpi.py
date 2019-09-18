@@ -37,7 +37,7 @@ class WorkerRunner(_process.ProcessRunner):
         super(WorkerRunner, self).__init__(user_entry_point, args, env_vars)
         self._master_hostname = str(master_hostname)
 
-    def run(self, wait=True, capture_error=False):  # type: (bool, bool) -> None
+    def run(self, wait=True, capture_error=False):  # type: (bool, bool) -> None # pylint: disable=unused-argument
         """The WorkerRunner proceeds as following:
 
         - wait for the MPI Master to create its SSH daemon
