@@ -102,7 +102,6 @@ disable=
     inconsistent-return-statements, # Fix inconsistent return statements
     broad-except, # TODO: Narrow the scope of caught exceptions
     unused-variable, # TODO: Remove unused variables
-    too-many-function-args, # TODO: Refactor functions with too many arguments
 
 [REPORTS]
 # Set the output format. Available formats are text, parseable, colorized, msvs

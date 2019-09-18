@@ -255,7 +255,7 @@ def import_module(uri, name=DEFAULT_MODULE_NAME, cache=None):  # type: (str, str
     install(_env.code_dir)
     try:
         module = importlib.import_module(name)
-        six.moves.reload_module(module)
+        six.moves.reload_module(module)  # pylint: disable=too-many-function-args
 
         return module
     except Exception as e:
