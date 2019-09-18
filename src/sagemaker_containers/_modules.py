@@ -15,7 +15,7 @@ from __future__ import absolute_import
 import importlib
 import os
 import shlex
-import subprocess
+import subprocess  # pylint: disable=unused-import
 import sys
 import tarfile
 import textwrap
