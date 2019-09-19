@@ -97,7 +97,7 @@ disable=
     redefined-builtin, # TODO: Do not redefine builtins
     line-too-long, # TODO: Enforce line length using Black
     wrong-import-order, # TODO: Fix import order
-    no-else-return, # TODO: Fix unnecessary usage of elif after return
+    no-else-return,
 
 [REPORTS]
 # Set the output format. Available formats are text, parseable, colorized, msvs
