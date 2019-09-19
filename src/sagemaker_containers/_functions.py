@@ -66,7 +66,7 @@ def getargspec(  # pylint: disable=inconsistent-return-statements
                 defaults (tuple): an n-tuple of the default values of the last n arguments.
     """
     if six.PY2:
-        return inspect.getargspec(fn)
+        return inspect.getargspec(fn)  # pylint: disable=deprecated-method
     elif six.PY3:
         full_arg_spec = inspect.getfullargspec(fn)
         return inspect.ArgSpec(
