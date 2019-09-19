@@ -48,7 +48,9 @@ def matching_args(fn, dictionary):  # type: (Callable, _mapping.Mapping) -> dict
     return _mapping.split_by_criteria(dictionary, arg_spec.args).included
 
 
-def getargspec(fn):  # type: (Callable) -> inspect.ArgSpec
+def getargspec(  # pylint: disable=inconsistent-return-statements
+    fn
+):  # type: (Callable) -> inspect.ArgSpec
     """Get the names and default values of a function's arguments.
 
     Args:

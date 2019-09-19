@@ -117,7 +117,7 @@ def _watch(inotify, watchers, watch_flags, s3_uploader):
     executor.shutdown(wait=True)
 
 
-def start_sync(s3_output_location, region):
+def start_sync(s3_output_location, region):  # pylint: disable=inconsistent-return-statements
     """Starts intermediate folder sync which copies files from 'opt/ml/output/intermediate'
     directory to the provided s3 output location as files created or modified.
     If files are deleted it doesn't delete them from s3.

@@ -74,7 +74,7 @@ def _wait_orted_process_to_finish():  # type: () -> None
     psutil.wait_procs(orted)
 
 
-def _orted_process():
+def _orted_process():  # pylint: disable=inconsistent-return-statements
     """Waits maximum of 5 minutes for orted process to start"""
     for _ in range(5 * 60):
         procs = [p for p in psutil.process_iter(attrs=["name"]) if p.info["name"] == "orted"]
