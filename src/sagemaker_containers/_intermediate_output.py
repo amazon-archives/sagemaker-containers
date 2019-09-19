@@ -47,7 +47,7 @@ def _upload_to_s3(s3_uploader, relative_path, file_path, filename):
     except FileNotFoundError:  # noqa ignore=F821
         # Broken link or deleted
         pass
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         logger.exception("Failed to upload file to s3.")
     finally:
         # delete the original file
@@ -64,7 +64,7 @@ def _copy_file(executor, s3_uploader, relative_path, filename):
     except FileNotFoundError:  # noqa ignore=F821
         # Broken link or deleted
         pass
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         logger.exception("Failed to copy file to the temporarily directory.")
 
 

@@ -259,7 +259,7 @@ def _can_connect(host, port=22):  # type: (str, int) -> bool
         client.close()
         logger.info("Can connect to host %s", host)
         return True
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.info("Cannot connect to host %s", host)
 
         logger.info("Connection failed with exception: \n %s", str(e))

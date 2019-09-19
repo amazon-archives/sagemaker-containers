@@ -86,7 +86,7 @@ def error_wrapper(fn, error_class):  # type: (Callable or None, Exception) -> ..
     def wrapper(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             six.reraise(error_class, error_class(e), sys.exc_info()[2])
 
     return wrapper

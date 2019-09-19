@@ -100,7 +100,6 @@ disable=
     no-else-return, # TODO: Fix unnecessary usage of elif after return
     deprecated-method, # TODO: Remove deprecated methods
     inconsistent-return-statements, # Fix inconsistent return statements
-    broad-except, # TODO: Narrow the scope of caught exceptions
 
 [REPORTS]
 # Set the output format. Available formats are text, parseable, colorized, msvs

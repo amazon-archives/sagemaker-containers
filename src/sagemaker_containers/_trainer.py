@@ -110,7 +110,7 @@ def train():
             intermediate_sync.join()
 
         exit_code = DEFAULT_FAILURE_CODE
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         failure_msg = "framework error: \n%s\n%s" % (traceback.format_exc(), str(e))
 
         _files.write_failure_file(failure_msg)

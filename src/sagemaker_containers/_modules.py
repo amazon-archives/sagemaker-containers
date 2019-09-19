@@ -258,7 +258,7 @@ def import_module(uri, name=DEFAULT_MODULE_NAME, cache=None):  # type: (str, str
         six.moves.reload_module(module)  # pylint: disable=too-many-function-args
 
         return module
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         six.reraise(_errors.ImportModuleError, _errors.ImportModuleError(e), sys.exc_info()[2])
 
 
