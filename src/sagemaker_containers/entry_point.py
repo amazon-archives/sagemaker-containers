@@ -32,7 +32,7 @@ def run(
     runner=_runner.ProcessRunnerType,
     extra_opts=None,
 ):
-    # type: (str, str, List[str], Dict[str, str], bool, bool, _runner.RunnerType,Dict[str, str]) -> None  # pylint: disable=line-too-long
+    # type: (str, str, List[str], Dict[str, str], bool, bool, _runner.RunnerType,Dict[str, str]) -> None  # pylint: disable=line-too-long # noqa ignore=E501
     """Download, prepare and executes a compressed tar file from S3 or provided directory as an user
     entrypoint. Runs the user entry point, passing env_vars as environment variables and args
     as command arguments.
