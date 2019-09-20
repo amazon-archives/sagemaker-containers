@@ -54,7 +54,7 @@ def _exit_processes(exit_code):  # type: (int) -> None
     Args:
         exit_code (int): exit code
     """
-    os._exit(exit_code)
+    os._exit(exit_code)  # pylint: disable=protected-access
 
 
 def train():
