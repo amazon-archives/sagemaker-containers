@@ -237,7 +237,7 @@ class Transformer(object):
 
         return result
 
-    def _error_response(self, error, status_code):
+    def _error_response(self, error, status_code):  # pylint: disable=no-self-use
         """Placeholder docstring"""
         body = json.dumps(
             {

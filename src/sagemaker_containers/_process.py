@@ -85,7 +85,7 @@ class ProcessRunner(object):
         else:
             return ["/bin/sh", "-c", "./%s %s" % (self._user_entry_point, " ".join(self._args))]
 
-    def _python_command(self):
+    def _python_command(self):  # pylint: disable=no-self-use
         """Placeholder docstring"""
         return [python_executable()]
 
