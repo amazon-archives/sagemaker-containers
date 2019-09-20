@@ -131,7 +131,8 @@ def split_by_criteria(
 
             * Args:
                 included (dict[str, object]: A dictionary with the keys included in the criteria.
-                excluded (dict[str, object]: A dictionary with the keys not included in the criteria.
+                excluded (dict[str, object]: A dictionary with the keys not included in the
+                                             criteria.
     """
     keys = keys or []
     keys = set(keys)

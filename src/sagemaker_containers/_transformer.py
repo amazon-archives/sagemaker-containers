@@ -131,12 +131,13 @@ class Transformer(object):
         transform_fn=None,
         error_class=_errors.ClientError,
     ):
-        """Default constructor. Wraps the any non default framework function in an error class to isolate
-        framework from user errors.
+        """Default constructor. Wraps the any non default framework function in an error class to
+        isolate framework from user errors.
 
         Args:
             model_fn (fn): Function responsible to load the model.
-            input_fn (fn): Takes request data and de-serializes the data into an object for prediction.
+            input_fn (fn): Takes request data and de-serializes the data into an object for
+                           prediction.
             predict_fn (fn): Function responsible for model predictions.
             output_fn (fn): Function responsible to serialize the prediction for the response.
             transform_fn (fn): Function responsible for taking input data and returning a prediction
@@ -175,7 +176,8 @@ class Transformer(object):
         The default implementation is used to load the model.
         This function is called by sagemaker_containers.beta.framework.worker.Worker,
         before starting the Flask application.
-        The gunicorn server forks multiple workers, executing multiple Flask applications in parallel.
+        The gunicorn server forks multiple workers, executing multiple Flask applications in
+        parallel.
         This function will be called once per each worker.
         It does not have return type or arguments.
         """

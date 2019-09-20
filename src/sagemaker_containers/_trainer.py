@@ -75,8 +75,8 @@ def train():
 
             framework = importlib.import_module(framework_name)
 
-            # the logger is configured after importing the framework library, allowing the framework to
-            # configure logging at import time.
+            # the logger is configured after importing the framework library, allowing
+            # the framework to configure logging at import time.
             _logging.configure_logger(env.log_level)
             logger.info("Imported framework %s", framework_name)
 

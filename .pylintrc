@@ -95,7 +95,6 @@ disable=
     super-init-not-called, # TODO: Call init method from base class
     bad-super-call, # TODO: # TODO: Fix arguments given to super()
     redefined-builtin, # TODO: Do not redefine builtins
-    line-too-long, # TODO: Enforce line length using Black
     wrong-import-order,
     no-else-return,
 

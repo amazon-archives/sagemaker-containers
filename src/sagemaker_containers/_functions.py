@@ -22,7 +22,8 @@ from sagemaker_containers import _mapping
 
 
 def matching_args(fn, dictionary):  # type: (Callable, _mapping.Mapping) -> dict
-    """Given a function fn and a dict dictionary, returns the function arguments that match the dict keys.
+    """Given a function fn and a dict dictionary, returns the function
+    arguments that match the dict keys.
 
     Example:
 
@@ -30,7 +31,8 @@ def matching_args(fn, dictionary):  # type: (Callable, _mapping.Mapping) -> dict
 
         dictionary = {'channel_dirs': {}, 'model_dir': '/opt/ml/model', 'other_args': None}
 
-        args = functions.matching_args(train, dictionary) # {'channel_dirs': {}, 'model_dir': '/opt/ml/model'}
+        args = functions.matching_args(train, dictionary) # {'channel_dirs': {},
+                                                             'model_dir': '/opt/ml/model'}
 
         train(**args)
     Args:

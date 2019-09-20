@@ -49,7 +49,8 @@ def check_error(cmd, error_class, capture_error=False, **kwargs):
 
 
 def python_executable():
-    """Returns the real path for the Python executable, if it exists. Returns RuntimeError otherwise.
+    """Returns the real path for the Python executable, if it exists.
+    Returns RuntimeError otherwise.
 
     Returns:
         (str): the real path of the current Python executable
