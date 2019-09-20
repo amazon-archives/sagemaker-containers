@@ -10,6 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""Placeholder docstring"""
 from __future__ import absolute_import
 
 import warnings
@@ -97,6 +98,8 @@ class Worker(flask.Flask):
 
 
 class Response(flask.Response):
+    """Placeholder docstring"""
+
     default_mimetype = _content_types.JSON
 
     def __init__(
@@ -108,6 +111,7 @@ class Response(flask.Response):
         mimetype=None,
         direct_passthrough=False,
     ):
+        """Placeholder docstring"""
         if accept:
             warnings.warn(
                 'ignoring deprecated "accept" argument to Response.__init__', DeprecationWarning
@@ -144,6 +148,7 @@ class Request(flask.Request, _mapping.MappingMixin):
     default_mimetype = _content_types.JSON
 
     def __init__(self, environ=None, serving_env=None):  # type: (dict, _env.ServingEnv) -> None
+        """Placeholder docstring"""
         super(Request, self).__init__(environ=environ or flask.request.environ)
 
         serving_env = serving_env or env

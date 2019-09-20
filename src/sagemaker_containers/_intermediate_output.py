@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""Placeholder docstring"""
 from __future__ import absolute_import
 
 import concurrent.futures as futures
@@ -41,6 +42,7 @@ def _timestamp():
 
 
 def _upload_to_s3(s3_uploader, relative_path, file_path, filename):
+    """Placeholder docstring"""
     try:
         key = os.path.join(s3_uploader["key_prefix"], relative_path, filename)
         s3_uploader["transfer"].upload_file(file_path, s3_uploader["bucket"], key)
@@ -56,6 +58,7 @@ def _upload_to_s3(s3_uploader, relative_path, file_path, filename):
 
 
 def _copy_file(executor, s3_uploader, relative_path, filename):
+    """Placeholder docstring"""
     try:
         src = os.path.join(intermediate_path, relative_path, filename)
         dst = os.path.join(tmp_dir_path, relative_path, "{}.{}".format(_timestamp(), filename))

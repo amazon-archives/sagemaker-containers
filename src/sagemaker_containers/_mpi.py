@@ -10,6 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""Placeholder docstring"""
 import argparse
 import inspect
 import logging
@@ -34,6 +35,7 @@ class WorkerRunner(_process.ProcessRunner):
     """
 
     def __init__(self, user_entry_point, args, env_vars, master_hostname):
+        """Placeholder docstring"""
         super(WorkerRunner, self).__init__(user_entry_point, args, env_vars)
         self._master_hostname = str(master_hostname)
 
@@ -61,15 +63,18 @@ class WorkerRunner(_process.ProcessRunner):
         logger.info("MPI process finished.")
 
     def _wait_master_to_start(self):  # type: () -> None
+        """Placeholder docstring"""
         while not _can_connect(self._master_hostname):
             time.sleep(1)
 
     def _wait_master_to_finish(self):  # type: () -> None
+        """Placeholder docstring"""
         while _can_connect(self._master_hostname):
             time.sleep(30)
 
 
 def _wait_orted_process_to_finish():  # type: () -> None
+    """Placeholder docstring"""
     orted = _orted_process()
     psutil.wait_procs(orted)
 
@@ -102,6 +107,7 @@ class MasterRunner(_process.ProcessRunner):
         timeout_in_seconds=60 * 60,
         num_processes=None,
     ):
+        """Placeholder docstring"""
 
         super(MasterRunner, self).__init__(user_entry_point, args, env_vars)
 
@@ -115,6 +121,7 @@ class MasterRunner(_process.ProcessRunner):
         self.timeout_in_seconds = timeout_in_seconds
 
     def _setup(self):  # type: () -> None
+        """Placeholder docstring"""
         logger.info("Starting MPI run as worker node.")
         logger.info("Creating SSH daemon.")
         _start_sshd_daemon()
@@ -122,6 +129,7 @@ class MasterRunner(_process.ProcessRunner):
         self._wait_for_workers()
 
     def _wait_for_workers(self):  # type: () -> None
+        """Placeholder docstring"""
         logger.info("Waiting for MPI workers to establish their SSH connections")
 
         workers = [host for host in self._hosts if host != self._master_hostname]
@@ -132,6 +140,7 @@ class MasterRunner(_process.ProcessRunner):
                 logger.info("Worker %s available for communication", host)
 
     def _create_command(self):  # type: () -> List[str, Any]
+        """Placeholder docstring"""
         num_hosts = len(self._hosts)
         num_processes = self._num_processes or self._process_per_host * num_hosts
 
@@ -210,8 +219,9 @@ class MasterRunner(_process.ProcessRunner):
         return command
 
     def _python_command(self):
-        # Use mpi4py to force processes to abort if an uncaught exception occurs.
-        # https://docs.chainer.org/en/stable/chainermn/tutorial/tips_faqs.html#mpi-process-hangs-after-an-unhandled-python-exception
+        """Use mpi4py to force processes to abort if an uncaught exception occurs.
+        https://docs.chainer.org/en/stable/chainermn/tutorial/tips_faqs.html#mpi-process-hangs-after-an-unhandled-python-exception
+        """
         return super(MasterRunner, self)._python_command() + ["-m", "mpi4py"]
 
 
@@ -236,6 +246,7 @@ mkdir -p /root/.ssh/ && ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
 
 
 def _start_sshd_daemon():  # type: () -> None
+    """Placeholder docstring"""
     sshd_executable = "/usr/sbin/sshd"
 
     if not os.path.exists(sshd_executable):

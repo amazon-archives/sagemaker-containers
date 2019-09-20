@@ -10,6 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""Placeholder docstring"""
 from __future__ import absolute_import
 
 import os
@@ -23,6 +24,7 @@ from sagemaker_containers import _entry_point_type, _env, _errors, _logging
 
 
 def create(cmd, error_class, cwd=None, capture_error=False, **kwargs):
+    """Placeholder docstring"""
     try:
         stderr = subprocess.PIPE if capture_error else None
         return subprocess.Popen(
@@ -34,6 +36,7 @@ def create(cmd, error_class, cwd=None, capture_error=False, **kwargs):
 
 def check_error(cmd, error_class, capture_error=False, **kwargs):
     # type: (List[str], type, bool, Mapping[str, object]) -> subprocess.Popen
+    """Placeholder docstring"""
     process = create(cmd, error_class, capture_error=capture_error, **kwargs)
 
     if capture_error:
@@ -71,6 +74,7 @@ class ProcessRunner(object):
         self._env_vars = env_vars
 
     def _create_command(self):
+        """Placeholder docstring"""
         entrypoint_type = _entry_point_type.get(_env.code_dir, self._user_entry_point)
 
         if entrypoint_type is _entry_point_type.PYTHON_PACKAGE:
@@ -82,15 +86,17 @@ class ProcessRunner(object):
             return ["/bin/sh", "-c", "./%s %s" % (self._user_entry_point, " ".join(self._args))]
 
     def _python_command(self):
+        """Placeholder docstring"""
         return [python_executable()]
 
     def _setup(self):
-        pass
+        """Placeholder docstring"""
 
     def _tear_down(self):
-        pass
+        """Placeholder docstring"""
 
     def run(self, wait=True, capture_error=False):
+        """Placeholder docstring"""
         self._setup()
 
         cmd = self._create_command()

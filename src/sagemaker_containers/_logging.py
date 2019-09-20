@@ -10,6 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""Placeholder docstring"""
 from __future__ import absolute_import
 
 import json
@@ -19,6 +20,9 @@ import sagemaker_containers
 
 
 def get_logger():
+    """Returns a logger with the name 'sagemaker-containers',
+    creating it if necessary.
+    """
     return logging.getLogger("sagemaker-containers")
 
 
@@ -39,6 +43,7 @@ def configure_logger(level, log_format="%(asctime)s %(name)-12s %(levelname)-8s 
 
 
 def log_script_invocation(cmd, env_vars, logger=None):
+    """Placeholder docstring"""
     logger = logger or get_logger()
 
     prefix = "\n".join(["%s=%s" % (key, value) for key, value in env_vars.items()])

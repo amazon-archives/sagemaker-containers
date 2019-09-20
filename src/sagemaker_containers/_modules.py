@@ -10,6 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""Placeholder docstring"""
 from __future__ import absolute_import
 
 import importlib
@@ -48,6 +49,7 @@ def exists(name):  # type: (str) -> bool
 
 
 def has_requirements(path):  # type: (str) -> None
+    """Placeholder docstring"""
     return os.path.exists(os.path.join(path, "requirements.txt"))
 
 
@@ -307,6 +309,7 @@ def run_module(
 
 
 def _warning_cache_deprecation(cache):
+    """Placeholder docstring"""
     if cache is not None:
         msg = "the cache parameter is unnecessary anymore. Cache is always set to True"
         warnings.warn(msg, DeprecationWarning)

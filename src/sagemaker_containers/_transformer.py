@@ -10,6 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""Placeholder docstring"""
 from __future__ import absolute_import
 
 import json
@@ -237,6 +238,7 @@ class Transformer(object):
         return result
 
     def _error_response(self, error, status_code):
+        """Placeholder docstring"""
         body = json.dumps(
             {
                 "error": error.__class__.__name__,

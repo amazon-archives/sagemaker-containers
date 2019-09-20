@@ -10,6 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+"""Placeholder docstring"""
 from __future__ import absolute_import
 
 from distutils import util
@@ -323,6 +324,7 @@ class _Env(_mapping.MappingMixin):
     """
 
     def __init__(self):
+        """Placeholder docstring"""
         current_host = os.environ.get(_params.CURRENT_HOST_ENV)
         module_name = os.environ.get(_params.USER_PROGRAM_ENV, None)
         module_dir = os.environ.get(_params.SUBMIT_DIR_ENV, code_dir)
