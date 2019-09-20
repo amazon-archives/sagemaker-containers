@@ -93,7 +93,6 @@ disable=
     too-many-branches, # TODO: Simplify or ignore as appropriate
     missing-docstring, # TODO: Add docstrings
     super-init-not-called, # TODO: Call init method from base class
-    bad-super-call, # TODO: # TODO: Fix arguments given to super()
     wrong-import-order,
     no-else-return,
 
