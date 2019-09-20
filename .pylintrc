@@ -92,7 +92,6 @@ disable=
     no-self-use, # TODO: Convert methods to functions where appropriate
     too-many-branches, # TODO: Simplify or ignore as appropriate
     missing-docstring, # TODO: Add docstrings
-    super-init-not-called, # TODO: Call init method from base class
     wrong-import-order,
     no-else-return,
 

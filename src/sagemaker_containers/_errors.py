@@ -33,6 +33,7 @@ class _CalledProcessError(ClientError):
         self.return_code = return_code
         self.cmd = cmd
         self.output = output
+        super(_CalledProcessError, self).__init__()
 
     def __str__(self):
         if six.PY3 and self.output:
