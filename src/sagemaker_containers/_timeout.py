@@ -16,8 +16,14 @@ from contextlib import contextmanager
 import signal
 
 
-class TimeoutError(Exception):
-    pass
+class TimeoutError(Exception):  # pylint: disable=redefined-builtin
+    """Overrides the Python 3 TimeoutError built-in exception.
+
+    This builtin is being overridden for the purpose of compatibility with Python 2,
+    since TimeoutError is not a built-in exception in Python 2.
+    """
+
+    pass  # pylint: disable=unnecessary-pass
 
 
 @contextmanager

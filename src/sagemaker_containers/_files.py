@@ -49,7 +49,7 @@ def write_failure_file(failure_msg):  # type: (str) -> None
 
 
 @contextlib.contextmanager
-def tmpdir(suffix="", prefix="tmp", dir=None):  # type: (str, str, str) -> None
+def tmpdir(suffix="", prefix="tmp", directory=None):  # type: (str, str, str) -> None
     """Create a temporary directory with a context manager. The file is deleted when the
     context exits.
 
@@ -60,12 +60,12 @@ def tmpdir(suffix="", prefix="tmp", dir=None):  # type: (str, str, str) -> None
                        otherwise there will be no suffix.
         prefix (str):  If prefix is specified, the file name will begin with that prefix;
                        otherwise, a default prefix is used.
-        dir (str):  If dir is specified, the file will be created in that directory;
+        directory (str):  If directory is specified, the file will be created in that directory;
                     otherwise, a default directory is used.
     Returns:
         str: path to the directory
     """
-    tmp = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
+    tmp = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=directory)
     yield tmp
     shutil.rmtree(tmp)
 

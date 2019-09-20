@@ -22,15 +22,15 @@ def get_logger():
     return logging.getLogger("sagemaker-containers")
 
 
-def configure_logger(level, format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s"):
+def configure_logger(level, log_format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s"):
     # type: (int, str) -> None
     """Set logger configuration.
 
     Args:
         level (int): Logger level
-        format (str): Logger format
+        log_format (str): Logger format
     """
-    logging.basicConfig(format=format, level=level)
+    logging.basicConfig(format=log_format, level=level)
 
     if level >= logging.INFO:
         logging.getLogger("boto3").setLevel(logging.INFO)
