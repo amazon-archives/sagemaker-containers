@@ -96,7 +96,7 @@ disable=
     bad-super-call, # TODO: # TODO: Fix arguments given to super()
     redefined-builtin, # TODO: Do not redefine builtins
     line-too-long, # TODO: Enforce line length using Black
-    wrong-import-order, # TODO: Fix import order
+    wrong-import-order,
     no-else-return,
 
 [REPORTS]
