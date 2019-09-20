@@ -159,7 +159,6 @@ class MasterRunner(_process.ProcessRunner):
 
         logger.info("Network interface name: %s" % self._network_interface_name)
 
-        # TODO(mvs): explain MPI setttings
         command = [
             "mpirun",
             "--host",

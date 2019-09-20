@@ -62,14 +62,8 @@ def train():
     intermediate_sync = None
     exit_code = SUCCESS_CODE
     try:
-        # TODO: iquintero - add error handling for ImportError to let the user know
-        # if the framework module is not defined.
         env = sagemaker_containers.training_env()
 
-        # TODO: [issue#144] There is a bug in the logic -
-        # we need os.environ.get(_params.REGION_NAME_ENV)
-        # in certain regions, but it is not going to be available unless
-        # TrainingEnvironment has been initialized. It shouldn't be environment variable.
         region = os.environ.get("AWS_REGION", os.environ.get(_params.REGION_NAME_ENV))
         intermediate_sync = _intermediate_output.start_sync(env.sagemaker_s3_output(), region)
 

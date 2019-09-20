@@ -163,7 +163,6 @@ class Request(flask.Request, _mapping.MappingMixin):
             (str): The value, if any, of the header 'ContentType' (used by some AWS services) and
                    'Content-Type'. Otherwise, returns 'application/json' as default.
         """
-        # todo(mvsusp): consider a better default content-type
         return (
             self.headers.get("ContentType")
             or self.headers.get("Content-Type")
