@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import json
 import os
-import platform
 import shutil
 import sys
 
