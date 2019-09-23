@@ -46,7 +46,7 @@ def opt_ml_input_config():
     ],
 )
 @pytest.mark.xfail(
-    "IS_CODEBUILD_IMAGE" not in os.environ,
+    os.environ.get("IS_CODEBUILD_IMAGE") != "true",
     reason="Needs root permissions to create /opt/ml when run locally.",
 )
 def test_gethostname_resource_config_set(content, value, opt_ml_input_config):
@@ -57,7 +57,7 @@ def test_gethostname_resource_config_set(content, value, opt_ml_input_config):
 
 
 @pytest.mark.xfail(
-    "IS_CODEBUILD_IMAGE" not in os.environ,
+    os.environ.get("IS_CODEBUILD_IMAGE") != "true",
     reason="Needs root permissions to create /opt/ml when run locally.",
 )
 def test_gethostname_with_env_not_set(opt_ml_input_config):
