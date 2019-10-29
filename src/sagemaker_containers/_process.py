@@ -77,7 +77,7 @@ def check_error(cmd, error_class, capture_error=False, **kwargs):
     if capture_error:
         # Create a copy of stderr so that it can be read after being streamed
         with io.BytesIO() as stderr_copy:
-            return_code = None
+            return_code = process.poll()
             while return_code is None:
                 stdout = process.stdout.readline()
                 sys.stdout.write(stdout.decode("utf-8"))
@@ -87,13 +87,20 @@ def check_error(cmd, error_class, capture_error=False, **kwargs):
                 stderr_copy.write(stderr)
                 return_code = process.poll()
 
-            stderr = stderr_copy.getvalue()
+            # Read the rest of stdout/stdin because readline() reads only one line at a time
+            stdout = process.stdout.read()
+            sys.stdout.write(stdout.decode("utf-8"))
+            stderr = process.stderr.read()
+            sys.stdout.write(stderr.decode("utf-8"))
+
+            stderr_copy.write(stderr)
+            full_stderr = stderr_copy.getvalue()
     else:
-        stderr = None
+        full_stderr = None
         return_code = process.wait()
 
     if return_code:
-        raise error_class(return_code=return_code, cmd=" ".join(cmd), output=stderr)
+        raise error_class(return_code=return_code, cmd=" ".join(cmd), output=full_stderr)
     return process
 
 
