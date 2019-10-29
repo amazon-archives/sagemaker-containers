@@ -77,6 +77,8 @@ def test_run_python_capture_error(log, popen, entry_point_type_script):
     mock_process = MagicMock()
     mock_process.stdout.readline.return_value = b"stdout"
     mock_process.stderr.readline.return_value = b"stderr"
+    mock_process.stdout.read.return_value = b"stdout"
+    mock_process.stderr.read.return_value = b"stderr"
     mock_process.poll.return_value = 1
     popen.return_value = mock_process
 
