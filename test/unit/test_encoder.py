@@ -19,7 +19,7 @@ from scipy import sparse
 from six import BytesIO
 
 from sagemaker_containers import _content_types, _encoders, _errors
-from sagemaker_containers._recordio_helper import _read_recordio
+from sagemaker_containers._recordio import _read_recordio
 from sagemaker_containers.record_pb2 import Record
 
 
