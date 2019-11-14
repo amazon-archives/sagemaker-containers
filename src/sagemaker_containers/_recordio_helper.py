@@ -10,7 +10,7 @@
 # distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-"""Placeholder docstring"""
+"""This module contains utility functions used to generate recordio-protobuf format."""
 import struct
 import sys
 
@@ -21,9 +21,12 @@ from sagemaker_containers.record_pb2 import Record
 
 
 def _resolve_type(dtype):
-    """
+    """Returns the type string corresponding to the numpy.dtype
     Args:
-        dtype:
+        dtype (numpy.dtype or str): numpy.dtype object
+
+    Returns:
+        (str): string corresponding to the dtype
     """
     if dtype == np.dtype(int):
         return "Int32"
@@ -35,11 +38,12 @@ def _resolve_type(dtype):
 
 
 def _write_feature_tensor(resolved_type, record, vector):
-    """
+    """Writes the feature tensor in the record based on the resolved type.
+
     Args:
-        resolved_type:
-        record:
-        vector:
+        resolved_type (str): String representing the feature type
+        record (Record object): Record object to write to
+        vector (np.array or csr_matrix): Represents the row (1D Array)
     """
     if resolved_type == "Int32":
         record.features["values"].int32_tensor.values.extend(vector)
@@ -50,11 +54,12 @@ def _write_feature_tensor(resolved_type, record, vector):
 
 
 def _write_label_tensor(resolved_type, record, scalar):
-    """
+    """Writes the label to record based on the resolved type.
+
     Args:
-        resolved_type:
-        record:
-        scalar:
+        resolved_type (str): String representing the feature type
+        record (Record object): Record object
+        scalar (int or float32 or float64): label value
     """
     if resolved_type == "Int32":
         record.label["values"].int32_tensor.values.extend([scalar])
@@ -65,11 +70,12 @@ def _write_label_tensor(resolved_type, record, scalar):
 
 
 def _write_keys_tensor(resolved_type, record, vector):
-    """
+    """Writes the keys entries in the Record object.
+
     Args:
-        resolved_type:
-        record:
-        vector:
+        resolved_type (str): Representing the type of key entry
+        record (Record object): Record to which the key would be added
+        vector (array): Array of keys to be added
     """
     if resolved_type == "Int32":
         record.features["values"].int32_tensor.keys.extend(vector)
@@ -80,11 +86,12 @@ def _write_keys_tensor(resolved_type, record, vector):
 
 
 def _write_shape(resolved_type, record, scalar):
-    """
+    """Writes the shape entry in the Record.
+
     Args:
-        resolved_type:
-        record:
-        scalar:
+        resolved_type (str): Representing the type of key entry
+        record (Record object): Record to which the key would be added
+        scalar (int or float32 or float64): the shape to added to the record
     """
     if resolved_type == "Int32":
         record.features["values"].int32_tensor.shape.extend([scalar])
@@ -95,12 +102,13 @@ def _write_shape(resolved_type, record, scalar):
 
 
 def _write_numpy_to_dense_tensor(file, array, labels=None):
-    """Writes a numpy array to a dense tensor
+    """Writes a numpy array to a dense record
 
     Args:
-        file:
-        array:
-        labels:
+        file (file-like object): file-like object where the
+                                 records will be written
+        array (numpy array): numpy array containing the features
+        labels (numpy array): numpy array containing the labels
     """
 
     # Validate shape of array and labels, resolve array and label types
@@ -129,12 +137,14 @@ def _write_numpy_to_dense_tensor(file, array, labels=None):
 
 
 def _write_spmatrix_to_sparse_tensor(file, array, labels=None):
-    """Writes a scipy sparse matrix to a sparse tensor
+    """Writes a scipy sparse matrix to a sparse tensor.
 
     Args:
-        file:
-        array:
-        labels:
+        file (file-like object): file-like object where the
+                                 records will be written
+        array (array-like): a sparse matrix containing features
+        labels (numpy array): numpy array containing the labels
+
     """
 
     if not issparse(array):
@@ -191,7 +201,7 @@ _kmagic = 0xCED7230A
 
 
 def _write_recordio(f, data):
-    """Writes a single data point as a RecordIO record to the given file-like object.
+    """Wraps the data with RecordIO magic and writes to file-like object.
 
     Args:
         f (file-like object): The file-like object to which the data point will be written
@@ -206,7 +216,8 @@ def _write_recordio(f, data):
 
 
 def _read_recordio(f):
-    """
+    """Reads a RecordIO and unpacks the body.
+
     Args:
         f: file like object
     """
