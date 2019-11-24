@@ -106,10 +106,8 @@ class Worker(flask.Flask):
         )
         if execution_parameters_fn:
             self.add_url_rule(
-                rule="/execution_parameters",
-                endpoint="execution_parameters",
-                view_func=execution_parameters_fn,
-                methods=["GET"],
+                rule="/execution_parameters", endpoint="execution_parameters",
+                view_func=execution_parameters_fn, methods=["GET"]
             )
 
         self.request_class = Request
