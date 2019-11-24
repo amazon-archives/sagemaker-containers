@@ -108,7 +108,7 @@ def test_user_execution_parameters_fn():
     app = _worker.Worker(
         transform_fn=MagicMock(),
         module_name="test_module",
-        execution_parameters_fn=test_execution_parameters_fn,
+        execution_parameters_fn=test_execution_parameters_fn
     )
 
     with app.test_client() as client:
