@@ -19,7 +19,6 @@ import subprocess
 import textwrap
 
 import pytest
-import six
 
 from sagemaker_containers.beta.framework import errors, modules
 import test
