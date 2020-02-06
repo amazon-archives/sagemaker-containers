@@ -155,14 +155,10 @@ def download_and_install(uri, name=DEFAULT_MODULE_NAME, cache=True):
 
     if not should_use_cache:
         with _files.tmpdir() as tmpdir:
-            if uri.startswith("s3://"):
-                dst = os.path.join(tmpdir, "tar_file")
-                _files.download_and_extract(uri, dst)
-                module_path = os.path.join(tmpdir, "module_dir")
-                os.makedirs(module_path)
-            else:
-                module_path = uri
-
+            dst = os.path.join(tmpdir, "tar_file")
+            _files.download_and_extract(uri, dst)
+            module_path = os.path.join(tmpdir, "module_dir")
+            os.makedirs(module_path)
             prepare(module_path, name)
             install(module_path)
 
