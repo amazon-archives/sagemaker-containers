@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.6.3 (2020-02-06)
+
+### Bug Fixes and Other Changes
+
+ * patch module.download_and_install to resolve network isolation issue
+
 ## v2.6.2 (2019-12-18)
 
 ### Bug fixes and other changes
