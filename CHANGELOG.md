@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.8.0 (2020-02-19)
+
+### Features
+
+ * pin inotify-simple version.
+
 ## v2.7.0 (2020-02-17)
 
 ### Features
