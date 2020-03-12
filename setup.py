@@ -44,7 +44,7 @@ required_packages = [
     "werkzeug==0.15.5",
     "paramiko==2.4.2",
     "psutil==5.4.8",
-    "protobuf>=3.1",
+    "protobuf==3.11.2",
     "scipy>=1.2.2",
 ]
 
