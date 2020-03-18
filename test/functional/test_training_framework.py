@@ -152,7 +152,7 @@ import os
 import numpy as np
 
 import subprocess
-print(subprocess.check_output('pip show protobuf'.split()))
+raise ValueError(subprocess.check_output('pip show google'.split()))
 
 parser = argparse.ArgumentParser()
 
