@@ -3,7 +3,5 @@ version: 0.2
 phases:
   build:
     commands:
-      - tox -e debug-protobuf
-
       - $(aws ecr get-login --no-include-email --region us-west-2)
       - IGNORE_COVERAGE=- tox -e py27 -- test/functional
