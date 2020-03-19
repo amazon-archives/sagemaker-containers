@@ -70,6 +70,9 @@ def patch_exit_process():
 
 @pytest.fixture(autouse=True)
 def fix_protobuf_installation_for_python_2():
+    # Python 2 requires an __init__.py at every level,
+    # but protobuf doesn't honor that, so we create the file ourselves.
+    # https://stackoverflow.com/a/45141001
     if sys.version_info.major == 2:
         protobuf_info = subprocess.check_output("pip show protobuf".split())
         site_packages = re.match(r"[\S\s]*Location: (.*)\s", protobuf_info).group(1)
