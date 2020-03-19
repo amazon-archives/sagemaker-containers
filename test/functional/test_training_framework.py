@@ -149,14 +149,8 @@ if comm.rank == 0:
 USER_MODE_SCRIPT = """
 import argparse
 import os
+import test.fake_ml_framework as fake_ml
 import numpy as np
-
-import re
-import subprocess
-s = subprocess.check_output('pip show protobuf'.split())
-m = re.search(r'Location: (.+site-packages)', s)
-path = os.path.join(m.group(0).split()[1], 'google', '__init__.py')
-subprocess.check_call(['touch', path])
 
 parser = argparse.ArgumentParser()
 
@@ -167,8 +161,6 @@ parser.add_argument('--batch_size', type=int)
 parser.add_argument('--model_dir', type=str)
 
 args = parser.parse_args()
-
-import test.fake_ml_framework as fake_ml
 
 data = np.load(os.path.join(os.environ['SM_CHANNEL_TRAINING'], args.training_data_file))
 x_train = data['features']
