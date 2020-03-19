@@ -155,8 +155,8 @@ import re
 import subprocess
 s = subprocess.check_output('pip show protobuf'.split())
 m = re.search(r'Location: (.+site-packages)', s)
-path = os.path.join(m.group(0).split()[1], 'google', 'protobuf')
-raise ValueError(subprocess.check_output(['ls', path]))
+path = os.path.join(m.group(0).split()[1], 'google', '__init__.py')
+subprocess.check_call(['touch', path])
 
 parser = argparse.ArgumentParser()
 
