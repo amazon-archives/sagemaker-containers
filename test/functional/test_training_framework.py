@@ -152,7 +152,8 @@ import os
 import numpy as np
 
 import subprocess
-raise ValueError(subprocess.check_output('pip show google'.split()))
+
+from google.protobuf import descriptor
 
 parser = argparse.ArgumentParser()
 
