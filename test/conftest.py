@@ -72,6 +72,6 @@ def patch_exit_process():
 def fix_protobuf_installation_for_python_2():
     if sys.version_info.major == 2:
         protobuf_info = subprocess.check_output("pip show protobuf".split())
-        site_packages = re.match(r'[\S\s]*Location: (.*)\s', protobuf_info).group(1)
+        site_packages = re.match(r"[\S\s]*Location: (.*)\s", protobuf_info).group(1)
         with open(os.path.join(site_packages, "google", "__init__.py"), "w"):
             pass
