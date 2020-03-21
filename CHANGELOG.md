@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.8.2 (2020-03-20)
+
+### Bug Fixes and Other Changes
+
+ * extract module to correct location in download_and_install
+ * vulnerable dependency version
+
+### Testing and Release Infrastructure
+
+ * create __init__.py file for Python 2 import of protobuf during tests
+
 ## v2.8.1 (2020-02-20)
 
 ### Bug Fixes and Other Changes
