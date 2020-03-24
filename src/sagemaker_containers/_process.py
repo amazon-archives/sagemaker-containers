@@ -15,7 +15,6 @@ from __future__ import absolute_import
 
 import io
 import os
-import shlex
 import subprocess
 import sys
 from typing import Dict, List, Mapping  # noqa ignore=F401 imported but unused
@@ -137,7 +136,7 @@ class ProcessRunner(object):
         elif entrypoint_type is _entry_point_type.PYTHON_PROGRAM:
             return self._python_command() + [self._user_entry_point] + self._args
         else:
-            args = [shlex.quote(arg) for arg in self._args]
+            args = [six.moves.shlex_quote(arg) for arg in self._args]
             return ["/bin/sh", "-c", "./%s %s" % (self._user_entry_point, " ".join(args))]
 
     def _python_command(self):  # pylint: disable=no-self-use
