@@ -136,7 +136,10 @@ class ProcessRunner(object):
         elif entrypoint_type is _entry_point_type.PYTHON_PROGRAM:
             return self._python_command() + [self._user_entry_point] + self._args
         else:
-            args = [six.moves.shlex_quote(arg) for arg in self._args]
+            args = [
+                six.moves.shlex_quote(arg)  # pylint: disable=too-many-function-args
+                for arg in self._args
+            ]
             return ["/bin/sh", "-c", "./%s %s" % (self._user_entry_point, " ".join(args))]
 
     def _python_command(self):  # pylint: disable=no-self-use
