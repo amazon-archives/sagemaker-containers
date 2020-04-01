@@ -66,7 +66,7 @@ def test_run_bash(log, popen, entry_point_type_script):
     with pytest.raises(_errors.ExecuteUserScriptError):
         _process.ProcessRunner("launcher.sh", ["--lr", "1 3"], {}).run()
 
-    cmd = ["/bin/sh", "-c", "./launcher.sh --lr 13"]
+    cmd = ["/bin/sh", "-c", "./launcher.sh --lr '1 3'"]
     popen.assert_called_with(cmd, cwd=_env.code_dir, env=os.environ, stderr=None)
     log.assert_called_with(cmd, {})
 
