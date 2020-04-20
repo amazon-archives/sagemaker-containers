@@ -1,6 +1,3 @@
-
-.. _header-n1174:
-
 WARNING: This package has been deprecated. Please use the `SageMaker Training Toolkit <https://github.com/aws/sagemaker-training-toolkit>`__ for model training and the `SageMaker Inference Toolkit <https://github.com/aws/sagemaker-inference-toolkit>`__ for model serving.
 ================================================================================================================================================================================================================================================================================
 
