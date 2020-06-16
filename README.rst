@@ -1,5 +1,5 @@
 WARNING: This package has been deprecated. Please use the `SageMaker Training Toolkit <https://github.com/aws/sagemaker-training-toolkit>`__ for model training and the `SageMaker Inference Toolkit <https://github.com/aws/sagemaker-inference-toolkit>`__ for model serving.
-================================================================================================================================================================================================================================================================================
+===============================================================================================================================================================================================================================================================================
 
 .. _header-n957:
 
@@ -13,12 +13,7 @@ SageMaker Containers
 SageMaker Containers gives you tools to create SageMaker-compatible Docker containers, and has additional tools for letting you create Frameworks
 (SageMaker-compatible Docker containers that can run arbitrary Python or shell scripts).
 
-Currently, this library is used by the following containers: `TensorFlow
-Script Mode <https://github.com/aws/sagemaker-tensorflow-container/tree/script-mode>`__,
-`MXNet <https://github.com/aws/sagemaker-mxnet-container>`__,
-`PyTorch <https://github.com/aws/sagemaker-pytorch-container>`__,
-`Chainer <https://github.com/aws/sagemaker-chainer-container>`__, and
-`Scikit-learn <https://github.com/aws/sagemaker-scikit-learn-container>`__.
+Currently, this library is used by the `SageMaker Scikit-learn containers <https://github.com/aws/sagemaker-scikit-learn-container>`__.
 
 .. contents::
 
@@ -161,7 +156,7 @@ example, in a Python script:
 .. code:: python
 
    import argparse
-   
+
    if __name__ == '__main__':
      parser = argparse.ArgumentParser()
 
@@ -190,7 +185,7 @@ includes the channels **training** and **testing**:
 
    estimator = PyTorch(entry_point='train.py', ...)
 
-   estimator.fit({'training': 's3://bucket/path/to/training/data', 
+   estimator.fit({'training': 's3://bucket/path/to/training/data',
                   'testing': 's3://bucket/path/to/testing/data'})
 
 The environment variable ``SM_CHANNEL_{channel_name}`` provides the
@@ -411,7 +406,7 @@ The number of gpus available in the current container. Usage example:
 .. code:: python
 
    import os
-   
+
    # using it in argparse
    parser.add_argument('num_gpus', type=int, default=os.environ['SM_NUM_GPUS'])
 
@@ -520,11 +515,11 @@ directory where standard SageMaker configuration files are located, e.g.
 ``/opt/ml/input/config/``.
 
 SageMaker training creates the following files in this folder when
-training starts: 
+training starts:
 
-- ``hyperparameters.json``: Amazon SageMaker makes the hyperparameters in a CreateTrainingJob request available in this file. 
+- ``hyperparameters.json``: Amazon SageMaker makes the hyperparameters in a CreateTrainingJob request available in this file.
 
-- ``inputdataconfig.json``: You specify data channel information in the InputDataConfig parameter in a CreateTrainingJob request. Amazon SageMaker makes this information available in this file. 
+- ``inputdataconfig.json``: You specify data channel information in the InputDataConfig parameter in a CreateTrainingJob request. Amazon SageMaker makes this information available in this file.
 
 - ``resourceconfig.json``: name of the current host and all host containers in the training.
 
